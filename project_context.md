@@ -1,41 +1,35 @@
-# Contexto del Proyecto: Plataforma de Gestión de Contenidos
+# Contexto del Proyecto: Plataforma de Gestión de Contenidos (AI PROMPT SOURCE)
 
-Este documento sirve como registro vivo del estado del proyecto, las decisiones técnicas y la evolución de la aplicación. Se utilizará como contexto para el desarrollo y la colaboración.
+> [!IMPORTANT]
+> **INSTRUCCIONES PARA IA**: Este archivo es la fuente de verdad. Si eres una IA nueva en esta conversación, lee este bloque primero:
+> 1.  **Arquitectura**: Next.js (App Router) Fullstack + Supabase.
+> 2.  **Misión**: Mantener un CMS genérico de 4 niveles (Sections > Categories > Subcategories > Items).
+> 3.  **Regla de Oro**: Todo contenido nuevo debe ser compatible con la estructura genérica definida. No crees tablas específicas para "Adeslas" o "Energía". Usa la jerarquía existente.
 
 ## Estado Actual
+- **Fase**: Diseño Técnico Finalizado / Preparado para Integración de Datos.
+- **Stack**: Next.js, React, Supabase, Tailwind CSS, Shadcn/UI.
+- **Docs**: Centralizados en carpeta `docs/`.
 
-- **Fase:** Configuración Inicial Guiada (Manual).
-- **Tecnologías confirmadas:** React (Frontend), Next.js (Fullstack), Supabase (Base de datos/Auth), GitHub (Control de Versiones).
-- **Herramientas de trabajo:** Jira (Gestión de tareas), Visual Studio Code (IDE).
-- **Estructura base:** Definida en `README.md`.
+## Arquitectura de Datos (Confirmada)
+La base de datos es **relacional pura** con 4 niveles:
+1.  **SECTIONS**: (Ej: ADESLAS, ENERGÍA, ALARMA).
+2.  **CATEGORIES**: Agrupadores de primer nivel.
+3.  **SUBCATEGORIES**: Agrupadores de segundo nivel.
+4.  **ITEMS**: El "atómico" de contenido. Campos: `body` (texto), `file_path` (PDF/descargas), `external_link` (links). 
 
-## Resumen del Proyecto
+*Flexibilidad*: Usa columnas **JSONB** (`config` y `attributes`) para datos ad-hoc sin alterar el esquema.
 
-Desarrollo de una plataforma web para la organización de información estructurada en tres áreas principales (ADESLAS, ENERGÍA, ALARMA) con un panel de administración para la gestión de categorías, subcategorías y contenidos (textos, documentos, archivos, enlaces).
+## Decisiones Críticas
+- **Seguridad**: RLS habilitado en todas las tablas de Supabase. Lectura pública inicial.
+- **Identidad**: Uso estricto de **UUID** para todos los identificadores.
+- **Orden**: El directorio raíz debe mantenerse limpio. Nueva lógica de negocio en `src/`, documentación en `docs/`.
 
-## Decisiones Técnicas
-### 2026-03-03: Selección de Base de Datos
+## Documentación Clave
+- [Diseño de Base de Datos](docs/DATABASE_DESIGN.md) (Contiene el SQL y el ERD).
+- [Guía de Configuración](docs/SETUP_GUIDE.md).
 
-- Se ha elegido **Supabase** como plataforma de base de datos (PostgreSQL) y autenticación.
-- Supabase proporciona una base de datos relacional robusta y APIs automáticas que se integran perfectamente con Next.js.
-
-### 2026-03-03: Herramientas de Desarrollo
-
-- Se ha confirmado el uso de **Jira** para la gestión ágil del proyecto y seguimiento de tareas.
-- El equipo utilizará **Visual Studio Code** como entorno de desarrollo principal.
-
-### 2026-03-04: Pivote a Next.js (Confirmado)
-- Tras evaluar opciones, se decide utilizar **Next.js** como framework Fullstack. Esto permite escribir el Frontend (React) y el Backend (Server Actions/API Routes) en un solo proyecto, garantizando escalabilidad y productividad.
-- Se ha limpiado la instalación previa de Nest.js.
-
-## Arquitectura (Planeada)
-- **Frontend:** React.
-- **Backend:** Next.js (Fullstack).
-- **Base de Datos:** Supabase (PostgreSQL).
-- **Navegación:** Jerárquica basada en tarjetas (Dashboard principal -> Categorías -> Subcategorías/Contenido).
-- **Admin Panel:** Módulo independiente para CRUD de contenidos.
-
-## Próximos Pasos
-1. Configuración del entorno de desarrollo React.
-2. Definición de la estructura de carpetas del proyecto.
-3. Diseño de la interfaz de usuario (Dashboard principal).
+## Próximos Pasos (Pendientes)
+1.  Verificar ejecución del SQL en Supabase.
+2.  Configurar cliente Supabase en `src/lib/supabase.ts`.
+3.  Implementar Server Actions para el primer fetch de SECTIONS.
