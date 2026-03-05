@@ -1,0 +1,4 @@
+LA BD tiene capacidad para guardar archivos o necesitamos un servidor AWS, por ejemplo 
+
+https://pocgikxkudkebwyqlldr.supabase.co
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvY2dpa3hrdWRrZWJ3eXFsbGRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MDYxODEsImV4cCI6MjA4ODI4MjE4MX0.sVnW0mVLYIDf4Flv2pLqRqqvn4xo6n56o8YFoAkyCCo
