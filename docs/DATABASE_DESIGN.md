@@ -19,32 +19,32 @@ El sistema está diseñado para ser **genérico** y **escalable**, permitiendo g
 
 ```mermaid
 erDiagram
-    SECTIONS ||--o{ CATEGORIES : "contiene"
-    CATEGORIES ||--o{ SUBCATEGORIES : "contiene"
-    SUBCATEGORIES ||--o{ ITEMS : "posee"
+    sections ||--o{ categories : "contiene"
+    categories ||--o{ subcategories : "contiene"
+    subcategories ||--o{ items : "posee"
 
-    SECTIONS {
+    sections {
         uuid id
         string name
         string slug
         jsonb config
     }
 
-    CATEGORIES {
+    categories {
         uuid id
         uuid section_id
         string name
         string slug
     }
 
-    SUBCATEGORIES {
+    subcategories {
         uuid id
         uuid category_id
         string name
         string slug
     }
 
-    ITEMS {
+    items {
         uuid id
         uuid subcategory_id
         string title
