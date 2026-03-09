@@ -19,9 +19,20 @@ El sistema está diseñado para ser **genérico** y **escalable**, permitiendo g
 
 ```mermaid
 erDiagram
+    profiles ||--o{ sections : "gestiona"
     sections ||--o{ categories : "contiene"
     categories ||--o{ subcategories : "contiene"
     subcategories ||--o{ items : "posee"
+
+    profiles {
+        uuid id
+        string first_name
+        string last_name
+        string email
+        string phone
+        user_role role
+        string avatar_url
+    }
 
     sections {
         uuid id
@@ -66,6 +77,22 @@ Las columnas `config` (en SECTIONS) y `attributes` (en ITEMS) permiten guardar d
 Código del proyecto en Supabase para crear la estructura:
 
 ```sql
+-- Enum de roles
+create type user_role as enum ('superadmin', 'admin', 'usuario');
+
+-- 0. PERFILES DE USUARIO
+create table profiles (
+  id uuid references auth.users(id) on delete cascade primary key,
+  first_name text not null,
+  last_name text not null,
+  email text unique not null,
+  phone text,
+  role user_role default 'usuario' not null,
+  avatar_url text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- 1. SECCIONES
 create table sections (
   id uuid default gen_random_uuid() primary key,
@@ -116,6 +143,23 @@ alter table categories enable row level security;
 alter table subcategories enable row level security;
 alter table items enable row level security;
 
+-- RLS para profiles
+alter table profiles enable row level security;
+-- Cada usuario puede ver su propio perfil
+create policy "Users can view own profile" 
+  on profiles for select 
+  using (auth.uid() = id);
+-- Cada usuario puede editar su propio perfil
+create policy "Users can update own profile" 
+  on profiles for update 
+  using (auth.uid() = id);
+-- Superadmin tiene acceso total a todos los perfiles
+create policy "Superadmin full access" 
+  on profiles for all 
+  using (
+    exists (select 1 from profiles where id = auth.uid() and role = 'superadmin')
+  );
+
 -- Políticas de lectura pública
 create policy "Public read" on sections for select using (true);
 create policy "Public read" on categories for select using (true);
@@ -125,4 +169,4 @@ create policy "Public read" on items for select using (true);
 
 ---
 
-*Ultima actualización: 2026-03-04*
+*Ultima actualización: 2026-03-09*

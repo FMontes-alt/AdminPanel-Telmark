@@ -1,5 +1,21 @@
 import { pgTable, uuid, text, jsonb, timestamp, unique, pgEnum } from "drizzle-orm/pg-core";
 
+// Enum roles
+export const userRoleEnum = pgEnum("user_role", ["superadmin", "admin", "usuario"]);
+
+// 0. USUARIOS
+export const profiles = pgTable("profiles", {
+    id: uuid("id").primaryKey(),
+    firstName: text("first_name").notNull(),
+    lastName: text("last_name").notNull(),
+    email: text("email").unique().notNull(),
+    phone: text("phone"),
+    role: userRoleEnum("role").default("usuario").notNull(),
+    avatarUrl: text("avatar_url"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // 1. SECCIONES
 export const sections = pgTable("sections", {
     id: uuid("id").primaryKey().defaultRandom(),
