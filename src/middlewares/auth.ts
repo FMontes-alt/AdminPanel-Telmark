@@ -4,8 +4,12 @@ import { createServerClient } from "@supabase/ssr";
 export async function withAuth(request: NextRequest, response: NextResponse) {
     const { pathname } = request.nextUrl
 
-    // Solo se actúa si la ruta es admin
-    if (pathname.startsWith('/admin')) {
+    // Rutas de interés
+    const isAdminRoute = pathname.startsWith('/admin')
+    const isLoginRoute = pathname === '/login'
+
+    // Solo actuamos si es una ruta protegida o el login
+    if (isAdminRoute || isLoginRoute) {
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -21,22 +25,29 @@ export async function withAuth(request: NextRequest, response: NextResponse) {
 
         const { data: { user } } = await supabase.auth.getUser()
 
-        // 1. Bloqueo si no hay sesión
-        if (!user) {
+        // 1. REDIRECCIÓN INVERSA: Si ya está logueado y va a /login, lo mandamos al admin
+        if (isLoginRoute && user) {
+            return NextResponse.redirect(new URL('/admin', request.url))
+        }
+
+        // 2. PROTECCIÓN ADMIN: Si no hay sesión y va a /admin, al login
+        if (isAdminRoute && !user) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
 
-        // 2. Bloqueo por rol (RBAC)
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single()
+        // 3. RBAC: Si va a admin y hay sesión, miramos el rol
+        if (isAdminRoute && user) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single()
 
-        const isAllowed = profile?.role === 'admin' || profile?.role === 'superadmin'
+            const isAllowed = profile?.role === 'admin' || profile?.role === 'superadmin'
 
-        if (!isAllowed) {
-            return NextResponse.redirect(new URL('/', request.url))
+            if (!isAllowed) {
+                return NextResponse.redirect(new URL('/', request.url))
+            }
         }
     }
 

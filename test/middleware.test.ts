@@ -11,7 +11,7 @@ vi.mock('../src/lib/supabase/middleware', () => ({
     updateSession: vi.fn((req) => NextResponse.next()),
 }))
 
-// Simular el cliente en Supabase (OJO: era @supabase/ssr, no src)
+// Simular el cliente en Supabase
 vi.mock('@supabase/ssr', () => ({
     createServerClient: vi.fn(() => ({
         auth: {
