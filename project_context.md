@@ -12,24 +12,30 @@
 - **Docs**: Centralizados en carpeta `docs/`.
 
 ## Arquitectura de Datos (Confirmada)
-La base de datos es **relacional pura** con 4 niveles:
+La base de datos es **relacional pura** estructurada en hierarchy + usuarios:
+0.  **PROFILES**: Usuarios con roles (`superadmin`, `admin`, `usuario`). Vinculados a Supabase Auth.
+0.5 **PROFILE_SECTIONS**: Tabla intermedia para asignar secciones específicas a usuarios.
 1.  **SECTIONS**: (Ej: ADESLAS, ENERGÍA, ALARMA).
 2.  **CATEGORIES**: Agrupadores de primer nivel.
 3.  **SUBCATEGORIES**: Agrupadores de segundo nivel.
-4.  **ITEMS**: El "atómico" de contenido. Campos: `body` (texto), `file_path` (PDF/descargas), `external_link` (links). 
+4.  **ITEMS**: Contenido atómico (texto, archivos, links).
 
-*Flexibilidad*: Usa columnas **JSONB** (`config` y `attributes`) para datos ad-hoc sin alterar el esquema.
+*Flexibilidad*: Columnas **JSONB** (`config` y `attributes`) para datos dinámicos.
 
 ## Decisiones Críticas
-- **Seguridad**: RLS habilitado en todas las tablas de Supabase. Lectura pública inicial.
-- **Identidad**: Uso estricto de **UUID** para todos los identificadores.
-- **Orden**: El directorio raíz debe mantenerse limpio. Nueva lógica de negocio en `src/`, documentación en `docs/`.
+- **Seguridad**: RLS estricto por ROLES. 
+  - `superadmin`: Acceso total.
+  - `admin`: Gestión de contenido global.
+  - `usuario`: Solo ve las secciones asignadas en `profile_sections`.
+- **Automatización**: Trigger en Supabase para crear `profile` automáticamente al registrarse en Auth.
+- **Identidad**: Uso estricto de **UUID**.
+- **Orden**: Directorio raíz limpio. Lógica en `src/`, docs en `docs/`.
 
 ## Documentación Clave
-- [Diseño de Base de Datos](docs/DATABASE_DESIGN.md) (Contiene el SQL y el ERD).
+- [Diseño de Base de Datos](docs/DATABASE_DESIGN.md) (Contiene el SQL, ERD y políticas RLS).
 - [Guía de Configuración](docs/SETUP_GUIDE.md).
 
 ## Próximos Pasos (Pendientes)
-1.  Verificar ejecución del SQL en Supabase.
-2.  Configurar cliente Supabase en `src/lib/supabase.ts`.
-3.  Implementar Server Actions para el primer fetch de SECTIONS.
+1.  Implementar el Trigger de autocreación de perfiles en Supabase.
+2.  Configurar el Middleware de Next.js para proteger rutas según el rol.
+3.  Implementar Server Actions para la gestión de usuarios y asignación de secciones.

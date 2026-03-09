@@ -208,9 +208,29 @@ create policy "Subcategories access" on subcategories for select using (
   exists (select 1 from categories where id = subcategories.category_id)
 );
 
-create policy "Items access" on items for select using (
   exists (select 1 from subcategories where id = items.subcategory_id)
 );
+
+-- 5. AUTOMATIZACIÓN (Triggers)
+-- Crea un perfil automáticamente cuando un usuario se registra en Supabase Auth
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, first_name, last_name, email, role)
+  values (
+    new.id, 
+    coalesce(new.raw_user_meta_data->>'first_name', ''), 
+    coalesce(new.raw_user_meta_data->>'last_name', ''), 
+    new.email, 
+    'usuario'
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
 ```
 
 ---
