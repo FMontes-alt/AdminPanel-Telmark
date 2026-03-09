@@ -19,10 +19,17 @@ El sistema está diseñado para ser **genérico** y **escalable**, permitiendo g
 
 ```mermaid
 erDiagram
-    profiles ||--o{ sections : "gestiona"
+    profiles ||--o{ profile_sections : "pertenece"
+    sections ||--o{ profile_sections : "asignada"
     sections ||--o{ categories : "contiene"
     categories ||--o{ subcategories : "contiene"
     subcategories ||--o{ items : "posee"
+
+    profile_sections {
+        uuid profile_id
+        uuid section_id
+        timestamp created_at
+    }
 
     profiles {
         uuid id
@@ -93,6 +100,14 @@ create table profiles (
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- 0.5. RELACIÓN PERFILES - SECCIONES
+create table profile_sections (
+  profile_id uuid references profiles(id) on delete cascade not null,
+  section_id uuid references sections(id) on delete cascade not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  primary key (profile_id, section_id)
+);
+
 -- 1. SECCIONES
 create table sections (
   id uuid default gen_random_uuid() primary key,
@@ -160,11 +175,42 @@ create policy "Superadmin full access"
     exists (select 1 from profiles where id = auth.uid() and role = 'superadmin')
   );
 
--- Políticas de lectura pública
-create policy "Public read" on sections for select using (true);
-create policy "Public read" on categories for select using (true);
-create policy "Public read" on subcategories for select using (true);
-create policy "Public read" on items for select using (true);
+-- RLS para profile_sections
+alter table profile_sections enable row level security;
+
+-- Superadmin full access
+create policy "Superadmin full access" on profile_sections for all using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'superadmin')
+);
+
+-- Usuarios pueden ver sus propias asignaciones
+create policy "Users can view own assignments" on profile_sections for select using (
+  auth.uid() = profile_id
+);
+
+-- Políticas de lectura
+-- Superadmins y Admins pueden leer todas las secciones
+-- Usuarios normales solo pueden leer las secciones que tengan asignadas en profile_sections
+create policy "Sections access" on sections for select using (
+  exists (
+    select 1 from profiles 
+    where id = auth.uid() 
+    and (role in ('superadmin', 'admin') or 
+         exists (select 1 from profile_sections where profile_id = auth.uid() and section_id = sections.id))
+  )
+);
+
+create policy "Categories access" on categories for select using (
+  exists (select 1 from sections where id = categories.section_id)
+);
+
+create policy "Subcategories access" on subcategories for select using (
+  exists (select 1 from categories where id = subcategories.category_id)
+);
+
+create policy "Items access" on items for select using (
+  exists (select 1 from subcategories where id = items.subcategory_id)
+);
 ```
 
 ---
