@@ -1,10 +1,14 @@
 import { type NextRequest } from "next/server";
-import { updateSession } from "./lib/supabase/middleware";
+import { updateSession } from "./middlewares/session";
 import { withAuth } from "./middlewares/auth";
+import { withSecurity } from "./middlewares/security";
 
 export async function middleware(request: NextRequest) {
     // 1. Capa de Sesión (Bajo nivel)
-    const response = await updateSession(request)
+    let response = await updateSession(request)
+
+    // 2. Capa de Seguridad (Headers)
+    response = await withSecurity(request, response)
 
     // 2. Capa de Seguridad (RBAC)
     return await withAuth(request, response)

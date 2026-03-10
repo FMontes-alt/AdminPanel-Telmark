@@ -1,8 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+/**
+ * Capa de Sesión: Se encarga de refrescar el token de Supabase 
+ * y sincronizar las cookies entre el cliente y el servidor.
+ */
 export async function updateSession(request: NextRequest) {
-    let supabaseResponse = NextResponse.next({request})
+    let supabaseResponse = NextResponse.next({ request })
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
