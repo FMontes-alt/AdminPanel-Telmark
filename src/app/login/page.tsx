@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { motion, Variants } from "framer-motion"
-import { Shield, Loader2, AlertCircle } from "lucide-react"
+import { Shield, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -55,6 +55,7 @@ export default function LoginPage() {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const [globalError, setGlobalError] = useState<string | null>(null)
+    const [showPassword, setShowPassword] = useState(false)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -152,12 +153,26 @@ export default function LoginPage() {
                                     <FormItem>
                                         <FormLabel className="text-slate-700 font-medium ml-1">Contraseña</FormLabel>
                                         <FormControl>
-                                            <Input
-                                                type="password"
-                                                placeholder="••••••••"
-                                                className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-500 focus-visible:border-blue-500 h-12 rounded-xl transition-all shadow-sm"
-                                                {...field}
-                                            />
+                                            <div className="relative group">
+                                                <Input
+                                                    type={showPassword ? "text" : "password"}
+                                                    placeholder="••••••••"
+                                                    className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-500 focus-visible:border-blue-500 h-12 rounded-xl transition-all shadow-sm pr-11"
+                                                    {...field}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-slate-50 focus:outline-none"
+                                                    title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="h-5 w-5" strokeWidth={1.5} />
+                                                    ) : (
+                                                        <Eye className="h-5 w-5" strokeWidth={1.5} />
+                                                    )}
+                                                </button>
+                                            </div>
                                         </FormControl>
                                         <FormMessage className="text-red-500 ml-1" />
                                     </FormItem>
