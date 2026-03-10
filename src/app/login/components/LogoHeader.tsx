@@ -13,7 +13,7 @@ export const LogoHeader = ({ variants }: LogoHeaderProps) => {
             <div className="inline-flex items-center justify-center w-[120px] h-[120px] rounded-2xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-6 overflow-hidden relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-orange-400 opacity-5" />
                 <Image
-                    src="/logo.png"
+                    src="/cropped-Logo_ColectivoPrime-284x284.png"
                     alt="Telmark Logo"
                     width={100}
                     height={100}
