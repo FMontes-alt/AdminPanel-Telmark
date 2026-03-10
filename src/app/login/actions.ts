@@ -44,9 +44,15 @@ export async function login(formData: FormData) {
     if (error) {
         // Mensajes más amigables en español
         if (error.message.includes("Invalid login credentials")) {
-            return { error: "Email o contraseña incorrectos." }
+            return { error: "El correo o la contraseña no son correctos. Por favor, inténtalo de nuevo." }
         }
-        return { error: error.message }
+        if (error.message.includes("Email not confirmed")) {
+            return { error: "Tu correo electrónico aún no ha sido confirmado." }
+        }
+        if (error.message.includes("too many requests")) {
+            return { error: "Demasiados intentos. Por favor, espera un momento antes de volver a intentarlo." }
+        }
+        return { error: "Ha ocurrido un error al intentar iniciar sesión. Por favor, contacta con soporte." }
     }
 
     // El middleware se encargará de redirigir a /admin u otra ruta
