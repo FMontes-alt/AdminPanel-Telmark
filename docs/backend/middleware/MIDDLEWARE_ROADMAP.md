@@ -4,16 +4,16 @@ Este documento sirve para recordar qué hemos hecho y qué falta por implementar
 
 ## ✅ Implementado
 - [x] **Gestión de Sesión:** Refresco automático de tokens de Supabase (`updateSession`).
-- [x] **Control de Acceso Básico (RBAC):** Redirección de `/admin` a `/login` si no hay sesión.
-- [x] **Capa de Seguridad Inicial:** Implementación de headers de seguridad.
+- [x] **Control de Acceso (RBAC):** Redirección y validación de roles (`admin`, `superadmin`).
+- [x] **Seguridad Avanzada:** Implementación de headers y CSP.
     - `X-Frame-Options: DENY` (Anti-Clickjacking).
     - `X-XSS-Protection: 1; mode=block` (Anti-XSS).
     - `Referrer-Policy: strict-origin-when-cross-origin`.
+    - `Content-Security-Policy`: Restricción de carga de recursos.
 
 ## ⏳ En Progreso / Siguiente Paso
 - [ ] **Activación de Capas:** Conectar la nueva capa de seguridad en el archivo principal `middleware.ts`.
-- [ ] **Refinamiento de RBAC:** Asegurar que los roles `admin` y `superadmin` tengan los permisos correctos en toda la app.
-- [ ] **CSP (Content Security Policy):** Definir de dónde permitimos cargar scripts y estilos.
+- [ ] **Portal de Usuario:** Definir ruta y protección para el rol `usuario`.
 
 ## 🚀 Pendiente (Roadmap Futuro)
 - [ ] **Maintenance Mode:** Un interruptor para cerrar el panel rápido.
