@@ -12,7 +12,7 @@ Este documento sirve para recordar qué hemos hecho y qué falta por implementar
 
 ## ⏳ En Progreso / Siguiente Paso
 - [ ] **Activación de Capas:** Conectar la nueva capa de seguridad en el archivo principal `middleware.ts`.
-- [ ] **Ampliación de RBAC:** Añadir lógica para los roles de `supervisor` y `agente`.
+- [ ] **Refinamiento de RBAC:** Asegurar que los roles `admin` y `superadmin` tengan los permisos correctos en toda la app.
 - [ ] **CSP (Content Security Policy):** Definir de dónde permitimos cargar scripts y estilos.
 
 ## 🚀 Pendiente (Roadmap Futuro)

@@ -43,7 +43,9 @@ export async function withAuth(request: NextRequest, response: NextResponse) {
                 .eq('id', user.id)
                 .single()
 
-            const isAllowed = profile?.role === 'admin' || profile?.role === 'superadmin'
+            // Solo permitimos a los que tengan rol de administrador
+            const allowedRoles = ['admin', 'superadmin'];
+            const isAllowed = profile?.role && allowedRoles.includes(profile.role);
 
             if (!isAllowed) {
                 return NextResponse.redirect(new URL('/', request.url))
