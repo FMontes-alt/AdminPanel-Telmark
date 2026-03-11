@@ -78,14 +78,14 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center sm:justify-center p-4 relative overflow-x-hidden overflow-y-auto">
             <BackgroundEffect />
 
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="w-full max-w-[420px] relative z-10"
+                className="w-full max-w-[420px] relative z-10 py-8"
             >
                 <LogoHeader variants={itemVariants} />
 
