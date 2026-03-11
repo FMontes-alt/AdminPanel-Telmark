@@ -10,13 +10,14 @@ Este documento sirve para recordar qué hemos hecho y qué falta por implementar
     - `X-XSS-Protection: 1; mode=block` (Anti-XSS).
     - `Referrer-Policy: strict-origin-when-cross-origin`.
     - `Content-Security-Policy`: Restricción de carga de recursos.
+- [x] **Activación de Capas:** Conexión modular en `middleware.ts`.
+- [x] **Maintenance Mode:** Implementado vía middleware modular y variable de entorno.
+- [x] **Trace ID:** Generación de `x-trace-id` para observabilidad.
 
 ## ⏳ En Progreso / Siguiente Paso
-- [ ] **Activación de Capas:** Conectar la nueva capa de seguridad en el archivo principal `middleware.ts`.
 - [ ] **Portal de Usuario:** Definir ruta y protección para el rol `usuario`.
 
 ## 🚀 Pendiente (Roadmap Futuro)
-- [ ] **Maintenance Mode:** Un interruptor para cerrar el panel rápido.
-- [ ] **Rate Limiting:** Controlar que no nos ataquen el login por fuerza bruta.
-- [ ] **Trace ID:** Un ID único para rastrear errores en los logs.
+- [ ] **Rate Limiting:** Controlar ataques de fuerza bruta.
 - [ ] **Bot Blocking:** Filtrar peticiones de bots maliciosos.
+- [ ] **Custom Maintenance Page:** Crear la UI para `/maintenance`.
