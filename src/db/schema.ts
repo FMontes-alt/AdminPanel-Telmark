@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, jsonb, timestamp, unique, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, jsonb, timestamp, unique, pgEnum, integer } from "drizzle-orm/pg-core";
 
 // Enum roles
 export const userRoleEnum = pgEnum("user_role", ["superadmin", "admin", "usuario"]);
@@ -47,6 +47,7 @@ export const categories = pgTable("categories", {
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    sortOrder: integer("sort_order").default(0),
 }, (t) => [
     unique().on(t.sectionId, t.slug),
 ]);

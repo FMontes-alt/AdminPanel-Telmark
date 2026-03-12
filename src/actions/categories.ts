@@ -12,7 +12,20 @@ export async function getCategories(sectionId: string) {
         .select()
         .from(categories)
         .where(eq(categories.sectionId, sectionId))
-        .orderBy(categories.createdAt)
+        .orderBy(categories.sortOrder, categories.createdAt)
+}
+
+export async function reorderCategories(ids: string[]) {
+    // We update each category's sortOrder based on its index in the array
+    await Promise.all(
+        ids.map((id, index) => 
+            db.update(categories)
+                .set({ sortOrder: index })
+                .where(eq(categories.id, id))
+        )
+    )
+    revalidatePath("/admin")
+    return { success: true }
 }
 
 export async function getCategoryById(id: string) {

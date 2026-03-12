@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { 
     Plus, 
@@ -10,14 +10,13 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { 
-    getSections, 
-    getCategoriesBySection, 
     createCategory,
-    createSubcategory,
-    createItem,
-    getSubcategoriesByCategory,
-    getItemsBySubcategory
-} from "@/lib/actions/cms"
+    reorderCategories,
+    deleteCategory
+} from "@/actions/categories"
+import { createSubcategory, deleteSubcategory } from "@/actions/subcategories"
+import { createItem, deleteItem } from "@/actions/items"
+import { getSectionHierarchy, type SectionHierarchy } from "@/actions/hierarchy"
 
 // Components
 import DeleteModal from "./components/DeleteModal"
@@ -28,58 +27,44 @@ export default function SectionDetailPage() {
     const params = useParams()
     const slug = params?.slug as string
     
-    const [section, setSection] = useState<any>(null)
-    const [categories, setCategories] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
+    const [section, setSection] = useState<SectionHierarchy | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
     
     // UI State
     const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
     const [isAddingCategory, setIsAddingCategory] = useState(false)
-
-    // Delete Confirmation State
-    const [deletingId, setDeletingId] = useState<string | null>(null)
-    const [isDeleting, setIsDeleting] = useState(false)
-
-    // Modals/Forms State
     const [addingSubId, setAddingSubId] = useState<string | null>(null)
     const [addingItemId, setAddingItemId] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (slug) fetchData()
+    // Delete Confirmation State
+    const [deletingId, setDeletingId] = useState<{ id: string, type: 'category' | 'subcategory' | 'item' } | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
+
+    const fetchData = useCallback(async () => {
+        setIsLoading(true)
+        try {
+            const data = await getSectionHierarchy(slug)
+            setSection(data)
+        } catch (error) {
+            console.error("Error fetching data:", error)
+        } finally {
+            setIsLoading(false)
+        }
     }, [slug])
 
-    const fetchData = async () => {
-        setLoading(true)
-        try {
-            const allSections = await getSections()
-            const currentSection = allSections.find((s: any) => s.slug === slug)
-            if (currentSection) {
-                setSection(currentSection)
-                const cats = await getCategoriesBySection(currentSection.id)
-                
-                const catsWithSubs = await Promise.all(cats.map(async (cat: any) => {
-                    const subs = await getSubcategoriesByCategory(cat.id)
-                    const subsWithItems = await Promise.all(subs.map(async (sub: any) => {
-                        const its = await getItemsBySubcategory(sub.id)
-                        return { ...sub, items: its }
-                    }))
-                    return { ...cat, subcategories: subsWithItems }
-                }))
-                
-                setCategories(catsWithSubs)
-            }
-        } catch (error) {
-            console.error("Error fetching section detail:", error)
-        } finally {
-            setLoading(false)
-        }
-    }
+    useEffect(() => {
+        fetchData()
+    }, [fetchData])
 
     const handleAddCategory = async (name: string) => {
         if (!section || !name) return
         try {
             const catSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-            await createCategory(section.id, name, catSlug)
+            await createCategory({ 
+                sectionId: section.id, 
+                name, 
+                slug: catSlug 
+            })
             setIsAddingCategory(false)
             fetchData()
         } catch (error) {
@@ -87,49 +72,66 @@ export default function SectionDetailPage() {
         }
     }
 
-    const handleAddSub = async (categoryId: string, name: string) => {
+    const handleAddSubcategory = async (categoryId: string, name: string) => {
         if (!name) return
         try {
             const subSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-            await createSubcategory(categoryId, name, subSlug)
+            await createSubcategory({ 
+                categoryId, 
+                name, 
+                slug: subSlug 
+            })
             setAddingSubId(null)
             fetchData()
         } catch (error) {
-            console.error("Error adding subcategory:", error)
+            console.error("Error creating subcategory:", error)
         }
     }
 
     const handleAddItem = async (subcategoryId: string, data: any) => {
-        if (!data.title) return
         try {
             const itemSlug = data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-            await createItem({
-                subcategoryId,
-                title: data.title,
-                slug: itemSlug,
-                body: data.body,
-                contentType: data.contentType
+            await createItem({ 
+                ...data, 
+                subcategoryId, 
+                slug: itemSlug 
             })
             setAddingItemId(null)
             fetchData()
         } catch (error) {
-            console.error("Error adding item:", error)
+            console.error("Error creating item:", error)
         }
     }
 
-    const handleReorder = (newOrder: any[]) => {
-        setCategories(newOrder)
-        // Log for colleague to implement persistence
-        console.log("New order to persist:", newOrder.map(c => c.id))
+    const handleReorder = async (newCategories: any[]) => {
+        if (!section) return
+        
+        // Optimistic UI update
+        const previousCategories = section.categories
+        setSection({ ...section, categories: newCategories })
+        
+        try {
+            await reorderCategories(newCategories.map(c => c.id))
+        } catch (error) {
+            console.error("Error reordering categories:", error)
+            // Rollback on error
+            setSection({ ...section, categories: previousCategories })
+        }
     }
 
     const confirmDelete = async () => {
         if (!deletingId) return
         setIsDeleting(true)
         try {
-            // Placeholder: The actual implementation will be in cms actions
-            console.log(`Confirming delete for ${deletingId}`)
+            if (deletingId.type === 'category') {
+                await deleteCategory(deletingId.id)
+            } else if (deletingId.type === 'subcategory') {
+                await deleteSubcategory(deletingId.id)
+            } else if (deletingId.type === 'item') {
+                await deleteItem(deletingId.id)
+            }
             setDeletingId(null)
+            fetchData()
         } catch (error) {
             console.error("Error deleting:", error)
         } finally {
@@ -137,7 +139,7 @@ export default function SectionDetailPage() {
         }
     }
 
-    if (loading) return <div className="p-8 text-center animate-pulse text-slate-400 font-medium">Cargando configuración...</div>
+    if (isLoading) return <div className="p-8 text-center animate-pulse text-slate-400 font-medium">Cargando configuración...</div>
     if (!section) return <div className="p-8 text-center text-red-500 font-bold">Sección no encontrada</div>
 
     return (
@@ -185,19 +187,19 @@ export default function SectionDetailPage() {
                     />
                 )}
 
-                {categories.length > 0 ? (
+                {section.categories.length > 0 ? (
                     <CategoryList 
-                        categories={categories}
+                        categories={section.categories}
                         onReorder={handleReorder}
                         expandedCategoryId={expandedCategory}
                         onToggleExpand={(id) => setExpandedCategory(expandedCategory === id ? null : id)}
                         addingSubId={addingSubId}
                         onStartAddingSub={(id) => setAddingSubId(id)}
                         onCancelAddingSub={() => setAddingSubId(null)}
-                        onAddSub={handleAddSub}
-                        onDeleteCategory={(id) => setDeletingId(id)}
-                        onDeleteSub={(id) => setDeletingId(id)}
-                        onDeleteItem={(id) => setDeletingId(id)}
+                        onAddSub={handleAddSubcategory}
+                        onDeleteCategory={(id) => setDeletingId({ id, type: 'category' })}
+                        onDeleteSub={(id) => setDeletingId({ id, type: 'subcategory' })}
+                        onDeleteItem={(id) => setDeletingId({ id, type: 'item' })}
                         addingItemId={addingItemId}
                         onStartAddingItem={(id) => setAddingItemId(id)}
                         onCancelAddingItem={() => setAddingItemId(null)}

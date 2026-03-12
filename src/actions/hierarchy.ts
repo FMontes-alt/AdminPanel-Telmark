@@ -69,7 +69,7 @@ export async function getSectionHierarchy(sectionSlug: string): Promise<SectionH
         .select()
         .from(categories)
         .where(eq(categories.sectionId, section.id))
-        .orderBy(categories.createdAt)
+        .orderBy(categories.sortOrder, categories.createdAt)
 
     if (sectionCategories.length === 0) {
         return { ...section, categories: [] }
