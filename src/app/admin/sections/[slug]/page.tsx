@@ -4,16 +4,9 @@ import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { 
     Plus, 
-    ChevronRight, 
-    FileText, 
-    Download, 
-    Link as LinkIcon, 
-    Info, 
-    MoreVertical,
-    FolderPlus,
-    FilePlus,
     ArrowLeft,
-    Eye
+    Eye,
+    FolderPlus
 } from "lucide-react"
 import Link from "next/link"
 import { 
@@ -26,6 +19,11 @@ import {
     getItemsBySubcategory
 } from "@/lib/actions/cms"
 
+// Components
+import DeleteModal from "./components/DeleteModal"
+import CategoryForm from "./components/CategoryForm"
+import CategoryList from "./components/CategoryList"
+
 export default function SectionDetailPage() {
     const params = useParams()
     const slug = params?.slug as string
@@ -37,19 +35,14 @@ export default function SectionDetailPage() {
     // UI State
     const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
     const [isAddingCategory, setIsAddingCategory] = useState(false)
-    const [newCategoryName, setNewCategoryName] = useState("")
+
+    // Delete Confirmation State
+    const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
 
     // Modals/Forms State
-    const [isAddingSub, setIsAddingSub] = useState<string | null>(null)
-    const [newSubName, setNewSubName] = useState("")
-    
-    const [isAddingItem, setIsAddingItem] = useState<string | null>(null)
-    const [newItem, setNewItem] = useState({
-        title: "",
-        contentType: "info" as "info" | "document" | "file" | "link",
-        body: "",
-        externalLink: ""
-    })
+    const [addingSubId, setAddingSubId] = useState<string | null>(null)
+    const [addingItemId, setAddingItemId] = useState<string | null>(null)
 
     useEffect(() => {
         if (slug) fetchData()
@@ -82,13 +75,11 @@ export default function SectionDetailPage() {
         }
     }
 
-    const handleAddCategory = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!section || !newCategoryName) return
+    const handleAddCategory = async (name: string) => {
+        if (!section || !name) return
         try {
-            const catSlug = newCategoryName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-            await createCategory(section.id, newCategoryName, catSlug)
-            setNewCategoryName("")
+            const catSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+            await createCategory(section.id, name, catSlug)
             setIsAddingCategory(false)
             fetchData()
         } catch (error) {
@@ -96,35 +87,53 @@ export default function SectionDetailPage() {
         }
     }
 
-    const handleAddSub = async (categoryId: string) => {
-        if (!newSubName) return
+    const handleAddSub = async (categoryId: string, name: string) => {
+        if (!name) return
         try {
-            const subSlug = newSubName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-            await createSubcategory(categoryId, newSubName, subSlug)
-            setNewSubName("")
-            setIsAddingSub(null)
+            const subSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+            await createSubcategory(categoryId, name, subSlug)
+            setAddingSubId(null)
             fetchData()
         } catch (error) {
             console.error("Error adding subcategory:", error)
         }
     }
 
-    const handleAddItem = async (subcategoryId: string) => {
-        if (!newItem.title) return
+    const handleAddItem = async (subcategoryId: string, data: any) => {
+        if (!data.title) return
         try {
-            const itemSlug = newItem.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+            const itemSlug = data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
             await createItem({
                 subcategoryId,
-                title: newItem.title,
+                title: data.title,
                 slug: itemSlug,
-                body: newItem.body,
-                contentType: newItem.contentType
+                body: data.body,
+                contentType: data.contentType
             })
-            setNewItem({ title: "", contentType: "info", body: "", externalLink: "" })
-            setIsAddingItem(null)
+            setAddingItemId(null)
             fetchData()
         } catch (error) {
             console.error("Error adding item:", error)
+        }
+    }
+
+    const handleReorder = (newOrder: any[]) => {
+        setCategories(newOrder)
+        // Log for colleague to implement persistence
+        console.log("New order to persist:", newOrder.map(c => c.id))
+    }
+
+    const confirmDelete = async () => {
+        if (!deletingId) return
+        setIsDeleting(true)
+        try {
+            // Placeholder: The actual implementation will be in cms actions
+            console.log(`Confirming delete for ${deletingId}`)
+            setDeletingId(null)
+        } catch (error) {
+            console.error("Error deleting:", error)
+        } finally {
+            setIsDeleting(false)
         }
     }
 
@@ -151,16 +160,16 @@ export default function SectionDetailPage() {
                         <Link 
                             href={`/dashboard/${section.slug}`}
                             target="_blank"
-                            className="bg-white text-slate-600 border border-slate-200 px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
+                            className="bg-white text-slate-600 border border-slate-200 px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center gap-2 shadow-sm active:scale-95"
                         >
-                            <Eye size={18} />
+                            <Eye size={18} className="text-blue-500" />
                             Vista Pública
                         </Link>
                         <button 
                             onClick={() => setIsAddingCategory(true)}
-                            className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-200"
+                            className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-200 active:scale-95 group"
                         >
-                            <FolderPlus size={18} />
+                            <FolderPlus size={18} className="group-hover:scale-110 transition-transform" />
                             Nueva Categoría
                         </button>
                     </div>
@@ -170,181 +179,30 @@ export default function SectionDetailPage() {
             {/* Content Structure */}
             <div className="space-y-4">
                 {isAddingCategory && (
-                    <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100 animate-in slide-in-from-top-4 duration-500">
-                        <form onSubmit={handleAddCategory} className="flex gap-4">
-                            <input 
-                                autoFocus
-                                value={newCategoryName}
-                                onChange={(e) => setNewCategoryName(e.target.value)}
-                                placeholder="Nombre de la nueva categoría..."
-                                className="flex-1 bg-white border-slate-200 rounded-2xl py-3 px-6 text-sm focus:ring-4 focus:ring-blue-500/10 transition-all border outline-none font-medium shadow-sm"
-                            />
-                            <button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
-                                Crear
-                            </button>
-                            <button type="button" onClick={() => setIsAddingCategory(false)} className="bg-white text-slate-500 px-6 py-3 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all border border-slate-200">
-                                Cancelar
-                            </button>
-                        </form>
-                    </div>
+                    <CategoryForm 
+                        onSubmit={handleAddCategory}
+                        onCancel={() => setIsAddingCategory(false)}
+                    />
                 )}
 
                 {categories.length > 0 ? (
-                    categories.map((category) => (
-                        <div key={category.id} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:border-slate-300">
-                            <div 
-                                className="w-full flex items-center justify-between p-6 hover:bg-slate-50/50 transition-colors group cursor-pointer"
-                                onClick={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${expandedCategory === category.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'}`}>
-                                        <ChevronRight size={20} className={`transition-transform duration-300 ${expandedCategory === category.id ? 'rotate-90' : ''}`} />
-                                    </div>
-                                    <div className="text-left">
-                                        <h3 className="font-bold text-slate-900">{category.name}</h3>
-                                        <p className="text-[10px] text-slate-400 font-bold tracking-widest uppercase mt-0.5">
-                                            {category.subcategories?.length || 0} Subcategorías
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                                    <button 
-                                        onClick={() => setIsAddingSub(category.id)}
-                                        className="p-2 text-slate-400 hover:text-blue-600 transition-colors bg-slate-50 rounded-lg"
-                                    >
-                                        <Plus size={18} />
-                                    </button>
-                                    <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors bg-slate-50 rounded-lg">
-                                        <MoreVertical size={18} />
-                                    </button>
-                                </div>
-                            </div>
-
-                            {expandedCategory === category.id && (
-                                <div className="px-6 pb-6 space-y-4 animate-in fade-in slide-in-from-top-1 duration-300">
-                                    {isAddingSub === category.id && (
-                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex gap-3">
-                                            <input 
-                                                autoFocus
-                                                value={newSubName}
-                                                onChange={e => setNewSubName(e.target.value)}
-                                                placeholder="Nombre de la subcategoría..."
-                                                className="flex-1 bg-white border-slate-200 rounded-xl py-2 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500/20"
-                                            />
-                                            <button 
-                                                onClick={() => handleAddSub(category.id)}
-                                                className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold"
-                                            >
-                                                Añadir
-                                            </button>
-                                            <button onClick={() => setIsAddingSub(null)} className="text-slate-400 text-xs font-bold">Cancelar</button>
-                                        </div>
-                                    )}
-
-                                    {category.subcategories?.length > 0 ? (
-                                        category.subcategories.map((sub: any) => (
-                                            <div key={sub.id} className="bg-slate-50/30 rounded-2xl p-5 border border-slate-100/80">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                                        {sub.name}
-                                                    </h4>
-                                                    <button 
-                                                        onClick={() => setIsAddingItem(sub.id)}
-                                                        className="text-[10px] font-bold text-blue-600 hover:underline uppercase tracking-tight flex items-center gap-1"
-                                                    >
-                                                        <FilePlus size={12} />
-                                                        Añadir Item
-                                                    </button>
-                                                </div>
-
-                                                {isAddingItem === sub.id && (
-                                                    <div className="bg-white p-4 rounded-xl border border-blue-100 mb-4 space-y-3 shadow-sm">
-                                                        <input 
-                                                            value={newItem.title}
-                                                            onChange={e => setNewItem({...newItem, title: e.target.value})}
-                                                            placeholder="Título del contenido..."
-                                                            className="w-full bg-slate-50 border-slate-100 rounded-lg py-2 px-3 text-xs outline-none"
-                                                        />
-                                                        <div className="flex gap-2">
-                                                            {(['info', 'document', 'file', 'link'] as const).map(type => (
-                                                                <button 
-                                                                    key={type}
-                                                                    onClick={() => setNewItem({...newItem, contentType: type})}
-                                                                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${newItem.contentType === type ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}
-                                                                >
-                                                                    {type.toUpperCase()}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                        <textarea 
-                                                            value={newItem.body}
-                                                            onChange={e => setNewItem({...newItem, body: e.target.value})}
-                                                            placeholder="Contenido o descripción..."
-                                                            className="w-full bg-slate-50 border-slate-100 rounded-lg py-2 px-3 text-xs outline-none min-h-[80px]"
-                                                        />
-                                                        <div className="flex justify-end gap-2 pt-2">
-                                                            <button 
-                                                                onClick={() => setIsAddingItem(null)}
-                                                                className="text-[10px] font-bold text-slate-400"
-                                                            >
-                                                                Cancelar
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => handleAddItem(sub.id)}
-                                                                className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-[10px] font-bold"
-                                                            >
-                                                                Guardar Item
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                <div className="space-y-2">
-                                                    {sub.items?.length > 0 ? (
-                                                        sub.items.map((item: any) => (
-                                                            <div key={item.id} className="bg-white p-3 rounded-xl border border-slate-200/60 flex items-center justify-between hover:border-blue-200 hover:shadow-sm transition-all cursor-pointer group/item">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="p-1.5 rounded-lg bg-slate-50 text-slate-400 group-hover/item:text-blue-500 transition-colors">
-                                                                        {item.contentType === 'file' && <Download size={14} />}
-                                                                        {item.contentType === 'link' && <LinkIcon size={14} />}
-                                                                        {item.contentType === 'document' && <FileText size={14} />}
-                                                                        {item.contentType === 'info' && <Info size={14} />}
-                                                                    </div>
-                                                                    <span className="text-xs font-semibold text-slate-700">{item.title}</span>
-                                                                </div>
-                                                                <div className="flex items-center gap-4">
-                                                                    <span className="text-[9px] font-bold text-slate-300 uppercase tracking-tighter">{item.contentType}</span>
-                                                                    <MoreVertical size={12} className="text-slate-300 opacity-0 group-hover/item:opacity-100" />
-                                                                </div>
-                                                            </div>
-                                                        ))
-                                                    ) : (
-                                                        <div className="py-6 text-center">
-                                                            <p className="text-[10px] text-slate-300 italic">No hay contenidos todavía</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="py-12 text-center border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/20">
-                                            <div className="max-w-[200px] mx-auto space-y-3">
-                                                <p className="text-[11px] text-slate-400 font-medium">Empieza añadiendo subcategorías a {category.name}</p>
-                                                <button 
-                                                    onClick={() => setIsAddingSub(category.id)}
-                                                    className="inline-flex items-center gap-2 text-blue-600 text-[10px] font-bold uppercase tracking-wider hover:underline"
-                                                >
-                                                    <Plus size={14} />
-                                                    Añadir Primera
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    ))
+                    <CategoryList 
+                        categories={categories}
+                        onReorder={handleReorder}
+                        expandedCategoryId={expandedCategory}
+                        onToggleExpand={(id) => setExpandedCategory(expandedCategory === id ? null : id)}
+                        addingSubId={addingSubId}
+                        onStartAddingSub={(id) => setAddingSubId(id)}
+                        onCancelAddingSub={() => setAddingSubId(null)}
+                        onAddSub={handleAddSub}
+                        onDeleteCategory={(id) => setDeletingId(id)}
+                        onDeleteSub={(id) => setDeletingId(id)}
+                        onDeleteItem={(id) => setDeletingId(id)}
+                        addingItemId={addingItemId}
+                        onStartAddingItem={(id) => setAddingItemId(id)}
+                        onCancelAddingItem={() => setAddingItemId(null)}
+                        onAddItem={handleAddItem}
+                    />
                 ) : (
                     <div className="py-20 text-center bg-white rounded-[40px] border border-slate-200 shadow-sm">
                         <div className="max-w-sm mx-auto space-y-6">
@@ -365,6 +223,13 @@ export default function SectionDetailPage() {
                     </div>
                 )}
             </div>
+
+            <DeleteModal 
+                isOpen={!!deletingId}
+                onClose={() => setDeletingId(null)}
+                onConfirm={confirmDelete}
+                isDeleting={isDeleting}
+            />
         </div>
     )
 }
