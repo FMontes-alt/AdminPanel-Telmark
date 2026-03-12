@@ -25,7 +25,7 @@ export async function middleware(request: NextRequest) {
     response = await withSecurity(request, response)
 
     // 4. Capa de Seguridad (RBAC)
-    response = await withAuth(request, response)
+    // TODO VOLVER A PONER response = await withAuth(request, response)
 
     // 5. Inyectar Trace ID final
     response.headers.set('x-trace-id', traceId);
