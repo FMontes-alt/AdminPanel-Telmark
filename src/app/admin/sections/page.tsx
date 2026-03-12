@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { Plus, Trash2, Edit2, ExternalLink } from "lucide-react"
-import { getSections, createSection } from "@/lib/actions/cms"
+import { getSections, createSection, deleteSection } from "@/actions/sections"
 
 export default function SectionsPage() {
     const [sections, setSections] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [isAdding, setIsAdding] = useState(false)
+    const [isDeleting, setIsDeleting] = useState<string | null>(null)
     const [newName, setNewName] = useState("")
     const [newSlug, setNewSlug] = useState("")
 
@@ -30,13 +31,26 @@ export default function SectionsPage() {
     const handleAddSection = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
-            await createSection(newName, newSlug)
+            await createSection({ name: newName, slug: newSlug })
             setNewName("")
             setNewSlug("")
             setIsAdding(false)
             fetchSections()
         } catch (error) {
             console.error("Error adding section:", error)
+        }
+    }
+
+    const handleDeleteSection = async (id: string) => {
+        if (!confirm("¿Estás seguro de eliminar esta sección y todo su contenido?")) return
+        setIsDeleting(id)
+        try {
+            await deleteSection(id)
+            fetchSections()
+        } catch (error) {
+            console.error("Error deleting section:", error)
+        } finally {
+            setIsDeleting(null)
         }
     }
 
@@ -113,8 +127,12 @@ export default function SectionsPage() {
                                     <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                                         <Edit2 size={16} />
                                     </button>
-                                    <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                        <Trash2 size={16} />
+                                    <button 
+                                        onClick={() => handleDeleteSection(section.id)}
+                                        disabled={isDeleting === section.id}
+                                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                                    >
+                                        <Trash2 size={16} className={isDeleting === section.id ? "animate-spin" : ""} />
                                     </button>
                                 </div>
                             </div>
