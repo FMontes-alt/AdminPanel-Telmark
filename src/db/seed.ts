@@ -44,7 +44,6 @@ const client = postgres(connectionString, { max: 1 });
 const db = drizzle(client, { schema });
 
 // ─── Función principal ──────────────────────────────────────────────────
-
 async function seed() {
     console.log("Iniciando seeding de la base de datos...\n");
 
@@ -153,3 +152,4 @@ seed()
         console.error("\nError durante el seeding:", error);
         process.exit(1);
     });
+
