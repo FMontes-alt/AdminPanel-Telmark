@@ -86,7 +86,7 @@ export function Sidebar() {
         {
             group: "Central",
             items: [
-                { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+                { name: 'Inicio', href: '/admin', icon: LayoutDashboard },
                 { name: 'Alertas', href: '/admin/alerts', icon: ShieldAlert },
             ]
         },
@@ -105,7 +105,7 @@ export function Sidebar() {
         {
             group: "Operativa",
             items: [
-                { name: 'Agentes', href: '/admin/agents', icon: Users },
+                { name: 'Empleados', href: '/admin/agents', icon: Users },
                 { name: 'Monitoreo', href: '/admin/monitoring', icon: Eye },
                 { name: 'Analíticas', href: '/admin/analytics', icon: BarChart3 },
             ]

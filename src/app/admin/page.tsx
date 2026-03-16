@@ -42,7 +42,7 @@ export default async function AdminDashboard() {
                 <div className="absolute top-0 right-0 -mr-12 -mt-12 w-64 h-64 bg-blue-50/50 rounded-full blur-3xl group-hover:bg-blue-100/50 transition-colors duration-700" />
 
                 <div className="relative z-10">
-                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Panel de Control 👋</h2>
+                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Panel de Control</h2>
                     <p className="text-slate-500 text-sm mt-1">Estado actual de la plataforma en tiempo real.</p>
                 </div>
 
@@ -51,7 +51,7 @@ export default async function AdminDashboard() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <input
                             type="text"
-                            placeholder="Buscar en el catálogo..."
+                            placeholder="Buscar contenido..."
                             className="w-full bg-slate-50 border-slate-100 rounded-2xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500/20 transition-all border outline-none font-medium"
                         />
                     </div>
