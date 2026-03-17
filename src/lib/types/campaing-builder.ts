@@ -1,5 +1,5 @@
 // 1.Definicion de los tipos de cajas
-export type WidgetType = 'video' | 'text' | 'link' | 'pdf' | 'stat'; 
+export type WidgetType = 'video' | 'text' | 'link' | 'pdf' | 'stat' | 'image'; 
 
 // 2.Interfaz base de cualquier widget (posición en la cuadricula)
 export interface BaseWidget{
@@ -29,10 +29,50 @@ export interface TextWidgetData extends BaseWidget{
     };
 }
 
+export interface LinkWidgetData extends BaseWidget{
+    type: 'link';
+    data: {
+        url: string; 
+        label: string;
+        icon?: string;
+    }
+}
+
+export interface PdfWidgetData extends BaseWidget{
+    type: 'pdf';
+    data: {
+        fileUrl: string; 
+        fileName: string;
+    }
+}
+
+export interface StatWidgetData extends BaseWidget{
+    type: 'stat';
+    data: {
+        label: string; 
+        value: string;
+        trend?: number;
+    }
+}
+
+export interface ImageWidgetData extends BaseWidget{
+    type: 'image';
+    data: {
+        url: string;
+        alt?: string;
+    }
+}
+
 // TODO Añadir mas componete pdf, enlace stats... 
 
 // 4. Tipo principal que lo engloba a todos
-export type CampaignWidget = VideoWidgetData | TextWidgetData;
+export type CampaignWidget =
+    | VideoWidgetData
+    | TextWidgetData
+    | LinkWidgetData
+    | PdfWidgetData
+    | StatWidgetData
+    | ImageWidgetData;
 
 // 5.Objeto completo que gardaremos en la base de datos JSON
 export interface CampaignLayout{
