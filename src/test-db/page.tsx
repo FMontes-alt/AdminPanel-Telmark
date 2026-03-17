@@ -19,7 +19,7 @@ export default async function TestPage() {
             </pre>
             {sections?.length === 0 && (
                 <p className="mt-4 text-orange-500 italic">
-                    La conexión funciona, pero la tabla 'sections' está vacía.
+                    La conexión funciona, pero la tabla &apos;sections&apos; está vacía.
                     ¡Normal, aún no hemos metido datos!
                 </p>
             )}

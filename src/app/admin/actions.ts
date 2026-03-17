@@ -19,7 +19,7 @@ export async function logout() {
                         cookiesToSet.forEach(({ name, value, options }) =>
                             cookieStore.set(name, value, options)
                         )
-                    } catch (error) {
+                    } catch {
                         // Ignorado en server components
                     }
                 },

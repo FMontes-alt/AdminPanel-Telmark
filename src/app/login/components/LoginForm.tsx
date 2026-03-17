@@ -1,9 +1,8 @@
 "use client"
 
 import { motion, Variants } from "framer-motion"
-import { Loader2, AlertCircle, Eye, EyeOff } from "lucide-react"
-import { useForm, UseFormReturn } from "react-hook-form"
-import * as z from "zod"
+import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react"
+import { UseFormReturn } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -16,15 +15,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
-const formSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(6),
-})
-
-type FormValues = z.infer<typeof formSchema>
+type FormValues = {
+    email: string
+    password: string
+}
 
 interface LoginFormProps {
-    form: any // UseFormReturn<FormValues>
+    form: UseFormReturn<FormValues>
     onSubmit: (values: FormValues) => Promise<void>
     isLoading: boolean
     globalError: string | null
