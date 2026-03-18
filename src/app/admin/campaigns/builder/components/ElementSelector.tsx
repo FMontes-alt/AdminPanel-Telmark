@@ -25,18 +25,18 @@ interface ElementSelectorProps {
 
 export function ElementSelector({ onAddElement }: ElementSelectorProps) {
     return (
-        <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm h-fit sticky top-24">
-            <h3 className="text-[10px] font-bold text-slate-400 mb-6 uppercase tracking-[0.2em]">
+        <div className="bg-white border border-slate-200 rounded-none p-2 shadow-sm h-full sticky top-0">
+            <h3 className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-[0.2em]">
                 Elementos Disponibles
             </h3>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2">
                 {ELEMENTS.map((element) => (
                     <button
                         key={element.type}
                         onClick={() => onAddElement(element.type)}
-                        className="flex items-center gap-4 p-3.5 rounded-2xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all group w-full text-left"
+                        className="flex items-center gap-3 p-1.5 rounded-none border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all group w-full text-left"
                     >
-                        <div className={`${element.color} text-white p-2.5 rounded-xl shadow-sm transition-all group-hover:scale-110 group-hover:shadow-md`}>
+                        <div className={`${element.color} text-white p-2.5 rounded-none shadow-sm transition-all group-hover:scale-110 group-hover:shadow-md`}>
                             {element.icon}
                         </div>
                         <div className="flex-1">

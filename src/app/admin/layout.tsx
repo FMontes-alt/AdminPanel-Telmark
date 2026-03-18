@@ -23,8 +23,8 @@ export default function AdminLayout({
         <AdminHeader />
 
         {/* Viewport del Contenido */}
-        <main className="p-4 md:p-8 w-full">
-            <div className="max-w-7xl mx-auto">
+        <main className="p-0 w-full overflow-hidden">
+            <div className="w-full">
                 {children}
             </div>
         </main>
