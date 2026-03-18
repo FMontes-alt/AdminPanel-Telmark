@@ -20,9 +20,14 @@ import {
     BellRing,
     ChevronDown,
     PlusCircle,
-    FolderTree
+    FolderTree,
+    PanelLeftClose,
+    PanelRightOpen,
+    Menu
 } from "lucide-react"
 import { getSections } from "@/lib/actions/cms"
+import { useSidebar } from "./SidebarProvider"
+import { Button } from "@/components/ui/button"
 
 interface NavItem {
     name: string;
@@ -54,6 +59,7 @@ const getColorForSection = (name: string) => {
 
 export function Sidebar() {
     const pathname = usePathname()
+    const { isCollapsed, toggleSidebar } = useSidebar()
     const [collapsedSections, setCollapsedSections] = useState<string[]>([])
     const [dbSections, setDbSections] = useState<{name: string, slug: string}[]>([])
 
@@ -93,7 +99,7 @@ export function Sidebar() {
         {
             group: "Contenidos",
             items: [
-                { name: 'Gestionar Secciones', href: '/admin/sections', icon: PlusCircle },
+                { name: 'Secciones', href: '/admin/sections', icon: PlusCircle },
                 ...dbSections.map(s => ({
                     name: s.name,
                     href: `/admin/sections/${s.slug}`,
@@ -127,11 +133,13 @@ export function Sidebar() {
     ]
 
     return (
-        <aside className="hidden lg:flex w-72 flex-col bg-white border-r border-slate-200 sticky top-0 h-screen z-20 text-slate-600">
-            {/* Logo Section */}
-            <div className="p-6 border-b border-slate-200 bg-white">
-                <Link href="/admin" className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white p-1.5 flex items-center justify-center shadow-lg shadow-blue-500/10 border border-slate-700">
+        <aside className={`transition-all duration-300 ease-in-out hidden lg:flex flex-col bg-white border-r border-slate-200 sticky top-0 h-screen z-20 text-slate-600 ${
+            isCollapsed ? 'w-20' : 'w-72'
+        }`}>
+            {/* Logo Section & Toggle */}
+            <div className={`border-b border-slate-200 bg-white min-h-[80px] flex items-center transition-all duration-300 ${isCollapsed ? 'p-4 justify-center flex-col gap-4' : 'p-6 justify-between'}`}>
+                <Link href="/admin" className="flex items-center gap-4 min-w-0">
+                    <div className="w-10 h-10 min-w-[40px] rounded-xl bg-white p-1.5 flex items-center justify-center shadow-lg shadow-blue-500/10 border border-slate-700">
                         <Image 
                             src="/cropped-Logo_ColectivoPrime-284x284.png" 
                             alt="Telmark Logo" 
@@ -140,49 +148,66 @@ export function Sidebar() {
                             className="object-contain"
                         />
                     </div>
-                    <div>
-                        <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                            Telmark <span className="text-blue-500">Center</span>
-                        </h2>
-                        <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase">Control Panel</p>
-                    </div>
+                    {!isCollapsed && (
+                        <div className="truncate">
+                            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                                Telmark <span className="text-blue-500">Center</span>
+                            </h2>
+                            <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase">Control Panel</p>
+                        </div>
+                    )}
                 </Link>
+
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={toggleSidebar}
+                    className={`text-slate-400 hover:text-blue-600 h-8 w-8 transition-all ${isCollapsed ? 'mt-0' : ''}`}
+                >
+                    {isCollapsed ? <PanelRightOpen size={18} /> : <PanelLeftClose size={18} />}
+                </Button>
             </div>
 
+
             {/* Navigation Section */}
-            <nav className="flex-1 p-6 space-y-8 overflow-y-auto custom-scrollbar">
+            <nav className={`flex-1 space-y-8 overflow-y-auto custom-scrollbar px-4 pt-6 pb-10 ${isCollapsed ? 'overflow-x-hidden' : 'px-6'}`}>
                 {navSections.map((group) => {
-                    const isCollapsed = collapsedSections.includes(group.group)
+                    const isCollapsedSec = collapsedSections.includes(group.group)
                     
                     return (
                         <div key={group.group} className="space-y-4">
-                            <button 
-                                onClick={() => toggleSection(group.group)}
-                                className="w-full flex items-center justify-between px-3 group/btn"
-                            >
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] transition-colors group-hover/btn:text-slate-600">
-                                    {group.group}
-                                </p>
-                                <ChevronDown 
-                                    size={12} 
-                                    className={`text-slate-400 transition-transform duration-200 group-hover/btn:text-slate-600 ${isCollapsed ? '-rotate-90' : ''}`}
-                                />
-                            </button>
-                            
                             {!isCollapsed && (
+                                <button 
+                                    onClick={() => toggleSection(group.group)}
+                                    className="w-full flex items-center justify-between px-3 group/btn"
+                                >
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] transition-colors group-hover/btn:text-slate-600">
+                                        {group.group}
+                                    </p>
+                                    <ChevronDown 
+                                        size={12} 
+                                        className={`text-slate-400 transition-transform duration-200 group-hover/btn:text-slate-600 ${isCollapsedSec ? '-rotate-90' : ''}`}
+                                    />
+                                </button>
+                            )}
+                            
+                            {(!isCollapsedSec || isCollapsed) && (
                                 <div className="space-y-1.5 transition-all duration-300">
                                     {group.items.map((item) => (
                                         <Link 
                                             key={item.name}
                                             href={item.href}
-                                            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all group ${
+                                            title={isCollapsed ? item.name : undefined}
+                                            className={`flex items-center rounded-xl text-sm font-semibold transition-all group ${
+                                                isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-4 py-2.5'
+                                            } ${
                                                 isActive(item.href) 
                                                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' 
                                                 : 'hover:bg-slate-100 hover:text-slate-900'
                                             }`}
                                         >
                                             <item.icon size={18} className={isActive(item.href) ? 'text-white' : item.iconColor || 'text-slate-400 group-hover:text-blue-600'} />
-                                            {item.name}
+                                            {!isCollapsed && <span className="truncate">{item.name}</span>}
                                         </Link>
                                     ))}
                                 </div>
@@ -193,19 +218,22 @@ export function Sidebar() {
             </nav>
 
             {/* User Access Footer */}
-            <div className="p-6 border-t border-slate-200 bg-slate-50/50">
-                <div className="flex items-center gap-3 px-2 py-1">
-                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">
+            <div className={`p-4 border-t border-slate-200 bg-slate-50/50 ${isCollapsed ? 'flex justify-center' : 'px-6'}`}>
+                <div className={`flex items-center gap-3 px-2 py-1 ${isCollapsed ? 'justify-center' : ''}`}>
+                    <div className="w-8 h-8 min-w-[32px] rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                         F
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-slate-900 truncate">Administrador</p>
-                        <p className="text-[10px] text-slate-400 truncate">Fran Montes</p>
-                    </div>
-                    <Settings size={14} className="text-slate-400 hover:text-blue-600 cursor-pointer" />
+                    {!isCollapsed && (
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-slate-900 truncate">Administrador</p>
+                            <p className="text-[10px] text-slate-400 truncate">Fran Montes</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </aside>
     )
 }
+
+
 
