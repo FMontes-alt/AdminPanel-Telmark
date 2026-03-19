@@ -20,12 +20,12 @@ export function CampaignsBuilder() {
 
     const addWidget = (type: WidgetType) => {
         const newWidget: CampaignWidget = {
-            id: Math.random().toString(36).substr(2, 9),
+            id: Math.random().toString(36).slice(2,11),
             type,
-            x: (widgets.length * 2) % 12,
-            y: Infinity, // Poner al final
-            w: type === 'stat' ? 3 : type === 'video' ? 6 : 4,
-            h: type === 'stat' ? 3 : type === 'video' ? 6 : 4,
+            x: (widgets.length * 4) % 24,
+            y: Infinity, 
+            w: type === 'stat' ? 6 : type === 'video' ? 12 : 8,
+            h: type === 'stat' ? 6 : type === 'video' ? 12 : 8,
             data: getDefaultData(type)
         };
         setWidgets([...widgets, newWidget]);
