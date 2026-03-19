@@ -76,7 +76,7 @@ export const items = pgTable("items", {
     body: text("body"),
     filePath: text("file_path"),
     externalLink: text("external_link"),
-    contentType: text("content_type", { enum: ["info", "document", "file", "link"] }).default("info"),
+    contentType: text("content_type", { enum: ["info", "document", "file", "link", "video"] }).default("info"),
     attributes: jsonb("attributes").default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [

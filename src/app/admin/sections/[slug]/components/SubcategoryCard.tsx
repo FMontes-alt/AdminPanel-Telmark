@@ -12,6 +12,8 @@ interface SubcategoryCardProps {
     onAddItem: (data: any) => Promise<void>
     onDeleteSub: () => void
     onDeleteItem: (id: string) => void
+    sectionSlug: string
+    categorySlug: string
 }
 
 export default function SubcategoryCard({ 
@@ -21,7 +23,9 @@ export default function SubcategoryCard({
     onCancelAddingItem, 
     onAddItem,
     onDeleteSub,
-    onDeleteItem
+    onDeleteItem,
+    sectionSlug,
+    categorySlug
 }: SubcategoryCardProps) {
     return (
         <div className="bg-slate-50/40 rounded-[28px] p-6 border border-slate-100/80 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 group/sub">
@@ -51,6 +55,8 @@ export default function SubcategoryCard({
                 <ItemForm 
                     onSubmit={onAddItem}
                     onCancel={onCancelAddingItem}
+                    sectionSlug={sectionSlug}
+                    categorySlug={categorySlug}
                 />
             )}
 

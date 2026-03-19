@@ -11,7 +11,8 @@ import {
     ArrowLeft,
     Search,
     LayoutGrid,
-    Target
+    Target,
+    Video
 } from "lucide-react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
@@ -21,6 +22,7 @@ import {
     getSubcategoriesByCategory,
     getItemsBySubcategory
 } from "@/lib/actions/cms"
+import { getSignedUrlAction } from "@/actions/storage"
 
 export default function DashboardSectionPage() {
     const { sectionSlug } = useParams()
@@ -61,6 +63,41 @@ export default function DashboardSectionPage() {
             console.error("Error fetching dashboard content:", error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleItemClick = async (item: any) => {
+        if (item.externalLink) {
+            let url = item.externalLink;
+            
+            // Si es un iframe, extraemos el src
+            if (url.trim().startsWith('<iframe')) {
+                const match = url.match(/src=["']([^"']+)["']/);
+                if (match && match[1]) {
+                    url = match[1];
+                } else {
+                    alert("No se pudo extraer la URL del código embed")
+                    return
+                }
+            }
+
+            window.open(url, '_blank')
+            return
+        }
+
+        if (item.filePath) {
+            try {
+                const signedUrl = await getSignedUrlAction(item.filePath)
+                if (signedUrl) {
+                    window.open(signedUrl, '_blank')
+                } else {
+                    alert("No se pudo generar el enlace de visualización")
+                }
+            } catch (error) {
+                console.error(error)
+                alert("Error al intentar abrir el archivo")
+            }
+            return
         }
     }
 
@@ -191,6 +228,7 @@ export default function DashboardSectionPage() {
                                                     <motion.div 
                                                         whileHover={{ y: -4 }}
                                                         key={item.id} 
+                                                        onClick={() => handleItemClick(item)}
                                                         className="group bg-white border border-slate-100 p-5 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all cursor-pointer flex flex-col justify-between min-h-[140px]"
                                                     >
                                                         <div className="space-y-3">
@@ -199,6 +237,7 @@ export default function DashboardSectionPage() {
                                                                     {item.contentType === 'file' && <Download size={20} />}
                                                                     {item.contentType === 'link' && <LinkIcon size={20} />}
                                                                     {item.contentType === 'document' && <FileText size={20} />}
+                                                                    {item.contentType === 'video' && <Video size={20} />}
                                                                     {item.contentType === 'info' && <Info size={20} />}
                                                                 </div>
                                                                 <ChevronRight size={16} className="text-slate-200 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-all" />

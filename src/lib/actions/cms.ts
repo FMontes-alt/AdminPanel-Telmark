@@ -64,7 +64,8 @@ export async function createItem(data: {
     body?: string;
     filePath?: string;
     externalLink?: string;
-    contentType?: "info" | "document" | "file" | "link";
+    contentType?: "info" | "document" | "file" | "link" | "video";
+    attributes?: any;
 }) {
     await db.insert(items).values(data)
     revalidatePath("/admin")
