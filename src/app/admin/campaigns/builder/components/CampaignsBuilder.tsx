@@ -11,6 +11,7 @@ import { BuilderCanvas } from "./Canvas/BuilderCanvas"
 export function CampaignsBuilder() {
     const [widgets, setWidgets] = useState<CampaignWidget[]>([])
     const [isSaving, setIsSaving] = useState(false)
+    const [isPublishing, setIsPublishing] = useState(false)
 
     // Cargar datos iniciales si existen
     useEffect(() => {
@@ -69,16 +70,28 @@ export function CampaignsBuilder() {
 
     const handleSave = async () => {
         setIsSaving(true);
-        // Simular guardado
+        // TODO hacer el guardado 
         setTimeout(() => setIsSaving(false), 1000);
     };
+
+    const handlePublish = async () => {
+        setIsPublishing(true);
+        console.log("Publcado campaña para los trabajadores...", widgets)
+        // TODO meter la logica de Supabase
+        setTimeout(() => {
+            setIsPublishing(false);
+            alert("Campaña publicada con exito");
+        }, 1500)
+    }
 
     return (
         <div className="flex flex-col min-h-screen bg-white overflow-hidden">
             <BuilderHeader
                 widgetsCount={widgets.length}
                 isSaving={isSaving}
+                isPublishing = {isPublishing}
                 onSave={handleSave}
+                onPublish= {handlePublish}
             />
 
             <div className="flex flex-1 overflow-hidden">
