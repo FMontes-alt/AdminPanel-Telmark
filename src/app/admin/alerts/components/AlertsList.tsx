@@ -1,0 +1,54 @@
+"use client"
+
+import { Zap, Loader2 } from "lucide-react"
+import { AlertItem } from "./AlertItem"
+import { AnimatePresence } from "framer-motion"
+
+interface AlertsListProps {
+    alerts: any[]
+    loading: boolean
+    onMarkAsRead: (id: string) => void
+}
+
+export function AlertsList({ alerts, loading, onMarkAsRead }: AlertsListProps) {
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-32 space-y-6">
+                <div className="relative">
+                    <div className="w-16 h-16 rounded-full border-4 border-slate-100 border-t-blue-600 animate-spin"></div>
+                    <Loader2 className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={24} />
+                </div>
+                <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Cargando eventos...</p>
+            </div>
+        )
+    }
+
+    if (alerts.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-32 space-y-8 bg-white/50 backdrop-blur-sm rounded-[50px] border border-dashed border-slate-200">
+                <div className="w-24 h-24 rounded-[35px] bg-slate-50 flex items-center justify-center text-slate-200">
+                    <Zap size={64} strokeWidth={1} />
+                </div>
+                <div className="text-center space-y-2">
+                    <h3 className="text-2xl font-bold text-slate-900">Todo bajo control</h3>
+                    <p className="text-slate-400 text-sm font-medium">No hay eventos recientes que coincidan con tu búsqueda.</p>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="grid grid-cols-1 gap-4">
+            <AnimatePresence mode="popLayout">
+                {alerts.map((alert, index) => (
+                    <AlertItem 
+                        key={alert.id}
+                        alert={alert}
+                        index={index}
+                        onMarkAsRead={onMarkAsRead}
+                    />
+                ))}
+            </AnimatePresence>
+        </div>
+    )
+}

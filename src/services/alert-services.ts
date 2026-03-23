@@ -6,7 +6,7 @@ export const AlertService = {
         createAlert({
             type: "create",
             severity: "info",
-            message: `✨ Nueva sección creada: ${name}`,
+            message: `Nueva sección creada: ${name}`,
             targetName: name,
             targetId: id
         }),

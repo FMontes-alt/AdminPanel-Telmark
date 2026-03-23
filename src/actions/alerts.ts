@@ -29,3 +29,13 @@ export async function getAlerts() {
         .orderBy(desc(alerts.createdAt))
         .limit(50)
 }
+
+export async function markAlertAsRead(alertId: string) {
+    await db
+        .update(alerts)
+        .set({ isRead: new Date() })
+        .where(eq(alerts.id, alertId))
+    
+    revalidatePath("/admin/alerts")
+    return { success: true }
+}
