@@ -15,13 +15,16 @@ interface BuilderCanvasProps {
     onLayoutChange: (layout: any) => void;
     onDeleteWidget: (id: string) => void;
     onUpdateWidget: (id: string, data: any) => void;
+    onAdjustWidget: (id: string) => void; 
 }
 
 export function BuilderCanvas({
     widgets,
     onLayoutChange,
     onDeleteWidget,
-    onUpdateWidget
+    onUpdateWidget,
+    onAdjustWidget
+    
 }: BuilderCanvasProps) {
     return (
         <main className="flex-1 bg-[#f1f5f9] relative overflow-y-auto">
@@ -30,6 +33,7 @@ export function BuilderCanvas({
                 style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
             <ResponsiveGridLayout
+                key={`grid-${widgets.map(w => `${w.id}-${w.isLocked}-${w.h}`).join('-')}`}
                 className="layout"
                 breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                 cols={{ lg: 24, md: 24, sm: 12, xs: 8, xxs: 4 }}
@@ -37,16 +41,24 @@ export function BuilderCanvas({
                 draggableHandle=".drag-handle"
                 margin={[8, 8]}
                 onLayoutChange={onLayoutChange}
+                layouts={{
+                    lg: widgets.map(w => ({
+                        i: w.id,
+                        x: w.x,
+                        y: w.y,
+                        w: w.w,
+                        h: w.h,
+                        static: w.isLocked
+                    }))
+                }}
             >
                 {widgets.map((widget) => (
-                    <div
-                        key={widget.id}
-                        data-grid={{ x: widget.x, y: widget.y, w: widget.w, h: widget.h }}
-                    >
+                    <div key={widget.id}>
                         <CanvasItem
                             widget={widget}
                             onDelete={onDeleteWidget}
                             onUpdate={onUpdateWidget}
+                            onAdjust= {onAdjustWidget}
                         />
                     </div>
                 ))}

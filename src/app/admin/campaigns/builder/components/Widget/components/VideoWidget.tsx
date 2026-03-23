@@ -6,13 +6,14 @@ import { Video, Youtube } from "lucide-react";
 interface VideoWidgetProps {
     widget: CampaignWidget;
     onUpdate: (id: string, data: any) => void;
+    isLocked?: boolean;
 }
 
-export function VideoWidget({ widget, onUpdate }: VideoWidgetProps) {
+export function VideoWidget({ widget, onUpdate, isLocked }: VideoWidgetProps) {
     const data = widget.data as { url: string };
 
     return (
-        <div className="h-full w-full p-2 flex flex-col gap-1">
+        <div className={`flex flex-col gap-1 ${isLocked ? 'p-0' : 'p-2'}`}>
             <div className="relative group/input">
                 <div className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none transition-colors group-focus-within/input:text-blue-500">
                     <Video size={14} />
@@ -20,6 +21,7 @@ export function VideoWidget({ widget, onUpdate }: VideoWidgetProps) {
                 <input
                     type="text"
                     value={data.url}
+                    readOnly={isLocked}
                     onChange={(e) => onUpdate(widget.id, { ...data, url: e.target.value })}
                     placeholder="URL VIDEO..."
                     className="w-full bg-slate-50 border border-slate-100 rounded-none py-1.5 px-8 text-[9px] font-bold focus:ring-0 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300 uppercase tracking-widest"

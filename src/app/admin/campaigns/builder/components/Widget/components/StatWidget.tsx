@@ -6,17 +6,19 @@ import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 interface StatWidgetProps {
     widget: CampaignWidget;
     onUpdate: (id: string, data: any) => void;
+    isLocked?: boolean;
 }
 
-export function StatWidget({ widget, onUpdate }: StatWidgetProps) {
+export function StatWidget({ widget, onUpdate, isLocked }: StatWidgetProps) {
     const data = widget.data as { label: string; value: string; trend: number };
 
     return (
-        <div className="h-full w-full p-2 flex flex-col justify-between">
+        <div className={`flex flex-col justify-between ${isLocked ? 'p-0' : 'p-2'}`}>
             <div className="space-y-0">
                 <input
                     type="text"
                     value={data.label}
+                    readOnly={isLocked}
                     onChange={(e) => onUpdate(widget.id, { ...data, label: e.target.value })}
                     className="w-full bg-transparent border-none focus:ring-0 text-[8px] font-black text-slate-400 uppercase tracking-widest p-0 placeholder:text-slate-200"
                     placeholder="TITULO"
@@ -25,6 +27,7 @@ export function StatWidget({ widget, onUpdate }: StatWidgetProps) {
                     <input
                         type="text"
                         value={data.value}
+                        readOnly={isLocked}
                         onChange={(e) => onUpdate(widget.id, { ...data, value: e.target.value })}
                         className="bg-transparent border-none focus:ring-0 text-xl font-black text-slate-900 p-0 w-16 placeholder:text-slate-100 uppercase"
                         placeholder="0"

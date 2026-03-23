@@ -6,9 +6,10 @@ import { FileText, Download, Eye } from "lucide-react";
 interface PdfWidgetProps {
     widget: CampaignWidget;
     onUpdate: (id: string, data: any) => void;
+    isLocked?: boolean;
 }
 
-export function PdfWidget({ widget, onUpdate }: PdfWidgetProps) {
+export function PdfWidget({ widget, onUpdate, isLocked }: PdfWidgetProps) {
     const data = widget.data as { fileUrl: string; fileName: string };
 
     return (
@@ -21,6 +22,7 @@ export function PdfWidget({ widget, onUpdate }: PdfWidgetProps) {
                 <input
                     type="text"
                     value={data.fileName}
+                    readOnly={isLocked}
                     onChange={(e) => onUpdate(widget.id, { ...data, fileName: e.target.value })}
                     className="w-full bg-transparent border-none focus:ring-0 text-center text-[9px] font-black text-slate-800 p-0 placeholder:text-slate-200 uppercase"
                     placeholder="ARCHIVO..."

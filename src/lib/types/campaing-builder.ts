@@ -9,6 +9,7 @@ export interface BaseWidget{
     y: number;
     w: number;
     h: number;
+    isLocked?: boolean;
 }
 
 
@@ -26,6 +27,7 @@ export interface TextWidgetData extends BaseWidget{
     type: 'text';
     data: {
         content: string;
+        variant?: 'h1' | 'h2' | 'p'; 
     };
 }
 

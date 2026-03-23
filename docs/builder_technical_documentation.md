@@ -38,14 +38,19 @@ export interface CampaignWidget extends BaseWidget {
 }
 ```
 
-## 3. Sistema de Layout (Fluid Grid)
+## 3. Sistema de Layout y Redimensionamiento (Fluid Grid)
 
-El lienzo utiliza un sistema de rejilla densa para maximizar la libertad de diseño:
+El lienzo utiliza un sistema de rejilla densa gestionado por `react-grid-layout`:
 - **Columnas**: 24 (Horizontal).
 - **Altura de Fila**: 20px (Vertical).
-- **Márgenes**: 8px (Separación interna).
+- **Redimensionamiento**: Cada bloque hereda la capacidad de cambiar su ancho (`w`) y alto (`h`) dinámicamente, con tiradores visuales integrados en el `CanvasItem`.
 
-## 4. Flujo de Persistencia
+## 4. Evolución del Widget de Texto
+
+Para permitir jerarquía visual (Títulos, Subtítulos, etc.), el `TextWidget` evoluciona de un simple `textarea` a un sistema de variantes:
+- **H1 (Título)**: Fuente Black, Tracking Tighter, Tamaño XL.
+- **H2 (Subtítulo)**: Fuente Bold, Tamaño L.
+- **P (Cuerpo)**: Fuente Medium, Interlineado amplio.
 
 1. **Guardar Borrador**: Almacena el estado actual en `localStorage` o tabla `drafts` de Supabase.
 2. **Publicar**: Realiza una validación de campos obligatorios y transfiere el layout al "Worker" de producción.
