@@ -15,12 +15,10 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { 
-    getSections, 
-    getCategoriesBySection, 
-    getSubcategoriesByCategory,
-    getItemsBySubcategory
-} from "@/lib/actions/cms"
+import { getSectionBySlug } from "@/actions/sections"
+import { getCategories } from "@/actions/categories"
+import { getSubcategories } from "@/actions/subcategories"
+import { getItems } from "@/actions/items"
 
 export default function DashboardSectionPage() {
     const { sectionSlug } = useParams()
@@ -37,21 +35,20 @@ export default function DashboardSectionPage() {
     const fetchData = async () => {
         setLoading(true)
         try {
-            const allSections = await getSections()
-            const currentSection = allSections.find((s: any) => s.slug === sectionSlug)
+            const currentSection = await getSectionBySlug(sectionSlug as string)
             if (currentSection) {
                 setSection(currentSection)
-                const cats = await getCategoriesBySection(currentSection.id)
-                
+                const cats = await getCategories(currentSection.id)
+
                 const catsWithSubs = await Promise.all(cats.map(async (cat: any) => {
-                    const subs = await getSubcategoriesByCategory(cat.id)
+                    const subs = await getSubcategories(cat.id)
                     const subsWithItems = await Promise.all(subs.map(async (sub: any) => {
-                        const its = await getItemsBySubcategory(sub.id)
+                        const its = await getItems(sub.id)
                         return { ...sub, items: its }
                     }))
                     return { ...cat, subcategories: subsWithItems }
                 }))
-                
+
                 setCategories(catsWithSubs)
                 if (catsWithSubs.length > 0) {
                     setSelectedCategoryId(catsWithSubs[0].id)

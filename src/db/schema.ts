@@ -82,3 +82,21 @@ export const items = pgTable("items", {
 }, (t) => [
     unique().on(t.subcategoryId, t.slug),
 ]);
+
+// 5. ALERTAS Y EVENTOS DEL SISTEMA
+export const alertTypeEnum = pgEnum("alert_type", ["error", "lock", "unlock", "delete", "create", "edit", "system"]);
+export const alertSeverityEnum = pgEnum("alert_severity", ["info", "warning", "critical"]);
+
+export const alerts = pgTable("alerts", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    type: alertTypeEnum("type").notNull(),
+    severity: alertSeverityEnum("severity").default("info").notNull(),
+    message: text("message").notNull(),
+    targetId: uuid("target_id"), // ID genérico para secciones, items, etc.
+    targetName: text("target_name"),
+    userId: uuid("user_id")
+        .references(() => profiles.id, { onDelete: "set null" }),
+    metadata: jsonb("metadata").default({}),
+    isRead: timestamp("is_read", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
