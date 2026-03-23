@@ -1,8 +1,11 @@
 "use client"
 
-import { FilePlus, Trash2 } from "lucide-react"
+import { useState } from "react"
+import { FilePlus, Trash2, Download, X, FileText, Link as LinkIcon, Info, Video } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import ItemForm from "./ItemForm"
 import ContentItem from "./ContentItem"
+import { getSignedUrlAction } from "@/actions/storage"
 
 interface SubcategoryCardProps {
     sub: any
@@ -27,6 +30,145 @@ export default function SubcategoryCard({
     sectionSlug,
     categorySlug
 }: SubcategoryCardProps) {
+    const [selectedItem, setSelectedItem] = useState<any>(null)
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+    const [loadingPreview, setLoadingPreview] = useState(false)
+
+    const getEmbedUrl = (url: string) => {
+        if (!url) return url;
+        const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+        if (ytMatch && ytMatch[1]) {
+            return `https://www.youtube.com/embed/${ytMatch[1]}`;
+        }
+        const vimeoMatch = url.match(/vimeo\.com\/(?:.*#|.*\/videos\/)?([0-9]+)/i);
+        if (vimeoMatch && vimeoMatch[1]) {
+            return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+        }
+        return url;
+    }
+
+    const handleSelectItem = async (item: any) => {
+        if (selectedItem?.id === item.id) {
+            handleClose()
+            return
+        }
+
+        setSelectedItem(item)
+        setPreviewUrl(null)
+        setLoadingPreview(true)
+
+        try {
+            if (item.filePath) {
+                const url = await getSignedUrlAction(item.filePath)
+                if (url && (item.filePath.toLowerCase().endsWith('.pdf') || item.contentType === 'document')) {
+                    try {
+                        const response = await fetch(url)
+                        const blob = await response.blob()
+                        const objectUrl = URL.createObjectURL(blob)
+                        setPreviewUrl(objectUrl)
+                    } catch (e) {
+                        setPreviewUrl(url)
+                    }
+                } else {
+                    setPreviewUrl(url)
+                }
+            } else if (item.externalLink) {
+                let url = item.externalLink
+                if (url.trim().startsWith('<iframe')) {
+                    const match = url.match(/src=["']([^"']+)["']/)
+                    if (match && match[1]) url = match[1]
+                }
+                setPreviewUrl(getEmbedUrl(url))
+            }
+        } catch (error) {
+            console.error("Error loading preview:", error)
+        } finally {
+            setLoadingPreview(false)
+        }
+    }
+
+    const handleClose = () => {
+        setSelectedItem(null)
+        setPreviewUrl(null)
+    }
+
+    const handleDownload = () => {
+        if (previewUrl) {
+            const a = document.createElement('a')
+            a.href = previewUrl
+            a.download = selectedItem?.title || 'download'
+            a.target = '_blank'
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+        }
+    }
+
+    const isImage = (path: string) => /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(path)
+    const isVideoFile = (path: string) => /\.(mp4|mov|webm|avi|mkv)$/i.test(path)
+    const isPdf = (path: string) => /\.pdf$/i.test(path)
+
+    const getSmallIcon = (contentType: string) => {
+        switch (contentType) {
+            case 'file': return <Download size={14} />
+            case 'link': return <LinkIcon size={14} />
+            case 'document': return <FileText size={14} />
+            case 'video': return <Video size={14} />
+            case 'info': return <Info size={14} />
+            default: return <FileText size={14} />
+        }
+    }
+
+    const renderPreview = () => {
+        if (loadingPreview) {
+            return (
+                <div className="flex items-center justify-center h-full">
+                    <div className="text-center space-y-3">
+                        <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto" />
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Cargando...</p>
+                    </div>
+                </div>
+            )
+        }
+
+        if (!previewUrl || !selectedItem) return null
+        const item = selectedItem
+
+        if (item.filePath && (isVideoFile(item.filePath) || item.contentType === 'video')) {
+            return <video src={previewUrl} controls className="w-full h-full object-contain rounded-xl" />
+        }
+        if (item.filePath && isImage(item.filePath)) {
+            return <img src={previewUrl} alt={item.title} className="w-full h-full object-contain rounded-xl" />
+        }
+        if (item.filePath && isPdf(item.filePath)) {
+            return <iframe src={previewUrl} className="w-full h-full rounded-xl border-0" title={item.title} />
+        }
+        if (item.contentType === 'video' || item.contentType === 'link') {
+            return <iframe src={previewUrl} className="w-full h-full rounded-xl border-0" title={item.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+        }
+        if (item.contentType === 'info') {
+            return (
+                <div className="p-4 overflow-y-auto h-full">
+                    <h3 className="text-base font-black text-slate-900 mb-3">{item.title}</h3>
+                    <div className="prose prose-sm text-slate-600">{item.body || "Sin contenido adicional."}</div>
+                </div>
+            )
+        }
+        if (item.filePath) {
+            return <iframe src={previewUrl} className="w-full h-full rounded-xl border-0" title={item.title} />
+        }
+
+        return (
+            <div className="flex items-center justify-center h-full text-center">
+                <div className="space-y-2">
+                    <Download size={24} className="mx-auto text-slate-300" />
+                    <p className="text-xs text-slate-500 font-bold">Vista previa no disponible</p>
+                    <button onClick={handleDownload} className="text-[10px] text-blue-600 font-bold uppercase underline">Descargar</button>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="bg-slate-50/40 rounded-[28px] p-6 border border-slate-100/80 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 group/sub">
             <div className="flex items-center justify-between mb-5">
@@ -60,21 +202,85 @@ export default function SubcategoryCard({
                 />
             )}
 
-            <div className="space-y-2.5">
-                {sub.items?.length > 0 ? (
-                    sub.items.map((item: any) => (
-                        <ContentItem 
-                            key={item.id} 
-                            item={item} 
-                            onDelete={onDeleteItem} 
-                        />
-                    ))
+            <AnimatePresence mode="wait">
+                {selectedItem ? (
+                    /* ── Layout Master-Detail ── */
+                    <motion.div
+                        key="viewer"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        transition={{ duration: 0.25 }}
+                        className="flex gap-4"
+                    >
+                        {/* Panel Izquierdo: Visor */}
+                        <div className="flex-[2] min-w-0 bg-white border border-slate-200 rounded-2xl shadow-lg overflow-hidden flex flex-col min-h-[400px]">
+                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50/50">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1 rounded-lg bg-blue-600 text-white">
+                                        {getSmallIcon(selectedItem.contentType)}
+                                    </div>
+                                    <div className="max-w-[150px] sm:max-w-xs md:max-w-sm truncate">
+                                        <h4 className="text-xs font-black text-slate-800 leading-tight truncate">{selectedItem.title}</h4>
+                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{selectedItem.contentType}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                    {previewUrl && (
+                                        <button onClick={handleDownload} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="Descargar">
+                                            <Download size={16} />
+                                        </button>
+                                    )}
+                                    <button onClick={handleClose} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all" title="Cerrar">
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex-1 p-1.5 bg-slate-50">
+                                {renderPreview()}
+                            </div>
+                        </div>
+
+                        {/* Panel Derecho: Lista de ítems */}
+                        <div className="flex-[1] min-w-0 flex flex-col gap-2">
+                            {sub.items?.map((item: any) => (
+                                <ContentItem
+                                    key={item.id}
+                                    item={item}
+                                    onDelete={onDeleteItem}
+                                    onSelect={handleSelectItem}
+                                    isSelected={selectedItem?.id === item.id}
+                                />
+                            ))}
+                        </div>
+                    </motion.div>
                 ) : (
-                    <div className="py-8 text-center border-2 border-dashed border-slate-50 rounded-[24px] bg-white/50">
-                        <p className="text-[11px] text-slate-300 font-semibold uppercase tracking-widest">Sin contenidos</p>
-                    </div>
+                    /* ── Layout Normal ── */
+                    <motion.div
+                        key="list"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-2.5"
+                    >
+                        {sub.items?.length > 0 ? (
+                            sub.items.map((item: any) => (
+                                <ContentItem 
+                                    key={item.id} 
+                                    item={item} 
+                                    onDelete={onDeleteItem}
+                                    onSelect={handleSelectItem}
+                                />
+                            ))
+                        ) : (
+                            <div className="py-8 text-center border-2 border-dashed border-slate-50 rounded-[24px] bg-white/50">
+                                <p className="text-[11px] text-slate-300 font-semibold uppercase tracking-widest">Sin contenidos</p>
+                            </div>
+                        )}
+                    </motion.div>
                 )}
-            </div>
+            </AnimatePresence>
         </div>
     )
 }

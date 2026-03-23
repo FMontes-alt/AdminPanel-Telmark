@@ -99,7 +99,7 @@ export default function CategoryItem({
                     )}
 
                     {category.subcategories?.length > 0 ? (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-6">
                             {category.subcategories.map((sub: any) => (
                                 <SubcategoryCard 
                                     key={sub.id}

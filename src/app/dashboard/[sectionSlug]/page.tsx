@@ -12,7 +12,8 @@ import {
     Search,
     LayoutGrid,
     Target,
-    Video
+    Video,
+    X
 } from "lucide-react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
@@ -24,6 +25,300 @@ import {
 } from "@/lib/actions/cms"
 import { getSignedUrlAction } from "@/actions/storage"
 
+// ─── Componente Visor de Subcategoría ──────────────────────────────
+function SubcategoryViewer({ sub }: { sub: any }) {
+    const [selectedItem, setSelectedItem] = useState<any>(null)
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+    const [loadingPreview, setLoadingPreview] = useState(false)
+
+    const getContentIcon = (contentType: string) => {
+        switch (contentType) {
+            case 'file': return <Download size={20} />
+            case 'link': return <LinkIcon size={20} />
+            case 'document': return <FileText size={20} />
+            case 'video': return <Video size={20} />
+            case 'info': return <Info size={20} />
+            default: return <FileText size={20} />
+        }
+    }
+
+    const getSmallIcon = (contentType: string) => {
+        switch (contentType) {
+            case 'file': return <Download size={16} />
+            case 'link': return <LinkIcon size={16} />
+            case 'document': return <FileText size={16} />
+            case 'video': return <Video size={16} />
+            case 'info': return <Info size={16} />
+            default: return <FileText size={16} />
+        }
+    }
+
+    const getEmbedUrl = (url: string) => {
+        if (!url) return url;
+        const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+        if (ytMatch && ytMatch[1]) {
+            return `https://www.youtube.com/embed/${ytMatch[1]}`;
+        }
+        const vimeoMatch = url.match(/vimeo\.com\/(?:.*#|.*\/videos\/)?([0-9]+)/i);
+        if (vimeoMatch && vimeoMatch[1]) {
+            return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+        }
+        return url;
+    }
+
+    const handleSelectItem = async (item: any) => {
+        if (selectedItem?.id === item.id) {
+            handleClose()
+            return
+        }
+
+        setSelectedItem(item)
+        setPreviewUrl(null)
+        setLoadingPreview(true)
+
+        try {
+            if (item.filePath) {
+                const url = await getSignedUrlAction(item.filePath)
+                if (url && (item.filePath.toLowerCase().endsWith('.pdf') || item.contentType === 'document')) {
+                    try {
+                        const response = await fetch(url)
+                        const blob = await response.blob()
+                        const objectUrl = URL.createObjectURL(blob)
+                        setPreviewUrl(objectUrl)
+                    } catch (e) {
+                        setPreviewUrl(url)
+                    }
+                } else {
+                    setPreviewUrl(url)
+                }
+            } else if (item.externalLink) {
+                let url = item.externalLink
+                if (url.trim().startsWith('<iframe')) {
+                    const match = url.match(/src=["']([^"']+)["']/)
+                    if (match && match[1]) url = match[1]
+                }
+                setPreviewUrl(getEmbedUrl(url))
+            }
+        } catch (error) {
+            console.error("Error loading preview:", error)
+        } finally {
+            setLoadingPreview(false)
+        }
+    }
+
+    const handleClose = () => {
+        setSelectedItem(null)
+        setPreviewUrl(null)
+    }
+
+    const handleDownload = () => {
+        if (previewUrl) {
+            const a = document.createElement('a')
+            a.href = previewUrl
+            a.download = selectedItem?.title || 'download'
+            a.target = '_blank'
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+        }
+    }
+
+    const isImage = (path: string) => /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(path)
+    const isVideo = (path: string) => /\.(mp4|mov|webm|avi|mkv)$/i.test(path)
+    const isPdf = (path: string) => /\.pdf$/i.test(path)
+
+    const renderPreview = () => {
+        if (loadingPreview) {
+            return (
+                <div className="flex items-center justify-center h-full">
+                    <div className="text-center space-y-3">
+                        <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto" />
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Cargando...</p>
+                    </div>
+                </div>
+            )
+        }
+
+        if (!previewUrl || !selectedItem) return null
+
+        const item = selectedItem
+
+        // Video como archivo
+        if (item.filePath && (isVideo(item.filePath) || item.contentType === 'video')) {
+            return <video src={previewUrl} controls className="w-full h-full object-contain rounded-xl" />
+        }
+
+        // Imagen
+        if (item.filePath && isImage(item.filePath)) {
+            return <img src={previewUrl} alt={item.title} className="w-full h-full object-contain rounded-xl" />
+        }
+
+        // PDF
+        if (item.filePath && isPdf(item.filePath)) {
+            return <iframe src={previewUrl} className="w-full h-full rounded-xl border-0" title={item.title} />
+        }
+
+        // Video embed (YouTube/Vimeo) o Link
+        if (item.contentType === 'video' || item.contentType === 'link') {
+            return <iframe src={previewUrl} className="w-full h-full rounded-xl border-0" title={item.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+        }
+
+        // Info (texto)
+        if (item.contentType === 'info') {
+            return (
+                <div className="p-6 overflow-y-auto h-full">
+                    <h3 className="text-lg font-black text-slate-900 mb-4">{item.title}</h3>
+                    <div className="prose prose-sm text-slate-600">{item.body || "Sin contenido adicional."}</div>
+                </div>
+            )
+        }
+
+        // Fallback genérico: iframe
+        if (item.filePath) {
+            return <iframe src={previewUrl} className="w-full h-full rounded-xl border-0" title={item.title} />
+        }
+
+        return (
+            <div className="flex items-center justify-center h-full text-center">
+                <div className="space-y-3">
+                    <Download size={32} className="mx-auto text-slate-300" />
+                    <p className="text-sm text-slate-500 font-bold">Vista previa no disponible</p>
+                    <button onClick={handleDownload} className="text-xs text-blue-600 font-bold uppercase underline">Descargar archivo</button>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <section className="space-y-6">
+            <div className="flex items-center gap-4">
+                <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.3em] whitespace-nowrap">{sub.name}</h3>
+                <div className="h-px bg-slate-200 flex-1" />
+            </div>
+
+            <AnimatePresence mode="wait">
+                {selectedItem ? (
+                    /* ── Layout Master-Detail ── */
+                    <motion.div
+                        key="viewer"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        transition={{ duration: 0.25 }}
+                        className="flex gap-4"
+                    >
+                        {/* Panel Izquierdo: Visor */}
+                        <div className="flex-[2] min-w-0 bg-white border border-slate-200 rounded-[24px] shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col min-h-[500px]">
+                            {/* Barra superior del visor */}
+                            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-1.5 rounded-lg bg-blue-600 text-white">
+                                        {getSmallIcon(selectedItem.contentType)}
+                                    </div>
+                                    <div className="max-w-[150px] sm:max-w-xs md:max-w-sm truncate">
+                                        <h4 className="text-sm font-black text-slate-800 leading-tight truncate">{selectedItem.title}</h4>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{selectedItem.contentType}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    {previewUrl && (
+                                        <button 
+                                            onClick={handleDownload}
+                                            className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
+                                            title="Descargar"
+                                        >
+                                            <Download size={18} />
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={handleClose}
+                                        className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                                        title="Cerrar"
+                                    >
+                                        <X size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                            {/* Área de contenido */}
+                            <div className="flex-1 p-2 bg-slate-50">
+                                {renderPreview()}
+                            </div>
+                        </div>
+
+                        {/* Panel Derecho: Lista de ítems */}
+                        <div className="flex-[1] min-w-0 flex flex-col gap-2">
+                            {sub.items?.map((item: any) => (
+                                <motion.div
+                                    key={item.id}
+                                    whileHover={{ x: -2 }}
+                                    onClick={() => handleSelectItem(item)}
+                                    className={`group p-4 rounded-2xl border cursor-pointer transition-all duration-200 ${
+                                        selectedItem?.id === item.id
+                                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20'
+                                            : 'bg-white border-slate-100 hover:border-blue-200 hover:shadow-md'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-1.5 rounded-lg transition-colors ${
+                                            selectedItem?.id === item.id
+                                                ? 'bg-white/20 text-white'
+                                                : 'bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500'
+                                        }`}>
+                                            {getSmallIcon(item.contentType)}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className={`text-xs font-black leading-tight truncate ${
+                                                selectedItem?.id === item.id ? 'text-white' : 'text-slate-800'
+                                            }`}>{item.title}</h4>
+                                            <p className={`text-[8px] font-bold uppercase tracking-widest mt-0.5 ${
+                                                selectedItem?.id === item.id ? 'text-blue-200' : 'text-slate-400'
+                                            }`}>{item.contentType}</p>
+                                        </div>
+                                        <ChevronRight size={14} className={`flex-shrink-0 ${
+                                            selectedItem?.id === item.id ? 'text-white/60' : 'text-slate-200'
+                                        }`} />
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </motion.div>
+                ) : (
+                    /* ── Layout Grid Normal ── */
+                    <motion.div
+                        key="grid"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                    >
+                        {sub.items?.map((item: any) => (
+                            <motion.div 
+                                whileHover={{ y: -4 }}
+                                key={item.id} 
+                                onClick={() => handleSelectItem(item)}
+                                className="group bg-white border border-slate-100 p-5 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all cursor-pointer flex flex-col justify-between min-h-[140px]"
+                            >
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="p-2.5 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                            {getContentIcon(item.contentType)}
+                                        </div>
+                                        <ChevronRight size={16} className="text-slate-200 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-all" />
+                                    </div>
+                                    <h4 className="text-sm font-black text-slate-800 leading-tight pr-4">{item.title}</h4>
+                                </div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4">Acceder {item.contentType}</p>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </section>
+    )
+}
+
+// ─── Página Principal ──────────────────────────────────────────────
 export default function DashboardSectionPage() {
     const { sectionSlug } = useParams()
     const [section, setSection] = useState<any>(null)
@@ -63,41 +358,6 @@ export default function DashboardSectionPage() {
             console.error("Error fetching dashboard content:", error)
         } finally {
             setLoading(false)
-        }
-    }
-
-    const handleItemClick = async (item: any) => {
-        if (item.externalLink) {
-            let url = item.externalLink;
-            
-            // Si es un iframe, extraemos el src
-            if (url.trim().startsWith('<iframe')) {
-                const match = url.match(/src=["']([^"']+)["']/);
-                if (match && match[1]) {
-                    url = match[1];
-                } else {
-                    alert("No se pudo extraer la URL del código embed")
-                    return
-                }
-            }
-
-            window.open(url, '_blank')
-            return
-        }
-
-        if (item.filePath) {
-            try {
-                const signedUrl = await getSignedUrlAction(item.filePath)
-                if (signedUrl) {
-                    window.open(signedUrl, '_blank')
-                } else {
-                    alert("No se pudo generar el enlace de visualización")
-                }
-            } catch (error) {
-                console.error(error)
-                alert("Error al intentar abrir el archivo")
-            }
-            return
         }
     }
 
@@ -217,38 +477,7 @@ export default function DashboardSectionPage() {
 
                                 <div className="grid grid-cols-1 gap-12">
                                     {activeCategory.subcategories?.map((sub: any) => (
-                                        <section key={sub.id} className="space-y-6">
-                                            <div className="flex items-center gap-4">
-                                                <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.3em] whitespace-nowrap">{sub.name}</h3>
-                                                <div className="h-px bg-slate-200 flex-1" />
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                {sub.items?.map((item: any) => (
-                                                    <motion.div 
-                                                        whileHover={{ y: -4 }}
-                                                        key={item.id} 
-                                                        onClick={() => handleItemClick(item)}
-                                                        className="group bg-white border border-slate-100 p-5 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all cursor-pointer flex flex-col justify-between min-h-[140px]"
-                                                    >
-                                                        <div className="space-y-3">
-                                                            <div className="flex items-center justify-between">
-                                                                <div className="p-2.5 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                                                    {item.contentType === 'file' && <Download size={20} />}
-                                                                    {item.contentType === 'link' && <LinkIcon size={20} />}
-                                                                    {item.contentType === 'document' && <FileText size={20} />}
-                                                                    {item.contentType === 'video' && <Video size={20} />}
-                                                                    {item.contentType === 'info' && <Info size={20} />}
-                                                                </div>
-                                                                <ChevronRight size={16} className="text-slate-200 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-all" />
-                                                            </div>
-                                                            <h4 className="text-sm font-black text-slate-800 leading-tight pr-4">{item.title}</h4>
-                                                        </div>
-                                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4">Acceder {item.contentType}</p>
-                                                    </motion.div>
-                                                ))}
-                                            </div>
-                                        </section>
+                                        <SubcategoryViewer key={sub.id} sub={sub} />
                                     ))}
                                 </div>
                             </motion.div>
