@@ -1,6 +1,6 @@
 import { ShieldCheck, Flame, BellRing, ChevronRight } from "lucide-react"
 import Link from "next/link"
-import { getSections } from "@/lib/actions/cms"
+import { getSections } from "@/actions/sections"
 
 export default async function Home() {
     const sections = await getSections()

@@ -25,7 +25,7 @@ import {
     PanelRightOpen,
     Menu
 } from "lucide-react"
-import { getSections } from "@/lib/actions/cms"
+import { getSections } from "@/actions/sections"
 import { createClient } from "@/lib/supabase/client"
 import { useSidebar } from "./SidebarProvider"
 import { Button } from "@/components/ui/button"

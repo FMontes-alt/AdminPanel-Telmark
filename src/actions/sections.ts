@@ -11,7 +11,7 @@ export async function getSections() {
     return db
         .select()
         .from(sections)
-        .orderBy(sections.createdAt)
+        .orderBy(sections.name)
 }
 
 export async function getSectionBySlug(slug: string) {
@@ -53,6 +53,7 @@ export async function createSection(data: CreateSectionInput) {
         .returning()
 
     revalidatePath("/admin")
+    revalidatePath("/")
     return newSection
 }
 
@@ -72,6 +73,7 @@ export async function updateSection(id: string, data: UpdateSectionInput) {
         .returning()
 
     revalidatePath("/admin")
+    revalidatePath("/")
     return updated
 }
 

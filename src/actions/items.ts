@@ -66,6 +66,7 @@ export async function createItem(data: CreateItemInput) {
         .returning()
 
     revalidatePath("/admin")
+    revalidatePath("/")
     return newItem
 }
 
@@ -89,6 +90,7 @@ export async function updateItem(id: string, data: UpdateItemInput) {
         .returning()
 
     revalidatePath("/admin")
+    revalidatePath("/")
     return updated
 }
 
@@ -97,6 +99,7 @@ export async function updateItem(id: string, data: UpdateItemInput) {
 export async function deleteItem(id: string) {
     await db.delete(items).where(eq(items.id, id))
     revalidatePath("/admin")
+    revalidatePath("/")
     return { success: true }
 }
 
