@@ -8,6 +8,8 @@ import { motion, useScroll, useMotionValueEvent } from "framer-motion"
 import { useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
+import { useEffect } from "react"
 
 
 export function AdminHeader() {
@@ -17,6 +19,26 @@ export function AdminHeader() {
 
     const pathname = usePathname()
     const isBuilder = pathname.includes('/campaigns/builder')
+
+    const [profile, setProfile] = useState<{ firstName?: string; avatarUrl?: string; email?: string } | null>(null)
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            
+            if (user) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('firstName, avatarUrl, email')
+                    .eq('id', user.id)
+                    .single()
+                
+                setProfile(data || { email: user.email })
+            }
+        }
+        fetchProfile()
+    }, [])
 
     useMotionValueEvent(scrollY, "change", (latest) => {
         const previous = scrollY.getPrevious() ?? 0
@@ -84,9 +106,19 @@ export function AdminHeader() {
                     <LogOut className="w-4 h-4" />
                 </Button>
 
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-100 to-indigo-100 border border-white shadow-sm flex items-center justify-center text-blue-600">
-                    <User size={16} />
-                </div>
+                <Link href="/admin/profile">
+                    <aside className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 border border-white shadow-lg shadow-blue-500/20 flex items-center justify-center text-white text-[10px] font-black uppercase hover:scale-110 active:scale-95 transition-all cursor-pointer overflow-hidden leading-none">
+                        {profile?.avatarUrl ? (
+                            <img src={profile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : profile?.firstName ? (
+                            profile.firstName[0]
+                        ) : profile?.email ? (
+                            profile.email[0]
+                        ) : (
+                            <User size={14} />
+                        )}
+                    </aside>
+                </Link>
             </div>
         </motion.header>
     )

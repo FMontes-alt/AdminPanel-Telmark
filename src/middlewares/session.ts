@@ -31,6 +31,21 @@ export async function updateSession(request: NextRequest) {
     )
 
     // Esto refresca la sesion si ha expirado 
-    await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const isLoginPage = request.nextUrl.pathname === '/login'
+
+    // Si NO hay usuario y NO está en /login → redirigir a /login
+    if (!user && !isLoginPage) {
+        const loginUrl = new URL('/login', request.url)
+        return NextResponse.redirect(loginUrl)
+    }
+
+    // Si HAY usuario y ESTÁ en /login → redirigir a /
+    if (user && isLoginPage) {
+        const homeUrl = new URL('/', request.url)
+        return NextResponse.redirect(homeUrl)
+    }
+
     return supabaseResponse
 }
