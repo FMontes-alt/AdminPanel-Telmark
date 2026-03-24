@@ -9,6 +9,7 @@ import {
     FolderPlus
 } from "lucide-react"
 import Link from "next/link"
+import { AdminPageHeader } from "@/components/ui/admin-page-header"
 import { 
     createCategory,
     reorderCategories,
@@ -153,29 +154,28 @@ export default function SectionDetailPage() {
                     <ArrowLeft size={16} />
                     Volver a Secciones
                 </Link>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{section.name}</h1>
-                        <p className="text-slate-500 text-sm mt-1">Estructura jerárquica de contenidos para esta área.</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Link 
-                            href={`/dashboard/${section.slug}`}
-                            target="_blank"
-                            className="bg-white text-slate-600 border border-slate-200 px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center gap-2 shadow-sm active:scale-95"
-                        >
-                            <Eye size={18} className="text-blue-500" />
-                            Vista Pública
-                        </Link>
-                        <button 
-                            onClick={() => setIsAddingCategory(true)}
-                            className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-200 active:scale-95 group"
-                        >
-                            <FolderPlus size={18} className="group-hover:scale-110 transition-transform" />
-                            Nueva Categoría
-                        </button>
-                    </div>
-                </div>
+                
+                <AdminPageHeader
+                    category="Contenidos"
+                    title={<>{section.name}</>}
+                    description="Estructura jerárquica de contenidos para esta área."
+                >
+                    <Link 
+                        href={`/dashboard/${section.slug}`}
+                        target="_blank"
+                        className="bg-white text-slate-600 border border-slate-200 px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center gap-2 shadow-sm active:scale-95"
+                    >
+                        <Eye size={18} className="text-blue-500" />
+                        Vista Pública
+                    </Link>
+                    <button 
+                        onClick={() => setIsAddingCategory(true)}
+                        className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-200 active:scale-95 group"
+                    >
+                        <FolderPlus size={18} className="group-hover:scale-110 transition-transform" />
+                        Nueva Categoría
+                    </button>
+                </AdminPageHeader>
             </div>
 
             {/* Content Structure */}

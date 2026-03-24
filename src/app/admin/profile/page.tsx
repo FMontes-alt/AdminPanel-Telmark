@@ -1,18 +1,18 @@
-import { User, Mail, Shield, Calendar, MapPin, Phone } from "lucide-react"
+import { User, Mail, Shield, Calendar, MapPin } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
+import { AdminPageHeader } from "@/components/ui/admin-page-header"
 
 export default async function ProfilePage() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     return (
-        <div className="p-8 max-w-4xl mx-auto space-y-8">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Mi Perfil</h1>
-                    <p className="text-slate-500 font-medium">Gestiona tu información personal y preferencias.</p>
-                </div>
-            </div>
+        <div className="p-8 max-w-[1400px] mx-auto space-y-12 min-h-screen">
+            <AdminPageHeader
+                category="Cuenta"
+                title={<>Mi <span className="text-blue-600">Perfil</span></>}
+                description="Gestiona tu información personal y preferencias."
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Profile Card */}
