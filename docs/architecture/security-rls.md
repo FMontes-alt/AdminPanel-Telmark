@@ -64,3 +64,12 @@ Borrar manualmente las cookies `sb-*` desde las DevTools del navegador (**Applic
 | Superadmin full access | ALL | Usa `is_superadmin()` para dar acceso total |
 | Users can view own profile | SELECT | `auth.uid() = id` (cada usuario ve solo su perfil) |
 | Users can update own profile | UPDATE | `auth.uid() = id` (cada usuario edita solo su perfil) |
+
+---
+
+## 🗺️ Navegación: Arquitectura
+- 🔙 **[Volver al Hub](../INDEX.md)**
+- 🗄️ **[Base de Datos](database.md)**
+- ⚙️ **[Middleware](middleware.md)**
+
+*Última actualización: 2026-03-24*

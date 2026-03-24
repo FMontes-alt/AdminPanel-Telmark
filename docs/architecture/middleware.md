@@ -4,7 +4,7 @@ Este documento sirve para recordar qué hemos hecho y qué falta por implementar
 
 ## ✅ Implementado
 - [x] **Gestión de Sesión:** Refresco automático de tokens de Supabase (`updateSession`).
-- [x] **Control de Acceso (RBAC):** Redirección y validación de roles (`admin`, `superadmin`).
+- [/] **Control de Acceso (RBAC):** Lógica implementada pero **temporalmente desactivada** en `middleware.ts` para facilitar el desarrollo inicial.
 - [x] **Seguridad Avanzada:** Implementación de headers y CSP.
     - `X-Frame-Options: DENY` (Anti-Clickjacking).
     - `X-XSS-Protection: 1; mode=block` (Anti-XSS).
@@ -21,3 +21,12 @@ Este documento sirve para recordar qué hemos hecho y qué falta por implementar
 - [ ] **Rate Limiting:** Controlar ataques de fuerza bruta.
 - [ ] **Bot Blocking:** Filtrar peticiones de bots maliciosos.
 - [ ] **Custom Maintenance Page:** Crear la UI para `/maintenance`.
+
+---
+
+## 🗺️ Navegación: Arquitectura
+- 🔙 **[Volver al Hub](../INDEX.md)**
+- 🗄️ **[Base de Datos](database.md)**
+- 🔐 **[Seguridad y RLS](security-rls.md)**
+
+*Última actualización: 2026-03-24*

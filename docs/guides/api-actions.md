@@ -55,5 +55,13 @@ await setItemAttribute(itemId, "prioridad", "alta")
 await removeItemAttribute(itemId, "prioridad")
 ```
 
-## 4. Verificación
 Se comprobó el funcionamiento con una página temporal en `/test-actions` que consultó las 3 secciones y el árbol jerárquico completo de "Adeslas" (3 categorías, 8 subcategorías, 11 items). **Resultado: OK ✅**
+
+---
+
+## 🗺️ Navegación: Guías
+- 🔙 **[Volver al Hub](../INDEX.md)**
+- 🛠️ **[Backend Setup](backend-setup.md)**
+- 🧬 **[Seeders & Data](seeding.md)**
+
+*Última actualización: 2026-03-24*

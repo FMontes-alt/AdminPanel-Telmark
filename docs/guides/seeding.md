@@ -40,3 +40,12 @@ El sistema está preparado para crecer. Si en el futuro **añades una nueva tabl
    - Añade el código de limpieza al inicio del archivo: `await db.delete(schema.reportes);` (Recuerda ponerlo por encima de las tablas de las que dependa).
    - Añade el paso de inserción utilizando los datos del factory.
 3. Vuelve a ejecutar `npm run seed`.
+
+---
+
+## 🗺️ Navegación: Guías
+- 🔙 **[Volver al Hub](../INDEX.md)**
+- 🚀 **[Setup inicial](setup.md)**
+- ⚡ **[API & Server Actions](api-actions.md)**
+
+*Última actualización: 2026-03-24*

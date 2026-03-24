@@ -13,7 +13,8 @@ El sistema está diseñado para ser **genérico** y **escalable**, permitiendo g
 
 ## 2. Diagrama Entidad-Relación (ERD)
 
-![Diagrama de Base de Datos](database_schema.png)
+> [!NOTE]
+> El diagrama visual (`database_schema.png`) está actualmente en proceso de regeneración para reflejar los últimos cambios en las tablas intermediate. Puedes consultar la estructura técnica en Mermaid abajo.
 
 ### Estructura Técnica (Mermaid)
 
@@ -235,4 +236,9 @@ create trigger on_auth_user_created
 
 ---
 
-*Ultima actualización: 2026-03-09*
+## 🗺️ Navegación: Arquitectura
+- 🔙 **[Volver al Hub](../INDEX.md)**
+- 🔐 **[Seguridad y RLS](security-rls.md)**
+- ⚙️ **[Middleware](middleware.md)**
+
+*Última actualización: 2026-03-24*

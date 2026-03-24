@@ -7,6 +7,9 @@ Se ha construido la interfaz gráfica de inicio de sesión (`/login`) y el punto
 
 El sistema ahora requiere credenciales válidas generadas en la consola de Supabase (Email y Contraseña) para permitir el acceso a las rutas protegidas.
 
+> [!WARNING]
+> Las restricciones de acceso basadas en Roles (RBAC) están actualmente **desactivadas** en el Middleware para facilitar el desarrollo. Todos los usuarios autenticados tienen acceso total al panel por el momento.
+
 ## 2. Dependencias Añadidas
 Para lograr un diseño premium se han instalado las siguientes herramientas:
 - **`framer-motion`**: Para dotar a la UI de animaciones fluidas y en cascada (*staggered animations*).
@@ -29,3 +32,12 @@ Se utilizan *Server Actions* de Next.js para ocultar la lógica de negocio al cl
 1. **Verificar Configuración**: Asegurar en la consola de Supabase (**Authentication > Providers**) que el acceso mediante `Email` está habilitado.
 2. **Crear Usuarios Híbridos**: Ya que se ha suprimido el seeder de `profiles` por la dependencia con las tablas abstractas de `auth.users`, los perfiles iniciales deberán crearse manualmente desde el panel oficial de Supabase.
 3. **Siguientes Pasos (EPIC 4 & 7)**: El sistema de barreras está implementado. El equipo puede comenzar a desarrollar los clientes universales de Supabase (Server/Browser) e iniciar la maquetación del *Layout* interno del panel en la ruta `/admin`.
+
+---
+
+## 🗺️ Navegación: Guías
+- 🔙 **[Volver al Hub](../INDEX.md)**
+- 🚀 **[Setup inicial](setup.md)**
+- 🔐 **[Seguridad y RLS](../architecture/security-rls.md)**
+
+*Última actualización: 2026-03-24*
