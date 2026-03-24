@@ -17,7 +17,9 @@ export async function withSecurity(request: NextRequest, response: NextResponse)
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com;
         img-src 'self' blob: data: https://*.supabase.co;
-        connect-src 'self' https://*.supabase.co;
+        connect-src 'self' blob: data: https://*.supabase.co;
+        media-src 'self' blob: data: https://*.supabase.co;
+        frame-src 'self' https: http: blob: data:;
     `.replace(/\s{2,}/g, ' ').trim();
 
     response.headers.set('Content-Security-Policy', cspHrader);

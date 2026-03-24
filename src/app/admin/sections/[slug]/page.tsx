@@ -204,6 +204,7 @@ export default function SectionDetailPage() {
                         onStartAddingItem={(id) => setAddingItemId(id)}
                         onCancelAddingItem={() => setAddingItemId(null)}
                         onAddItem={handleAddItem}
+                        sectionSlug={slug}
                     />
                 ) : (
                     <div className="py-20 text-center bg-white rounded-[40px] border border-slate-200 shadow-sm">
