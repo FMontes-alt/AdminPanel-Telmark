@@ -21,6 +21,7 @@ interface CategoryItemProps {
     onStartAddingItem: (subId: string) => void
     onCancelAddingItem: () => void
     onAddItem: (subId: string, data: any) => Promise<void>
+    sectionSlug: string
 }
 
 export default function CategoryItem({
@@ -37,7 +38,8 @@ export default function CategoryItem({
     addingItemId,
     onStartAddingItem,
     onCancelAddingItem,
-    onAddItem
+    onAddItem,
+    sectionSlug
 }: CategoryItemProps) {
     return (
         <Reorder.Item 
@@ -97,7 +99,7 @@ export default function CategoryItem({
                     )}
 
                     {category.subcategories?.length > 0 ? (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-6">
                             {category.subcategories.map((sub: any) => (
                                 <SubcategoryCard 
                                     key={sub.id}
@@ -108,6 +110,8 @@ export default function CategoryItem({
                                     onAddItem={(data) => onAddItem(sub.id, data)}
                                     onDeleteSub={() => onDeleteSub(sub.id)}
                                     onDeleteItem={onDeleteItem}
+                                    sectionSlug={sectionSlug}
+                                    categorySlug={category.slug}
                                 />
                             ))}
                         </div>
