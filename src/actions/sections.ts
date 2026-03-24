@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/db"
-import { sections } from "@/db/schema"
+import { sections, categories, subcategories } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { AlertService } from "@/services/alert-services"
@@ -52,6 +52,28 @@ export async function createSection(data: CreateSectionInput) {
             config: data.config ?? {},
         })
         .returning()
+
+    // --- AUTO-SEEDING para Plantillas Especializadas ---
+    const config = data.config as any
+    if (config?.template && config.template !== 'GENERICO') {
+        const templateLabel = config.template === 'POLIZAS' ? 'Mis Pólizas' : 
+                             config.template === 'DOCUMENTOS' ? 'Mis Documentos' : 
+                             config.template === 'VIDEOS' ? 'Mis Vídeos' : 'General'
+
+        // 1. Crear Categoría Inicial
+        const [newCat] = await db.insert(categories).values({
+            sectionId: newSection.id,
+            name: templateLabel,
+            slug: 'general'
+        }).returning()
+
+        // 2. Crear Subcategoría Inicial
+        await db.insert(subcategories).values({
+            categoryId: newCat.id,
+            name: 'Principal',
+            slug: 'principal'
+        })
+    }
 
     await AlertService.sectionCreated(newSection.name, newSection.id)
 

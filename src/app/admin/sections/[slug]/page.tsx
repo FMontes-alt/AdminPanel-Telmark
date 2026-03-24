@@ -46,6 +46,12 @@ export default function SectionDetailPage() {
         try {
             const data = await getSectionHierarchy(slug)
             setSection(data)
+            
+            // Auto-expand if specialized and has categories
+            const config = data?.config as any
+            if (data && config?.template && config.template !== 'GENERICO' && data.categories.length > 0) {
+                setExpandedCategory(data.categories[0].id)
+            }
         } catch (error) {
             console.error("Error fetching data:", error)
         } finally {
@@ -156,7 +162,7 @@ export default function SectionDetailPage() {
                 </Link>
                 
                 <AdminPageHeader
-                    category="Contenidos"
+                    category={`Sección / ${(section.config as any)?.template || 'GENERICO'}`}
                     title={<>{section.name}</>}
                     description="Estructura jerárquica de contenidos para esta área."
                 >
@@ -205,6 +211,7 @@ export default function SectionDetailPage() {
                         onCancelAddingItem={() => setAddingItemId(null)}
                         onAddItem={handleAddItem}
                         sectionSlug={slug}
+                        sectionTemplate={(section.config as any)?.template || "GENERICO"}
                     />
                 ) : (
                     <div className="py-20 text-center bg-white rounded-[40px] border border-slate-200 shadow-sm">

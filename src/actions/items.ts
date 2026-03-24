@@ -46,7 +46,7 @@ type CreateItemInput = {
     body?: string | null
     filePath?: string | null
     externalLink?: string | null
-    contentType?: "info" | "document" | "file" | "link"
+    contentType?: "info" | "document" | "file" | "link" | "video"
     attributes?: Record<string, unknown>
 }
 
@@ -65,7 +65,7 @@ export async function createItem(data: CreateItemInput) {
         })
         .returning()
 
-    revalidatePath("/admin")
+    revalidatePath("/admin/sections")
     revalidatePath("/")
     return newItem
 }
@@ -78,7 +78,7 @@ type UpdateItemInput = {
     body?: string | null
     filePath?: string | null
     externalLink?: string | null
-    contentType?: "info" | "document" | "file" | "link"
+    contentType?: "info" | "document" | "file" | "link" | "video"
     attributes?: Record<string, unknown>
 }
 

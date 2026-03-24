@@ -21,6 +21,7 @@ interface CategoryListProps {
     onCancelAddingItem: () => void
     onAddItem: (subId: string, data: any) => Promise<void>
     sectionSlug: string
+    sectionTemplate: string
 }
 
 export default function CategoryList({
@@ -39,7 +40,8 @@ export default function CategoryList({
     onStartAddingItem,
     onCancelAddingItem,
     onAddItem,
-    sectionSlug
+    sectionSlug,
+    sectionTemplate
 }: CategoryListProps) {
     return (
         <Reorder.Group 
@@ -66,6 +68,7 @@ export default function CategoryList({
                     onCancelAddingItem={onCancelAddingItem}
                     onAddItem={onAddItem}
                     sectionSlug={sectionSlug}
+                    sectionTemplate={sectionTemplate}
                 />
             ))}
         </Reorder.Group>

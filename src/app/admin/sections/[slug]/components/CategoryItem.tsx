@@ -22,6 +22,7 @@ interface CategoryItemProps {
     onCancelAddingItem: () => void
     onAddItem: (subId: string, data: any) => Promise<void>
     sectionSlug: string
+    sectionTemplate: string
 }
 
 export default function CategoryItem({
@@ -39,7 +40,8 @@ export default function CategoryItem({
     onStartAddingItem,
     onCancelAddingItem,
     onAddItem,
-    sectionSlug
+    sectionSlug,
+    sectionTemplate
 }: CategoryItemProps) {
     return (
         <Reorder.Item 
@@ -112,6 +114,7 @@ export default function CategoryItem({
                                     onDeleteItem={onDeleteItem}
                                     sectionSlug={sectionSlug}
                                     categorySlug={category.slug}
+                                    sectionTemplate={sectionTemplate}
                                 />
                             ))}
                         </div>

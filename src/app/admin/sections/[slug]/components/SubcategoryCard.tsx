@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { FilePlus, Trash2, Download, X, FileText, Link as LinkIcon, Info, Video } from "lucide-react"
+import { FilePlus, Trash2, Download, X, FileText, Link as LinkIcon, Info, Video, Table as TableIcon, LayoutGrid, List } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import ItemForm from "./ItemForm"
 import ContentItem from "./ContentItem"
 import { getSignedUrlAction } from "@/actions/storage"
+import { SECTION_TEMPLATES, SectionTemplateType } from "@/lib/constants/section-templates"
 
 interface SubcategoryCardProps {
     sub: any
@@ -17,6 +18,7 @@ interface SubcategoryCardProps {
     onDeleteItem: (id: string) => void
     sectionSlug: string
     categorySlug: string
+    sectionTemplate: string
 }
 
 export default function SubcategoryCard({ 
@@ -28,11 +30,15 @@ export default function SubcategoryCard({
     onDeleteSub,
     onDeleteItem,
     sectionSlug,
-    categorySlug
+    categorySlug,
+    sectionTemplate
 }: SubcategoryCardProps) {
     const [selectedItem, setSelectedItem] = useState<any>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [loadingPreview, setLoadingPreview] = useState(false)
+
+    const template = SECTION_TEMPLATES[sectionTemplate as SectionTemplateType] || SECTION_TEMPLATES.GENERICO
+    const layout = template.layout
 
     const getEmbedUrl = (url: string) => {
         if (!url) return url;
@@ -175,6 +181,10 @@ export default function SubcategoryCard({
                 <h4 className="text-base font-extrabold text-slate-800 flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
                     {sub.name}
+                    <span className="ml-2 px-2 py-0.5 bg-slate-100 text-[8px] text-slate-400 rounded-md uppercase tracking-widest font-bold border border-slate-200/50">
+                        {layout === 'grid' ? <LayoutGrid size={10} className="inline mr-1" /> : layout === 'table' ? <TableIcon size={10} className="inline mr-1" /> : <List size={10} className="inline mr-1" />}
+                        Vista {layout}
+                    </span>
                 </h4>
                 <div className="flex items-center gap-2 opacity-0 group-hover/sub:opacity-100 transition-opacity">
                     <button 
@@ -199,6 +209,7 @@ export default function SubcategoryCard({
                     onCancel={onCancelAddingItem}
                     sectionSlug={sectionSlug}
                     categorySlug={categorySlug}
+                    sectionTemplate={sectionTemplate}
                 />
             )}
 
@@ -250,6 +261,7 @@ export default function SubcategoryCard({
                                     onDelete={onDeleteItem}
                                     onSelect={handleSelectItem}
                                     isSelected={selectedItem?.id === item.id}
+                                    compact={true}
                                 />
                             ))}
                         </div>
@@ -262,8 +274,23 @@ export default function SubcategoryCard({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="space-y-2.5"
+                        className={
+                            layout === 'grid' 
+                                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" 
+                                : layout === 'table'
+                                    ? "space-y-1 bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm"
+                                    : "space-y-2.5"
+                        }
                     >
+                        {layout === 'table' && sub.items?.length > 0 && (
+                            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50/50 border-b border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                <div className="col-span-5">Título / Información</div>
+                                <div className="col-span-3 text-center">Tipo</div>
+                                <div className="col-span-2 text-center text-blue-500">Póliza / Estado</div>
+                                <div className="col-span-2 text-right">Acciones</div>
+                            </div>
+                        )}
+
                         {sub.items?.length > 0 ? (
                             sub.items.map((item: any) => (
                                 <ContentItem 
@@ -271,10 +298,11 @@ export default function SubcategoryCard({
                                     item={item} 
                                     onDelete={onDeleteItem}
                                     onSelect={handleSelectItem}
+                                    layout={layout}
                                 />
                             ))
                         ) : (
-                            <div className="py-8 text-center border-2 border-dashed border-slate-50 rounded-[24px] bg-white/50">
+                            <div className={`py-8 text-center border-2 border-dashed border-slate-50 rounded-[24px] bg-white/50 ${layout === 'grid' ? 'col-span-full' : ''}`}>
                                 <p className="text-[11px] text-slate-300 font-semibold uppercase tracking-widest">Sin contenidos</p>
                             </div>
                         )}
