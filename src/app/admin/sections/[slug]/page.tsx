@@ -150,7 +150,7 @@ export default function SectionDetailPage() {
     if (!section) return <div className="p-8 text-center text-red-500 font-bold">Sección no encontrada</div>
 
     return (
-        <div className="space-y-8">
+        <div className="p-8 lg:p-12 space-y-12 max-w-[1400px] mx-auto min-h-screen">
             {/* Header */}
             <div className="flex flex-col gap-4">
                 <Link 

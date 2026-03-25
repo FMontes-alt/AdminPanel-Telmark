@@ -4,7 +4,7 @@ import { db } from "@/db"
 import { sections, categories, subcategories } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
-import { AlertService } from "@/services/alert-services"
+import { AlertService } from "@/services/alerts/alert-services"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
@@ -56,9 +56,9 @@ export async function createSection(data: CreateSectionInput) {
     // --- AUTO-SEEDING para Plantillas Especializadas ---
     const config = data.config as any
     if (config?.template && config.template !== 'GENERICO') {
-        const templateLabel = config.template === 'POLIZAS' ? 'Mis Pólizas' : 
-                             config.template === 'DOCUMENTOS' ? 'Mis Documentos' : 
-                             config.template === 'VIDEOS' ? 'Mis Vídeos' : 'General'
+        const templateLabel = config.template === 'POLIZAS' ? 'Mis Pólizas' :
+            config.template === 'DOCUMENTOS' ? 'Mis Documentos' :
+                config.template === 'VIDEOS' ? 'Mis Vídeos' : 'General'
 
         // 1. Crear Categoría Inicial
         const [newCat] = await db.insert(categories).values({

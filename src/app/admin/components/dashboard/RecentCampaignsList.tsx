@@ -1,5 +1,6 @@
-import { ArrowUpRight, ShieldCheck, Zap, Calendar, MoreHorizontal } from "lucide-react"
+import { ArrowUpRight, ShieldCheck, Zap, Calendar } from "lucide-react"
 import Link from "next/link"
+import { AdminPageHeader } from "@/components/ui/admin-page-header"
 
 interface Campaign {
     id: string
@@ -15,17 +16,18 @@ interface RecentCampaignsListProps {
 export function RecentCampaignsList({ sections }: RecentCampaignsListProps) {
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">Campañas Recientes</h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Últimas actualizaciones en la red</p>
-                </div>
+            <AdminPageHeader
+                category="Últimas actualizaciones"
+                title="Campañas Recientes"
+                description="Secciones modificadas recientemente en la plataforma."
+                size="sm"
+            >
                 <Link href="/admin/sections">
                     <button className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 flex items-center gap-1.5 transition-all group">
                         Ver todo <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                     </button>
                 </Link>
-            </div>
+            </AdminPageHeader>
 
             <div className="space-y-3">
                 {sections.map((section) => (

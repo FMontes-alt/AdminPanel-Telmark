@@ -2,7 +2,7 @@
 
 import { LogOut, Search, User, Eye, Edit3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { logout } from "../actions"
+import { logout } from "@/actions/auth"
 import { useRouter } from "next/navigation"
 import { motion, useScroll, useMotionValueEvent } from "framer-motion"
 import { useState } from "react"
