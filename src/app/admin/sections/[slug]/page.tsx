@@ -10,19 +10,22 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { AdminPageHeader } from "@/components/ui/admin-page-header"
+// Actions
 import { 
     createCategory,
     reorderCategories,
-    deleteCategory
+    deleteCategory,
+    updateCategory
 } from "@/actions/categories"
-import { createSubcategory, deleteSubcategory } from "@/actions/subcategories"
+import { createSubcategory, deleteSubcategory, updateSubcategory } from "@/actions/subcategories"
 import { createItem, deleteItem } from "@/actions/items"
 import { getSectionHierarchy, type SectionHierarchy } from "@/actions/hierarchy"
+import { bulkCreateHierarchy } from "@/actions/bulk-actions"
 
 // Components
 import DeleteModal from "./components/DeleteModal"
-import CategoryForm from "./components/CategoryForm"
 import CategoryList from "./components/CategoryList"
+import HierarchyBuilder from "./components/HierarchyBuilder"
 
 export default function SectionDetailPage() {
     const params = useParams()
@@ -63,22 +66,6 @@ export default function SectionDetailPage() {
         fetchData()
     }, [fetchData])
 
-    const handleAddCategory = async (name: string) => {
-        if (!section || !name) return
-        try {
-            const catSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-            await createCategory({ 
-                sectionId: section.id, 
-                name, 
-                slug: catSlug 
-            })
-            setIsAddingCategory(false)
-            fetchData()
-        } catch (error) {
-            console.error("Error creating category:", error)
-        }
-    }
-
     const handleAddSubcategory = async (categoryId: string, name: string) => {
         if (!name) return
         try {
@@ -107,6 +94,47 @@ export default function SectionDetailPage() {
             fetchData()
         } catch (error) {
             console.error("Error creating item:", error)
+        }
+    }
+
+    const handleBulkCreate = async (data: any) => {
+        if (!section) return
+        try {
+            await bulkCreateHierarchy({
+                sectionId: section.id,
+                ...data
+            })
+            setIsAddingCategory(false)
+            fetchData()
+        } catch (error) {
+            console.error("Error in bulk create:", error)
+        }
+    }
+
+    const handleUpdateCategory = async (id: string, name: string) => {
+        try {
+            await updateCategory(id, { name })
+            fetchData()
+        } catch (error) {
+            console.error("Error updating category:", error)
+        }
+    }
+
+    const handleUpdateSubcategory = async (id: string, name: string) => {
+        try {
+            await updateSubcategory(id, { name })
+            fetchData()
+        } catch (error) {
+            console.error("Error updating subcategory:", error)
+        }
+    }
+
+    const handleDeleteSubcategory = async (id: string) => {
+        try {
+            await deleteSubcategory(id)
+            fetchData()
+        } catch (error) {
+            console.error("Error deleting subcategory:", error)
         }
     }
 
@@ -176,9 +204,9 @@ export default function SectionDetailPage() {
                     </Link>
                     <button 
                         onClick={() => setIsAddingCategory(true)}
-                        className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-200 active:scale-95 group"
+                        className="bg-blue-600 text-white px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-200 active:scale-95 group"
                     >
-                        <FolderPlus size={18} className="group-hover:scale-110 transition-transform" />
+                        <Plus size={18} className="group-hover:scale-110 transition-transform" />
                         Nueva Categoría
                     </button>
                 </AdminPageHeader>
@@ -187,8 +215,10 @@ export default function SectionDetailPage() {
             {/* Content Structure */}
             <div className="space-y-4">
                 {isAddingCategory && (
-                    <CategoryForm 
-                        onSubmit={handleAddCategory}
+                    <HierarchyBuilder 
+                        sectionSlug={slug}
+                        sectionTemplate={(section.config as any)?.template || "GENERICO"}
+                        onSubmit={handleBulkCreate}
                         onCancel={() => setIsAddingCategory(false)}
                     />
                 )}
@@ -197,6 +227,8 @@ export default function SectionDetailPage() {
                     <CategoryList 
                         categories={section.categories}
                         onReorder={handleReorder}
+                        onUpdateCategory={handleUpdateCategory}
+                        onUpdateSub={handleUpdateSubcategory}
                         expandedCategoryId={expandedCategory}
                         onToggleExpand={(id) => setExpandedCategory(expandedCategory === id ? null : id)}
                         addingSubId={addingSubId}
@@ -204,8 +236,8 @@ export default function SectionDetailPage() {
                         onCancelAddingSub={() => setAddingSubId(null)}
                         onAddSub={handleAddSubcategory}
                         onDeleteCategory={(id) => setDeletingId({ id, type: 'category' })}
-                        onDeleteSub={(id) => setDeletingId({ id, type: 'subcategory' })}
-                        onDeleteItem={(id) => setDeletingId({ id, type: 'item' })}
+                        onDeleteSubAction={async (id) => setDeletingId({ id, type: 'subcategory' })}
+                        onDeleteItem={async (id) => setDeletingId({ id, type: 'item' })}
                         addingItemId={addingItemId}
                         onStartAddingItem={(id) => setAddingItemId(id)}
                         onCancelAddingItem={() => setAddingItemId(null)}
