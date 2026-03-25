@@ -41,10 +41,10 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(loginUrl)
     }
 
-    // Si HAY usuario y ESTÁ en /login → redirigir a /
+    // Si HAY usuario y ESTÁ en /login → redirigir a /admin
     if (user && isLoginPage) {
-        const homeUrl = new URL('/', request.url)
-        return NextResponse.redirect(homeUrl)
+        const adminUrl = new URL('/admin', request.url)
+        return NextResponse.redirect(adminUrl)
     }
 
     return supabaseResponse

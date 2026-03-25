@@ -171,7 +171,7 @@ export function Sidebar() {
                     {!isCollapsed && (
                         <div className="truncate">
                             <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                                Telmark <span className="text-blue-500">Center</span>
+                                Colectivo <span className="text-blue-500">Prime</span>
                             </h2>
                             <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase">Control Panel</p>
                         </div>

@@ -48,7 +48,7 @@ export async function withAuth(request: NextRequest, response: NextResponse) {
             const isAllowed = profile?.role && allowedRoles.includes(profile.role);
 
             if (!isAllowed) {
-                return NextResponse.redirect(new URL('/', request.url))
+                return NextResponse.redirect(new URL('/admin', request.url))
             }
         }
     }
