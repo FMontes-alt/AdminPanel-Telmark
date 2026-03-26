@@ -22,11 +22,10 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
     // ─── MODO TABLA ────────────────────────────────────────────────────────
     if (layout === 'table') {
         return (
-            <div 
+            <div
                 onClick={() => onSelect(item)}
-                className={`grid grid-cols-12 gap-4 px-6 py-2.5 items-center transition-all cursor-pointer border-b border-slate-50 last:border-0 hover:bg-blue-50/50 group/item ${
-                    isSelected ? 'bg-blue-50/80 border-blue-100' : 'bg-white'
-                }`}
+                className={`grid grid-cols-12 gap-4 px-6 py-2.5 items-center transition-all cursor-pointer border-b border-slate-50 last:border-0 hover:bg-blue-50/50 group/item ${isSelected ? 'bg-blue-50/80 border-blue-100' : 'bg-white'
+                    }`}
             >
                 <div className="col-span-5 flex items-center gap-3 min-w-0">
                     <div className={`p-1.5 rounded-lg shrink-0 ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
@@ -38,7 +37,7 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                     </div>
                     <span className={`text-xs font-bold truncate ${isSelected ? 'text-blue-700' : 'text-slate-700'}`}>{item.title}</span>
                 </div>
-                
+
                 <div className="col-span-3 text-center">
                     <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{item.contentType}</span>
                 </div>
@@ -57,7 +56,7 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                 </div>
 
                 <div className="col-span-2 flex justify-end gap-1">
-                    <button 
+                    <button
                         onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
                         className="p-1.5 opacity-0 group-hover/item:opacity-100 text-slate-300 hover:text-red-600 transition-all"
                     >
@@ -71,15 +70,14 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
     // ─── MODO GRID ──────────────────────────────────────────────────────────
     if (layout === 'grid') {
         const isVideo = item.contentType === 'video' || (item.filePath && /\.(mp4|mov|webm)$/i.test(item.filePath))
-        
+
         return (
-            <div 
+            <div
                 onClick={() => onSelect(item)}
-                className={`flex flex-col rounded-2xl border transition-all cursor-pointer group/item overflow-hidden ${
-                    isSelected
+                className={`flex flex-col rounded-2xl border transition-all cursor-pointer group/item overflow-hidden ${isSelected
                         ? 'bg-blue-600 border-blue-600 ring-4 ring-blue-500/10'
                         : 'bg-white border-slate-100 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/50'
-                }`}
+                    }`}
             >
                 <div className={`aspect-video w-full relative flex items-center justify-center ${isSelected ? 'bg-blue-700' : 'bg-slate-50'}`}>
                     {itemImage ? (
@@ -94,11 +92,10 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                         </div>
                     )}
                     <div className="absolute top-2 right-2">
-                         <button 
+                        <button
                             onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                            className={`p-2 rounded-xl backdrop-blur-md transition-all ${
-                                isSelected ? 'bg-white/10 text-white/60 hover:text-white' : 'bg-black/5 text-slate-400 hover:text-red-600 hover:bg-red-50'
-                            }`}
+                            className={`p-2 rounded-xl backdrop-blur-md transition-all ${isSelected ? 'bg-white/10 text-white/60 hover:text-white' : 'bg-black/5 text-slate-400 hover:text-red-600 hover:bg-red-50'
+                                }`}
                         >
                             <Trash2 size={14} />
                         </button>
@@ -114,22 +111,19 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
 
     // ─── MODO LISTA / COMPACT ───────────────────────────────────────────────
     return (
-        <div 
+        <div
             onClick={() => onSelect(item)}
-            className={`rounded-2xl border flex items-center justify-between transition-all cursor-pointer group/item ${
-                compact ? 'p-2.5' : 'p-3.5'
-            } ${
-                isSelected
+            className={`rounded-2xl border flex items-center justify-between transition-all cursor-pointer group/item ${compact ? 'p-2.5' : 'p-3.5'
+                } ${isSelected
                     ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20'
                     : 'bg-white border-slate-100 hover:border-blue-200 hover:shadow-md hover:shadow-slate-100'
-            }`}
+                }`}
         >
             <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                <div className={`${compact ? 'w-6 h-6 rounded-lg' : 'w-8 h-8 rounded-xl'} flex shrink-0 items-center justify-center transition-all overflow-hidden ${
-                    isSelected
+                <div className={`${compact ? 'w-6 h-6 rounded-lg' : 'w-8 h-8 rounded-xl'} flex shrink-0 items-center justify-center transition-all overflow-hidden ${isSelected
                         ? 'bg-white/20 text-white'
                         : 'bg-slate-50 text-slate-400 group-hover/item:text-blue-600 group-hover/item:bg-blue-50'
-                }`}>
+                    }`}>
                     {itemImage ? (
                         <img src={itemImage} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -160,11 +154,10 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                                             </span>
                                         )}
                                         {item.attributes.estado && (
-                                            <span className={`text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded-md ${
-                                                isSelected 
-                                                    ? 'bg-white/20 text-white' 
+                                            <span className={`text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded-md ${isSelected
+                                                    ? 'bg-white/20 text-white'
                                                     : item.attributes.estado === 'Activa' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
-                                            }`}>
+                                                }`}>
                                                 {item.attributes.estado}
                                             </span>
                                         )}
@@ -179,16 +172,15 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                 {!compact && (
                     <span className={`text-[10px] font-extrabold uppercase tracking-widest ${isSelected ? 'text-blue-200' : 'text-slate-300'}`}>{item.contentType}</span>
                 )}
-                <button 
+                <button
                     onClick={(e) => {
                         e.stopPropagation();
                         onDelete(item.id);
                     }}
-                    className={`p-2 transition-all rounded-xl ${
-                        isSelected
+                    className={`p-2 transition-all rounded-xl ${isSelected
                             ? 'text-white/60 hover:text-white hover:bg-white/10'
                             : `${compact ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'} text-slate-300 hover:text-red-600 hover:bg-red-50`
-                    }`}
+                        }`}
                 >
                     <Trash2 size={compact ? 14 : 16} />
                 </button>
