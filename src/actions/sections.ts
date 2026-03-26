@@ -75,7 +75,7 @@ export async function createSection(data: CreateSectionInput) {
         })
     }
 
-    await AlertService.sectionCreated(newSection.name, newSection.id)
+    await AlertService.sectionCreated(newSection.name, newSection.id, newSection.slug)
 
     revalidatePath("/admin")
     revalidatePath("/")
@@ -101,15 +101,15 @@ export async function updateSection(id: string, data: UpdateSectionInput) {
         // ¿Ha cambiado el bloqueo?
         if (config.isLocked !== undefined && config.isLocked !== oldConfig?.isLocked) {
             config.isLocked
-                ? await AlertService.sectionLocked(section!.name, id)
-                : await AlertService.sectionUnlocked(section!.name, id)
+                ? await AlertService.sectionLocked(section!.name, id, section!.slug)
+                : await AlertService.sectionUnlocked(section!.name, id, section!.slug)
         }
 
         // ¿Ha cambiado el estado de error?
         if (config.hasError !== undefined && config.hasError !== oldConfig?.hasError) {
             config.hasError
-                ? await AlertService.sectionErrorReported(section!.name, id)
-                : await AlertService.sectionErrorFixed(section!.name, id)
+                ? await AlertService.sectionErrorReported(section!.name, id, section!.slug)
+                : await AlertService.sectionErrorFixed(section!.name, id, section!.slug)
         }
     }
     revalidatePath("/admin")

@@ -94,6 +94,7 @@ export const alerts = pgTable("alerts", {
     message: text("message").notNull(),
     targetId: uuid("target_id"), // ID genérico para secciones, items, etc.
     targetName: text("target_name"),
+    targetUrl: text("target_url"),
     userId: uuid("user_id")
         .references(() => profiles.id, { onDelete: "set null" }),
     metadata: jsonb("metadata").default({}),
