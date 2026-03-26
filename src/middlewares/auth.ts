@@ -6,10 +6,11 @@ export async function withAuth(request: NextRequest, response: NextResponse) {
 
     // Rutas de interés
     const isAdminRoute = pathname.startsWith('/admin')
+    const isDashboardRoute = pathname.startsWith('/dashboard')
     const isLoginRoute = pathname === '/login'
 
     // Solo actuamos si es una ruta protegida o el login
-    if (!isAdminRoute && !isLoginRoute) {
+    if (!isAdminRoute && !isDashboardRoute && !isLoginRoute) {
         return response
     }
 
