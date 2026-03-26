@@ -18,11 +18,11 @@ import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { motion } from "framer-motion"
 /*
-### Image URL Support & Visualization
-Enhanced the way images are managed and displayed throughout the admin panel.
-- **Section Image Editor**: You can now update the cover image of existing sections. Just hover over the section image and click the "Imagen" icon to enter a new URL.
-- **Creation Preview**: Added a live thumbnail next to the "URL Portada" field when creating a section, so you can verify the URL works immediately.
-- **Smart Item Previews**: Content items (files or links) now automatically detect if they are images and display a real thumbnail in the grid and list views, replacing generic icons.
+### Session & Security Fix
+Resolved the "infinite loop" and access issues in the admin panel.
+- **Loop Prevention**: Fixed a bug where non-admin users were redirected to `/admin` repeatedly. Now they are sent back to the home page (`/`) safely.
+- **Middleware Cleanup**: Streamlined the session refresh process to prevent redundant calls and ensure cookies are correctly synchronized.
+- **Improved Logging**: Added a unique `x-trace-id` to every request for easier debugging of future access issues.
 */
 
 interface AlertItemProps {
