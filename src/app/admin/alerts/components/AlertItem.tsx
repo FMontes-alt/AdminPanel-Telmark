@@ -18,11 +18,11 @@ import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { motion } from "framer-motion"
 /*
-### Stationary Highlighting (Animation Cleanup)
-Removed all dynamic tilting and scaling to create a more stable, professional UI.
-- **No More Tilt**: Eliminated the `rotate-[-1deg]` effect from template selectors and cards.
-- **Static Hover**: Replaced `scale` and `translate` animations with clean border/shadow highlights.
-- **Stability**: Elements no longer "jump" or "lean" when hovered, satisfying the user's preference for a stationary design.
+### Image URL Support & Visualization
+Enhanced the way images are managed and displayed throughout the admin panel.
+- **Section Image Editor**: You can now update the cover image of existing sections. Just hover over the section image and click the "Imagen" icon to enter a new URL.
+- **Creation Preview**: Added a live thumbnail next to the "URL Portada" field when creating a section, so you can verify the URL works immediately.
+- **Smart Item Previews**: Content items (files or links) now automatically detect if they are images and display a real thumbnail in the grid and list views, replacing generic icons.
 */
 
 interface AlertItemProps {

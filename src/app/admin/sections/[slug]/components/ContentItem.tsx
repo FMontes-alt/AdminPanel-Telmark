@@ -11,7 +11,14 @@ interface ContentItemProps {
     compact?: boolean
 }
 
+const isImage = (path?: string) => {
+    if (!path) return false
+    return /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(path) || path.startsWith('data:image/')
+}
+
 export default function ContentItem({ item, onDelete, onSelect, isSelected, layout = 'list', compact = false }: ContentItemProps) {
+    const itemImage = isImage(item.filePath) ? item.filePath : isImage(item.externalLink) ? item.externalLink : null
+
     // ─── MODO TABLA ────────────────────────────────────────────────────────
     if (layout === 'table') {
         return (
@@ -75,7 +82,9 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                 }`}
             >
                 <div className={`aspect-video w-full relative flex items-center justify-center ${isSelected ? 'bg-blue-700' : 'bg-slate-50'}`}>
-                    {isVideo ? (
+                    {itemImage ? (
+                        <img src={itemImage} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-105" />
+                    ) : isVideo ? (
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isSelected ? 'bg-white text-blue-600' : 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'} transition-transform`}>
                             <Video size={20} fill="currentColor" />
                         </div>
@@ -116,16 +125,22 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
             }`}
         >
             <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                <div className={`${compact ? 'w-6 h-6 rounded-lg' : 'w-8 h-8 rounded-xl'} flex shrink-0 items-center justify-center transition-all ${
+                <div className={`${compact ? 'w-6 h-6 rounded-lg' : 'w-8 h-8 rounded-xl'} flex shrink-0 items-center justify-center transition-all overflow-hidden ${
                     isSelected
                         ? 'bg-white/20 text-white'
                         : 'bg-slate-50 text-slate-400 group-hover/item:text-blue-600 group-hover/item:bg-blue-50'
                 }`}>
-                    {item.contentType === 'file' && <Download size={compact ? 12 : 16} />}
-                    {item.contentType === 'link' && <LinkIcon size={compact ? 12 : 16} />}
-                    {item.contentType === 'document' && <FileText size={compact ? 12 : 16} />}
-                    {item.contentType === 'video' && <Video size={compact ? 12 : 16} />}
-                    {item.contentType === 'info' && <Info size={compact ? 12 : 16} />}
+                    {itemImage ? (
+                        <img src={itemImage} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                        <>
+                            {item.contentType === 'file' && <Download size={compact ? 12 : 16} />}
+                            {item.contentType === 'link' && <LinkIcon size={compact ? 12 : 16} />}
+                            {item.contentType === 'document' && <FileText size={compact ? 12 : 16} />}
+                            {item.contentType === 'video' && <Video size={compact ? 12 : 16} />}
+                            {item.contentType === 'info' && <Info size={compact ? 12 : 16} />}
+                        </>
+                    )}
                 </div>
                 <div className="flex flex-col flex-1 min-w-0 pr-2">
                     <span className={`${compact ? 'text-[11px]' : 'text-sm'} font-bold truncate block w-full ${isSelected ? 'text-white' : 'text-slate-700'}`}>{item.title}</span>
