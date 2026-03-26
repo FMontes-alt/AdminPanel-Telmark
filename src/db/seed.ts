@@ -52,7 +52,6 @@ async function seed() {
     await db.delete(schema.items);
     await db.delete(schema.subcategories);
     await db.delete(schema.categories);
-    await db.delete(schema.profileSections);
     await db.delete(schema.sections);
     // No borramos profiles porque están atados a auth.users de Supabase
     console.log("   Tablas limpiadas\n");
