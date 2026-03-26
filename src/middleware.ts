@@ -11,7 +11,7 @@ export async function middleware(request: NextRequest) {
     // 1. Capa de Mantenimiento (Prioridad Máxima)
     // Pasamos un NextResponse.next() limpio para ver si mantenimiento quiere redirigir
     let response = await withMaintenance(request, NextResponse.next());
-    
+
     // SI HAY REDIRECCIÓN (Modo mantenimiento activo), cortamos aquí inmediatamente
     if (response.status !== 200) {
         return response;
@@ -26,6 +26,8 @@ export async function middleware(request: NextRequest) {
 
     // 4. Capa de Seguridad (RBAC)
     // TODO VOLVER A PONER response = await withAuth(request, response)
+    response = await withAuth(request, response)
+
 
     // 5. Inyectar Trace ID final
     response.headers.set('x-trace-id', traceId);
