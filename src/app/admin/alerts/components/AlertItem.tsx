@@ -11,7 +11,9 @@ import {
     Zap,
     Clock,
     ChevronRight,
+    ExternalLink,
 } from "lucide-react"
+import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { motion } from "framer-motion"
@@ -89,6 +91,15 @@ export function AlertItem({ alert, onMarkAsRead, index }: AlertItemProps) {
 
             {/* Actions */}
             <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+                {alert.targetUrl && (
+                    <Link
+                        href={alert.targetUrl}
+                        className="px-6 py-3 rounded-2xl bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                    >
+                        <ExternalLink size={12} />
+                        Ver
+                    </Link>
+                )}
                 {!alert.isRead && (
                     <button
                         onClick={() => onMarkAsRead(alert.id)}

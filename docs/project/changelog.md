@@ -64,3 +64,12 @@ El módulo de gestión de contenidos ha sido rediseñado para ser más premium y
 8. `docs/historial-cambios.md` (Este documento)
 
 *Documentación de seguimiento para el equipo de desarrollo de Telmark.*
+
+---
+
+## 🗺️ Navegación: Proyecto
+- 🔙 **[Volver al Hub](../INDEX.md)**
+- 🎯 **[Objetivos y Épicas](epics.md)**
+- 🚀 **[Roadmap](roadmap.md)**
+
+*Última actualización: 2026-03-24*

@@ -28,7 +28,7 @@ export default async function AdminDashboard() {
     ])
 
     return (
-        <div className="p-8 lg:p-12 space-y-2 max-w-[1400px] mx-auto min-h-screen">
+        <div className="p-8 lg:p-12 space-y-12 max-w-[1400px] mx-auto min-h-screen">
             <DashboardHeader />
             
             <StatGrid 

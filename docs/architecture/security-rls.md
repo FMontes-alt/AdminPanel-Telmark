@@ -43,7 +43,7 @@ ON "public"."profiles"
 USING (is_admin_or_superadmin());
 ```
 
-> **IMPORTANTE**: Si en el futuro se crean más políticas RLS que necesiten consultar el rol del usuario desde `profiles`, deben usar `is_superadmin()` (o funciones similares con `SECURITY DEFINER`) en vez de hacer `SELECT` directo a la tabla.
+> **IMPORTANTE**: Si en el futuro se crean más políticas RLS que necesiten consultar el rol del usuario desde `profiles`, deben usar `is_admin_or_superadmin()` (o funciones similares con `SECURITY DEFINER`) en vez de hacer `SELECT` directo a la tabla.
 
 ## 2. Gestión de Cookies de Supabase
 
@@ -74,3 +74,12 @@ TABLAS: `sections`, `categories`, `subcategories`, `items`
 |---|---|---|---|
 | Public Read Access | SELECT | `true` | Cualquiera (incluso no logueados) puede leer |
 | Admin Write Access | ALL | `is_admin_or_superadmin()` | Solo admins pueden crear/editar/borrar |
+
+---
+
+## 🗺️ Navegación: Arquitectura
+- 🔙 **[Volver al Hub](../INDEX.md)**
+- 🗄️ **[Base de Datos](database.md)**
+- ⚙️ **[Middleware](middleware.md)**
+
+*Última actualización: 2026-03-24*

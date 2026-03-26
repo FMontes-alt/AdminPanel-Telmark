@@ -3,6 +3,9 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
+/**
+ * Función centralizada para iniciar sesión y obtener el rol del usuario
+ */
 export async function login(formData: FormData) {
     const email = formData.get("email") as string
     const password = formData.get("password") as string
@@ -59,9 +62,40 @@ export async function login(formData: FormData) {
             .select('role')
             .eq('id', authData.user.id)
             .single()
-
+            
         return { success: true, role: profile?.role || 'usuario' }
     }
 
     return { success: true, role: 'usuario' }
+}
+
+/**
+ * Función centralizada para cerrar sesión
+ */
+export async function logout() {
+    const cookieStore = await cookies()
+
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return cookieStore.getAll()
+                },
+                setAll(cookiesToSet) {
+                    try {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        )
+                    } catch {
+                        // Ignorado en server components
+                    }
+                },
+            },
+        }
+    )
+
+    await supabase.auth.signOut()
+    return { success: true }
 }

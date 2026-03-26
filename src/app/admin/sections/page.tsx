@@ -5,6 +5,8 @@ import { SectionsHeader } from "./components/SectionsHeader"
 import { SectionsList } from "./components/SectionsList"
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal"
 import { getSections, createSection, deleteSection, updateSection } from "@/actions/sections"
+import { SECTION_TEMPLATE_OPTIONS, SectionTemplateType } from "@/lib/constants/section-templates"
+import { Layout, FileText, Video, ShieldCheck } from "lucide-react"
 
 export default function SectionsPage() {
     const [sections, setSections] = useState<any[]>([])
@@ -17,6 +19,7 @@ export default function SectionsPage() {
     const [newName, setNewName] = useState("")
     const [newSlug, setNewSlug] = useState("")
     const [newCoverUrl, setNewCoverUrl] = useState("")
+    const [selectedTemplate, setSelectedTemplate] = useState<SectionTemplateType>("GENERICO")
 
     useEffect(() => {
         fetchSections()
@@ -40,7 +43,10 @@ export default function SectionsPage() {
             await createSection({ 
                 name: newName, 
                 slug: newSlug,
-                config: { coverUrl: newCoverUrl }
+                config: { 
+                    coverUrl: newCoverUrl,
+                    template: selectedTemplate
+                }
             })
             setNewName("")
             setNewSlug("")
@@ -122,6 +128,36 @@ export default function SectionsPage() {
                                     placeholder="https://images.unsplash.com/..."
                                     className="w-full bg-slate-100/50 border-transparent focus:bg-white focus:border-blue-100 rounded-2xl py-4 px-6 text-sm transition-all border outline-none font-bold text-slate-700 shadow-sm focus:ring-4 focus:ring-blue-500/5"
                                 />
+                            </div>
+
+                            {/* Template Selector */}
+                            <div className="space-y-3 lg:col-span-3">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Función de la Sección</label>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    {SECTION_TEMPLATE_OPTIONS.map((tpl) => (
+                                        <button
+                                            key={tpl.id}
+                                            type="button"
+                                            onClick={() => setSelectedTemplate(tpl.id)}
+                                            className={`flex flex-col items-start p-4 rounded-3xl border-2 transition-all text-left gap-3 ${
+                                                selectedTemplate === tpl.id 
+                                                ? "border-blue-600 bg-blue-50/50 ring-4 ring-blue-500/5 rotate-[-1deg] scale-[1.02]" 
+                                                : "border-slate-100 bg-slate-50/50 hover:border-slate-200"
+                                            }`}
+                                        >
+                                            <div className={`p-2 rounded-xl h-9 w-9 flex items-center justify-center ${selectedTemplate === tpl.id ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "bg-white text-slate-400 border border-slate-100"}`}>
+                                                {tpl.id === 'GENERICO' && <Layout size={18} />}
+                                                {tpl.id === 'DOCUMENTOS' && <FileText size={18} />}
+                                                {tpl.id === 'VIDEOS' && <Video size={18} />}
+                                                {tpl.id === 'POLIZAS' && <ShieldCheck size={18} />}
+                                            </div>
+                                            <div>
+                                                <p className={`text-[11px] font-extrabold uppercase tracking-tight ${selectedTemplate === tpl.id ? "text-blue-700" : "text-slate-900"}`}>{tpl.label}</p>
+                                                <p className="text-[9px] text-slate-500 font-medium leading-tight mt-1">{tpl.description}</p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 

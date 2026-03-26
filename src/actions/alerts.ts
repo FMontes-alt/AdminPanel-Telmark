@@ -12,6 +12,7 @@ export async function createAlert(data: {
     message: string,
     targetId?: string,
     targetName?: string,
+    targetUrl?: string,
     userId?: string
 }) {
     await db.insert(alerts).values({

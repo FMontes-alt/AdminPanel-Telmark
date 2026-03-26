@@ -55,8 +55,13 @@ Para permitir jerarquía visual (Títulos, Subtítulos, etc.), el `TextWidget` e
 1. **Guardar Borrador**: Almacena el estado actual en `localStorage` o tabla `drafts` de Supabase.
 2. **Publicar**: Realiza una validación de campos obligatorios y transfiere el layout al "Worker" de producción.
 
-## 5. Guía de Rediseño
+- **Inputs**: Uso de `transparent` and `focus:ring-0` para integrarse con el diseño sin parecer formularios antiguos.
 
-- **StatWidget**: Enfoque en tipografía bold (`black`) y badges de tendencia dinámicos.
-- **LinkWidget**: Botones con gradientes premium (`blue/indigo`) y sombras suaves.
-- **Inputs**: Uso de `transparent` y `focus:ring-0` para integrarse con el diseño sin parecer formularios antiguos.
+---
+
+## 🗺️ Navegación: Features
+- 🔙 **[Volver al Hub](../INDEX.md)**
+- 🔔 **[Sistema de Alertas](alerts-system.md)**
+- 📘 **[Guía de Setup](../guides/setup.md)**
+
+*Última actualización: 2026-03-24*

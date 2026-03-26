@@ -1,10 +1,10 @@
 "use server"
 
 import { db } from "@/db"
-import { sections } from "@/db/schema"
+import { sections, categories, subcategories } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
-import { AlertService } from "@/services/alert-services"
+import { AlertService } from "@/services/alerts/alert-services"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
@@ -53,7 +53,29 @@ export async function createSection(data: CreateSectionInput) {
         })
         .returning()
 
-    await AlertService.sectionCreated(newSection.name, newSection.id)
+    // --- AUTO-SEEDING para Plantillas Especializadas ---
+    const config = data.config as any
+    if (config?.template && config.template !== 'GENERICO') {
+        const templateLabel = config.template === 'POLIZAS' ? 'Mis Pólizas' :
+            config.template === 'DOCUMENTOS' ? 'Mis Documentos' :
+                config.template === 'VIDEOS' ? 'Mis Vídeos' : 'General'
+
+        // 1. Crear Categoría Inicial
+        const [newCat] = await db.insert(categories).values({
+            sectionId: newSection.id,
+            name: templateLabel,
+            slug: 'general'
+        }).returning()
+
+        // 2. Crear Subcategoría Inicial
+        await db.insert(subcategories).values({
+            categoryId: newCat.id,
+            name: 'Principal',
+            slug: 'principal'
+        })
+    }
+
+    await AlertService.sectionCreated(newSection.name, newSection.id, newSection.slug)
 
     revalidatePath("/admin")
     revalidatePath("/")
@@ -79,15 +101,15 @@ export async function updateSection(id: string, data: UpdateSectionInput) {
         // ¿Ha cambiado el bloqueo?
         if (config.isLocked !== undefined && config.isLocked !== oldConfig?.isLocked) {
             config.isLocked
-                ? await AlertService.sectionLocked(section!.name, id)
-                : await AlertService.sectionUnlocked(section!.name, id)
+                ? await AlertService.sectionLocked(section!.name, id, section!.slug)
+                : await AlertService.sectionUnlocked(section!.name, id, section!.slug)
         }
 
         // ¿Ha cambiado el estado de error?
         if (config.hasError !== undefined && config.hasError !== oldConfig?.hasError) {
             config.hasError
-                ? await AlertService.sectionErrorReported(section!.name, id)
-                : await AlertService.sectionErrorFixed(section!.name, id)
+                ? await AlertService.sectionErrorReported(section!.name, id, section!.slug)
+                : await AlertService.sectionErrorFixed(section!.name, id, section!.slug)
         }
     }
     revalidatePath("/admin")

@@ -24,7 +24,13 @@ Librerías para el backend y auth:
 npm install @supabase/ssr @supabase/supabase-js
 ```
 
-## Paso 4: Comandos Útiles
-- **Desarrollo**: `npm run dev`
-- **Build**: `npm run build`
 - **Lint**: `npm run lint`
+
+---
+
+## 🗺️ Navegación: Guías
+- 🔙 **[Volver al Hub](../INDEX.md)**
+- 🛠️ **[Backend Setup](backend-setup.md)**
+- ⚡ **[API & Server Actions](api-actions.md)**
+
+*Última actualización: 2026-03-24*

@@ -33,5 +33,13 @@ const data = await db.select().from(sections);
 ```
 
 ## Próximos Pasos recomendados
-1. **Seeding**: Rellenar las tablas con datos iniciales reales.
 2. **Server Actions**: Crear las funciones para Insertar, Editar y Borrar desde el panel de administración.
+
+---
+
+## 🗺️ Navegación: Guías
+- 🔙 **[Volver al Hub](../INDEX.md)**
+- 🗄️ **[Base de Datos](../architecture/database.md)**
+- ⚡ **[API & Server Actions](api-actions.md)**
+
+*Última actualización: 2026-03-24*

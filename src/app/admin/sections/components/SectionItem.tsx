@@ -1,4 +1,5 @@
-import { Trash2, ShieldCheck, Zap, ArrowUpRight, AlertCircle, Lock, Unlock } from "lucide-react"
+import { Trash2, ShieldCheck, Zap, ArrowUpRight, AlertCircle, Lock, Unlock, FileText, Video, Layout } from "lucide-react"
+import { SECTION_TEMPLATES } from "@/lib/constants/section-templates"
 
 interface SectionItemProps {
     section: any
@@ -45,7 +46,10 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
                     <img src={coverUrl} alt={section.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-300">
-                        <Zap size={32} strokeWidth={1} />
+                        {config.template === 'DOCUMENTOS' && <FileText size={32} strokeWidth={1} />}
+                        {config.template === 'VIDEOS' && <Video size={32} strokeWidth={1} />}
+                        {config.template === 'POLIZAS' && <ShieldCheck size={32} strokeWidth={1} />}
+                        {(config.template === 'GENERICO' || !config.template) && <Layout size={32} strokeWidth={1} />}
                     </div>
                 )}
                 {isLocked && (
@@ -58,7 +62,17 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
             {/* Content Info - Compact Padding */}
             <div className="flex-1 min-w-0 p-5 pl-7 flex flex-col justify-center">
                 <div className="space-y-0.5">
-                    <p className="text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em]">Sección</p>
+                    <div className="flex items-center gap-2 mb-1">
+                        <p className="text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em]">
+                            {config.template ? SECTION_TEMPLATES[config.template as keyof typeof SECTION_TEMPLATES]?.label : "Sección"}
+                        </p>
+                        {config.template && (
+                            <div className="w-1 h-1 rounded-full bg-slate-300" />
+                        )}
+                        {config.template && (
+                            <p className="text-[8px] font-medium text-slate-400 uppercase tracking-widest">Plantilla</p>
+                        )}
+                    </div>
                     <h4 className="text-lg font-bold text-slate-900 tracking-tighter truncate uppercase group-hover:text-blue-600 transition-colors">
                         {section.name}
                     </h4>

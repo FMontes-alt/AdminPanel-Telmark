@@ -5,6 +5,7 @@ import {
     Trash2, 
     MessageCircle 
 } from "lucide-react"
+import { AdminPageHeader } from "@/components/ui/admin-page-header"
 
 type ActivityType = 'create' | 'edit' | 'delete' | 'comment' | 'user'
 
@@ -32,13 +33,14 @@ interface ActivityFeedProps {
 export function ActivityFeed({ activities }: ActivityFeedProps) {
     return (
         <div className="flex flex-col gap-8">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight">Actividad</h3>
-                </div>
+            <AdminPageHeader
+                category="Eventos del sistema"
+                title="Actividad"
+                description="Últimas acciones realizadas por el equipo."
+                size="sm"
+            >
                 <button className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors">Historial Completo</button>
-            </div>
+            </AdminPageHeader>
 
             <div className="space-y-8 relative before:absolute before:left-[19px] before:top-2 before:bottom-0 before:w-px before:bg-slate-100">
                 {activities.map((item) => {

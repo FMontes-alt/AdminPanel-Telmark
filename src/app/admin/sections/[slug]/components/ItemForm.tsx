@@ -1,8 +1,9 @@
 "use client"
 
-import { ArrowLeft, Upload, Link, Type, Video, X } from "lucide-react"
-import { useState, useRef } from "react"
+import { ArrowLeft, Upload, Link, Type, Video, X, Calendar, ClipboardList } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
 import { uploadFileAction } from "@/actions/storage"
+import { SECTION_TEMPLATES, SectionTemplateType } from "@/lib/constants/section-templates"
 
 interface ItemFormProps {
     sectionSlug: string
@@ -16,17 +17,24 @@ interface ItemFormProps {
         attributes?: any
     }) => Promise<void>
     onCancel: () => void
+    sectionTemplate: string
 }
 
-export default function ItemForm({ sectionSlug, categorySlug, onSubmit, onCancel }: ItemFormProps) {
+export default function ItemForm({ sectionSlug, categorySlug, onSubmit, onCancel, sectionTemplate }: ItemFormProps) {
+    const template = SECTION_TEMPLATES[sectionTemplate as SectionTemplateType] || SECTION_TEMPLATES.GENERICO
     const fileInputRef = useRef<HTMLInputElement>(null)
+    
+    // Initial content type based on template
+    const defaultContentType = template.allowedContentTypes[0] as "info" | "document" | "file" | "link" | "video"
+
     const [formData, setFormData] = useState({
         title: "",
-        contentType: "info" as "info" | "document" | "file" | "link" | "video",
+        contentType: defaultContentType,
         body: "",
         externalLink: "",
         filePath: "",
         videoSource: "url" as "file" | "url" | "embed",
+        customAttributes: {} as Record<string, any>
     })
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [uploadProgress, setUploadProgress] = useState<number | null>(null)
@@ -65,10 +73,21 @@ export default function ItemForm({ sectionSlug, categorySlug, onSubmit, onCancel
             await onSubmit({
                 ...formData,
                 filePath: finalFilePath,
-                attributes: formData.contentType === 'video' ? { videoSource: formData.videoSource } : {}
+                attributes: {
+                    ...(formData.contentType === 'video' ? { videoSource: formData.videoSource } : {}),
+                    ...formData.customAttributes
+                }
             })
             
-            setFormData({ title: "", contentType: "info", body: "", externalLink: "", filePath: "", videoSource: "url" })
+            setFormData({ 
+                title: "", 
+                contentType: defaultContentType, 
+                body: "", 
+                externalLink: "", 
+                filePath: "", 
+                videoSource: "url",
+                customAttributes: {} 
+            })
             setSelectedFile(null)
             setUploadProgress(null)
         } catch (error) {
@@ -106,19 +125,58 @@ export default function ItemForm({ sectionSlug, categorySlug, onSubmit, onCancel
                     className="w-full bg-slate-50 border-slate-100 rounded-2xl py-3 px-5 text-sm outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all"
                 />
 
-                {/* Tipo de Contenido Selector */}
-                <div className="grid grid-cols-5 gap-2 p-1 bg-slate-50 rounded-2xl">
-                    {(['info', 'document', 'file', 'link', 'video'] as const).map(type => (
-                        <button 
-                            key={type}
-                            type="button"
-                            onClick={() => setFormData({...formData, contentType: type})}
-                            className={`py-2 rounded-xl text-[10px] font-bold transition-all ${formData.contentType === type ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
-                        >
-                            {type.toUpperCase()}
-                        </button>
-                    ))}
-                </div>
+                {/* Tipo de Contenido Selector - Solo si hay más de uno permitido */}
+                {template.allowedContentTypes.length > 1 && (
+                    <div className="grid grid-cols-5 gap-2 p-1 bg-slate-50 rounded-2xl">
+                        {template.allowedContentTypes.map(type => (
+                            <button 
+                                key={type}
+                                type="button"
+                                onClick={() => setFormData({...formData, contentType: type as any})}
+                                className={`py-2 rounded-xl text-[10px] font-bold transition-all ${formData.contentType === type ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                {type.toUpperCase()}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* Custom Fields according to Template */}
+                {template.customFields && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50/30 rounded-2xl border border-blue-100/50">
+                        {template.customFields.map(field => (
+                            <div key={field.name} className="space-y-1.5">
+                                <label className="text-[9px] font-bold text-blue-600 uppercase tracking-wider ml-1">{field.label}</label>
+                                {field.type === 'select' ? (
+                                    <select 
+                                        value={formData.customAttributes[field.name] || ""}
+                                        onChange={e => setFormData({
+                                            ...formData, 
+                                            customAttributes: { ...formData.customAttributes, [field.name]: e.target.value }
+                                        })}
+                                        className="w-full bg-white border border-blue-100 rounded-xl py-2 px-3 text-xs outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                    >
+                                        <option value="">Seleccionar...</option>
+                                        {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                    </select>
+                                ) : (
+                                    <div className="relative">
+                                        {field.type === 'date' ? <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" size={14} /> : <ClipboardList className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" size={14} />}
+                                        <input 
+                                            type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
+                                            value={formData.customAttributes[field.name] || ""}
+                                            onChange={e => setFormData({
+                                                ...formData, 
+                                                customAttributes: { ...formData.customAttributes, [field.name]: e.target.value }
+                                            })}
+                                            className="w-full bg-white border border-blue-100 rounded-xl py-2 pl-9 pr-3 text-xs outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 {/* Campos Condicionales según Tipo */}
                 {formData.contentType === 'video' && (

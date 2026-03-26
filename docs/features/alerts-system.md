@@ -60,3 +60,12 @@ await AlertService.sectionDeleted(name, id)
 - **Lucide React**: Iconografía semántica.
 - **Date-fns**: Formateo de fechas relativas (ej: "hace 5 minutos").
 - **Tailwind CSS**: Estilizado premium y responsive.
+
+---
+
+## 🗺️ Navegación: Features
+- 🔙 **[Volver al Hub](../INDEX.md)**
+- 🎨 **[Campaign Builder](campaign-builder.md)**
+- ⚡ **[API & Server Actions](../guides/api-actions.md)**
+
+*Última actualización: 2026-03-24*
