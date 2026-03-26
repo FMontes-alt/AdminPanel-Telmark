@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { motion, Variants } from "framer-motion"
 
-import { login } from "./actions"
+import { login } from "@/actions/auth"
 import { BackgroundEffect } from "./components/BackgroundEffect"
 import { LogoHeader } from "./components/LogoHeader"
 import { LoginForm } from "./components/LoginForm"
@@ -71,8 +71,12 @@ export default function LoginPage() {
             setGlobalError(result.error)
             setIsLoading(false)
         } else if (result?.success) {
-            // Si el login es correcto, redirigimos al dashboard admin
-            router.push("/admin")
+            // Si el login es correcto, redirigimos según su rol
+            if (result.role === 'admin' || result.role === 'superadmin') {
+                router.push("/admin")
+            } else {
+                router.push("/") // Dashboard
+            }
             router.refresh() // Forzamos recarga para que el middleware pille bien la sesión
         }
     }

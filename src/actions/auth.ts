@@ -27,36 +27,41 @@ export async function login(formData: FormData) {
                             cookieStore.set(name, value, options)
                         )
                     } catch {
-                        // The `setAll` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
+                        // Ignoring setAll error on server components
                     }
                 },
             },
         }
     )
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
     })
 
-    if (error) {
-        // Mensajes más amigables en español
-        if (error.message.includes("Invalid login credentials")) {
+    if (authError) {
+        if (authError.message.includes("Invalid login credentials")) {
             return { error: "El correo o la contraseña no son correctos. Por favor, inténtalo de nuevo." }
         }
-        if (error.message.includes("Email not confirmed")) {
+        if (authError.message.includes("Email not confirmed")) {
             return { error: "Tu correo electrónico aún no ha sido confirmado." }
         }
-        if (error.message.includes("too many requests")) {
+        if (authError.message.includes("too many requests")) {
             return { error: "Demasiados intentos. Por favor, espera un momento antes de volver a intentarlo." }
         }
         return { error: "Ha ocurrido un error al intentar iniciar sesión. Por favor, contacta con soporte." }
     }
 
-    // El middleware se encargará de redirigir a /admin u otra ruta
-    // si intentamos acceder directamente, pero aquí forzamos la recarga al home
-    // o podríamos retornar 'success' y que el cliente haga router.push
-    return { success: true }
+    // Una vez logueado, obtenemos el rol del usuario para redirigir correctamente
+    if (authData.user) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', authData.user.id)
+            .single()
+
+        return { success: true, role: profile?.role || 'usuario' }
+    }
+
+    return { success: true, role: 'usuario' }
 }
