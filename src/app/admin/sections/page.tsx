@@ -121,13 +121,29 @@ export default function SectionsPage() {
                             </div>
                             <div className="space-y-2 lg:col-span-1">
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">URL Portada</label>
-                                <input 
-                                    value={newCoverUrl}
-                                    onChange={(e) => setNewCoverUrl(e.target.value)}
-                                    type="text"
-                                    placeholder="https://images.unsplash.com/..."
-                                    className="w-full bg-slate-100/50 border-transparent focus:bg-white focus:border-blue-100 rounded-2xl py-4 px-6 text-sm transition-all border outline-none font-bold text-slate-700 shadow-sm focus:ring-4 focus:ring-blue-500/5"
-                                />
+                                <div className="flex gap-3">
+                                    <div className="flex-1">
+                                        <input 
+                                            value={newCoverUrl}
+                                            onChange={(e) => setNewCoverUrl(e.target.value)}
+                                            type="text"
+                                            placeholder="https://images.unsplash.com/..."
+                                            className="w-full bg-slate-100/50 border-transparent focus:bg-white focus:border-blue-100 rounded-2xl py-4 px-6 text-sm transition-all border outline-none font-bold text-slate-700 shadow-sm focus:ring-4 focus:ring-blue-500/5"
+                                        />
+                                    </div>
+                                    {newCoverUrl && (
+                                        <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-200 bg-white shrink-0 shadow-sm">
+                                            <img 
+                                                src={newCoverUrl} 
+                                                alt="Preview" 
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = "https://placehold.co/100x100?text=Error"
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Template Selector */}
