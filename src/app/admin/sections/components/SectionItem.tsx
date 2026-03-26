@@ -43,7 +43,7 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
             {/* Compact Image - Flush with edges */}
             <div className="w-28 bg-slate-100 relative shrink-0">
                 {coverUrl ? (
-                    <img src={coverUrl} alt={section.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <img src={coverUrl} alt={section.name} className="w-full h-full object-cover transition-transform duration-700" />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-300">
                         {config.template === 'DOCUMENTOS' && <FileText size={32} strokeWidth={1} />}
@@ -97,7 +97,7 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
             </div>
 
             {/* Sidebar Actions */}
-            <div className="flex flex-col gap-2 p-4 justify-center opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+            <div className="flex flex-col gap-2 p-4 justify-center opacity-0 group-hover:opacity-100 transition-all">
                 <a 
                     href={`/admin/sections/${section.slug}`}
                     className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-blue-600 transition-all shadow-lg shadow-slate-900/20"

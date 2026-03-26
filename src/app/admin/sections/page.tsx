@@ -141,7 +141,7 @@ export default function SectionsPage() {
                                             onClick={() => setSelectedTemplate(tpl.id)}
                                             className={`flex flex-col items-start p-4 rounded-3xl border-2 transition-all text-left gap-3 ${
                                                 selectedTemplate === tpl.id 
-                                                ? "border-blue-600 bg-blue-50/50 ring-4 ring-blue-500/5 rotate-[-1deg] scale-[1.02]" 
+                                                ? "border-blue-600 bg-white ring-4 ring-blue-500/10 shadow-lg shadow-blue-500/10" 
                                                 : "border-slate-100 bg-slate-50/50 hover:border-slate-200"
                                             }`}
                                         >

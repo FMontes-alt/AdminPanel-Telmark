@@ -197,16 +197,16 @@ export default function SectionDetailPage() {
                     <Link 
                         href={`/dashboard/${section.slug}`}
                         target="_blank"
-                        className="bg-white text-slate-600 border border-slate-200 px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center gap-2 shadow-sm active:scale-95"
+                        className="bg-white text-slate-600 border border-slate-200 px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center gap-2 shadow-sm"
                     >
                         <Eye size={18} className="text-blue-500" />
                         Vista Pública
                     </Link>
                     <button 
                         onClick={() => setIsAddingCategory(true)}
-                        className="bg-blue-600 text-white px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-200 active:scale-95 group"
+                        className="bg-blue-600 text-white px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-200 group"
                     >
-                        <Plus size={18} className="group-hover:scale-110 transition-transform" />
+                        <Plus size={18} className="transition-transform" />
                         Nueva Categoría
                     </button>
                 </AdminPageHeader>

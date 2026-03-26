@@ -5,6 +5,7 @@ import { useState, useRef } from "react"
 import { SECTION_TEMPLATES, SectionTemplateType } from "@/lib/constants/section-templates"
 import { uploadFileAction } from "@/actions/storage"
 import { cn } from "@/lib/utils"
+import AlertModal from "./AlertModal"
 
 interface HierarchyBuilderProps {
     sectionSlug: string
@@ -38,6 +39,18 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
     ])
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [statusMessage, setStatusMessage] = useState("")
+    const [showValidation, setShowValidation] = useState(false)
+    const [alertModal, setAlertModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type: 'error' | 'info' | 'success';
+    }>({
+        isOpen: false,
+        title: "",
+        message: "",
+        type: "error"
+    })
 
     const addSubcategory = () => {
         setSubcategories([...subcategories, { id: crypto.randomUUID(), name: "", items: [] }])
@@ -92,10 +105,22 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
     }
 
     const handleSaveAll = async () => {
-        if (!categoryName || subcategories.some(s => !s.name) || isSubmitting) {
-            alert("Por favor, rellena todos los nombres de categoría y subcategoría.")
+        // Validación básica
+        const hasEmptySub = subcategories.some(s => !s.name.trim())
+        const hasEmptyItems = subcategories.some(s => s.items.some(i => !i.title.trim() && !i.file))
+
+        if (!categoryName.trim() || hasEmptySub || hasEmptyItems) {
+            setShowValidation(true)
+            setAlertModal({
+                isOpen: true,
+                title: "Campos incompletos",
+                message: "Por favor, rellena todos los nombres de categoría, subcategoría y títulos de ítems (marcados en rojo).",
+                type: "error"
+            })
             return
         }
+
+        if (isSubmitting) return
 
         setIsSubmitting(true)
         setStatusMessage("Iniciando creación masiva...")
@@ -106,8 +131,20 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
             for (const sub of subcategories) {
                 const finalItems = []
                 for (const item of sub.items) {
+                    // Validar título
+                    if (!item.title.trim() && !item.file) {
+                        throw new Error(`El ítem en la subcategoría "${sub.name}" no tiene título.`)
+                    }
+
                     let uploadedPath = ""
+                    let itemTitle = item.title
+
                     if (item.file) {
+                        // Si no hay título, usar nombre de archivo
+                        if (!itemTitle) {
+                            itemTitle = item.file.name.split('.').slice(0, -1).join('.') || item.file.name
+                        }
+
                         setStatusMessage(`Subiendo archivo: ${item.file.name}...`)
                         updateItem(sub.id, item.id, { isUploading: true })
                         const uploadData = new FormData()
@@ -118,7 +155,7 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
                     }
 
                     finalItems.push({
-                        title: item.title,
+                        title: itemTitle,
                         contentType: item.contentType,
                         body: item.body,
                         externalLink: item.externalLink,
@@ -139,7 +176,12 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
             })
         } catch (error) {
             console.error(error)
-            alert("Error al guardar: " + (error as any).message)
+            setAlertModal({
+                isOpen: true,
+                title: "Error al guardar",
+                message: (error as any).message || "Ha ocurrido un error inesperado.",
+                type: "error"
+            })
             setStatusMessage("Error al guardar.")
         } finally {
             setIsSubmitting(false)
@@ -194,7 +236,10 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
                         value={categoryName}
                         onChange={e => setCategoryName(e.target.value)}
                         placeholder="Ej: Documentación de Seguros"
-                        className="w-full bg-slate-50/50 border-transparent focus:bg-white focus:border-blue-100 rounded-2xl py-4 px-6 text-xl transition-all border outline-none font-black text-slate-900"
+                        className={cn(
+                            "w-full bg-slate-50/50 border-transparent focus:bg-white focus:border-blue-100 rounded-2xl py-4 px-6 text-xl transition-all border outline-none font-black text-slate-900",
+                            showValidation && !categoryName.trim() && "border-red-500 bg-red-50/10 placeholder:text-red-300"
+                        )}
                     />
                 </div>
 
@@ -212,7 +257,10 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
                                         value={sub.name}
                                         onChange={e => updateSubcategoryName(sub.id, e.target.value)}
                                         placeholder="Nombre de la Subcategoría..."
-                                        className="bg-transparent border-b-2 border-slate-200 focus:border-blue-500 py-1 text-sm font-black text-slate-700 outline-none w-full transition-colors"
+                                        className={cn(
+                                            "bg-transparent border-b-2 border-slate-200 focus:border-blue-500 py-1 text-sm font-black text-slate-700 outline-none w-full transition-colors",
+                                            showValidation && !sub.name.trim() && "border-red-500 text-red-600 placeholder:text-red-300"
+                                        )}
                                     />
                                 </div>
                                 <button onClick={() => removeSubcategory(sub.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
@@ -231,7 +279,10 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
                                                     value={item.title}
                                                     onChange={e => updateItem(sub.id, item.id, { title: e.target.value })}
                                                     placeholder="Título del Ítem..."
-                                                    className="w-full text-xs font-black text-slate-800 outline-none border-b border-slate-100 py-1 focus:border-indigo-400 transition-colors"
+                                                    className={cn(
+                                                        "w-full text-xs font-black text-slate-800 outline-none border-b border-slate-100 py-1 focus:border-indigo-400 transition-colors",
+                                                        showValidation && !item.title.trim() && !item.file && "border-red-500 text-red-600 placeholder:text-red-300"
+                                                    )}
                                                 />
                                                 <div className="flex flex-wrap gap-2">
                                                     {template.allowedContentTypes.map(type => (
@@ -291,12 +342,47 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
                                                             <div className="flex-1 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-xl p-3 bg-white hover:bg-slate-50 transition-colors cursor-pointer group/upload relative overflow-hidden">
                                                                 <input 
                                                                     type="file" 
-                                                                    onChange={e => updateItem(sub.id, item.id, { file: e.target.files?.[0] || null })}
+                                                                    multiple
+                                                                    onChange={e => {
+                                                                        const files = Array.from(e.target.files || [])
+                                                                        if (files.length === 0) return
+
+                                                                        // Primer archivo: actualiza el ítem actual
+                                                                        const firstFile = files[0]
+                                                                        const firstTitle = item.title || firstFile.name.split('.').slice(0, -1).join('.') || firstFile.name
+                                                                        updateItem(sub.id, item.id, { 
+                                                                            file: firstFile,
+                                                                            title: firstTitle
+                                                                        })
+
+                                                                        // Archivos adicionales: crea nuevos ítems
+                                                                        if (files.length > 1) {
+                                                                            const newItems: ItemDraft[] = files.slice(1).map(file => ({
+                                                                                id: crypto.randomUUID(),
+                                                                                title: file.name.split('.').slice(0, -1).join('.') || file.name,
+                                                                                contentType: item.contentType,
+                                                                                body: "",
+                                                                                externalLink: "",
+                                                                                file: file
+                                                                            }))
+
+                                                                            setSubcategories(prev => prev.map(s => {
+                                                                                if (s.id === sub.id) {
+                                                                                    // Insertar después del ítem actual
+                                                                                    const currentIdx = s.items.findIndex(i => i.id === item.id)
+                                                                                    const updatedItems = [...s.items]
+                                                                                    updatedItems.splice(currentIdx + 1, 0, ...newItems)
+                                                                                    return { ...s, items: updatedItems }
+                                                                                }
+                                                                                return s
+                                                                            }))
+                                                                        }
+                                                                    }}
                                                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                                                 />
                                                                 <div className="flex items-center gap-2 text-slate-400 group-hover/upload:text-indigo-500 transition-colors">
                                                                     <Upload size={14} />
-                                                                    <span className="text-[10px] font-black uppercase tracking-tight">Seleccionar PDF/Archivo</span>
+                                                                    <span className="text-[10px] font-black uppercase tracking-tight">Seleccionar uno o varios archivos</span>
                                                                 </div>
                                                             </div>
                                                         )}
@@ -334,6 +420,14 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
                     </button>
                 </div>
             </div>
+
+            <AlertModal 
+                isOpen={alertModal.isOpen}
+                onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
+                title={alertModal.title}
+                message={alertModal.message}
+                type={alertModal.type as any}
+            />
         </div>
     )
 }

@@ -76,7 +76,7 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
             >
                 <div className={`aspect-video w-full relative flex items-center justify-center ${isSelected ? 'bg-blue-700' : 'bg-slate-50'}`}>
                     {isVideo ? (
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isSelected ? 'bg-white text-blue-600' : 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'} transition-transform group-hover/item:scale-110`}>
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isSelected ? 'bg-white text-blue-600' : 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'} transition-transform`}>
                             <Video size={20} fill="currentColor" />
                         </div>
                     ) : (
