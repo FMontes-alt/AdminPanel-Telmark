@@ -68,17 +68,19 @@ export async function bulkCreateHierarchy(data: BulkHierarchyInput) {
                 }
 
                 for (const itemInput of subInput.items) {
-                    const itemSlug = generateSlug(itemInput.title)
+                    const finalTitle = itemInput.title?.trim() || "Ítem sin título"
+                    const itemSlug = generateSlug(finalTitle) || crypto.randomUUID().slice(0, 8)
+                    
                     const [newItem] = await tx
                         .insert(items)
                         .values({
                             subcategoryId: newSub.id,
-                            title: itemInput.title,
+                            title: finalTitle,
                             slug: itemSlug,
-                            contentType: itemInput.contentType,
-                            body: itemInput.body,
-                            externalLink: itemInput.externalLink,
-                            filePath: itemInput.filePath,
+                            contentType: itemInput.contentType || 'info',
+                            body: itemInput.body || "",
+                            externalLink: itemInput.externalLink || "",
+                            filePath: itemInput.filePath || "",
                             attributes: itemInput.attributes || {},
                         })
                         .returning()

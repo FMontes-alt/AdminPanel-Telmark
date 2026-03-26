@@ -38,17 +38,29 @@ export function AlertsList({ alerts, loading, onMarkAsRead }: AlertsListProps) {
     }
 
     return (
-        <div className="grid grid-cols-1 gap-4">
-            <AnimatePresence mode="popLayout">
-                {alerts.map((alert, index) => (
-                    <AlertItem 
-                        key={alert.id}
-                        alert={alert}
-                        index={index}
-                        onMarkAsRead={onMarkAsRead}
-                    />
-                ))}
-            </AnimatePresence>
+        <div className="space-y-2">
+            {/* Table Header */}
+            <div className="hidden lg:grid grid-cols-[48px_100px_1fr_150px_120px_160px] gap-4 px-6 py-3 bg-slate-50/50 rounded-xl mb-2 border-l-4 border-l-transparent">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Estado</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Descripción</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Objetivo</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fecha</div>
+                <div className="text-right text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">Acciones</div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+                <AnimatePresence mode="popLayout">
+                    {alerts.map((alert, index) => (
+                        <AlertItem 
+                            key={alert.id}
+                            alert={alert}
+                            index={index}
+                            onMarkAsRead={onMarkAsRead}
+                        />
+                    ))}
+                </AnimatePresence>
+            </div>
         </div>
     )
 }

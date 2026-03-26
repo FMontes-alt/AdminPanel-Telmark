@@ -1,5 +1,6 @@
-import { Trash2, ShieldCheck, Zap, ArrowUpRight, AlertCircle, Lock, Unlock, FileText, Video, Layout } from "lucide-react"
+import { Trash2, ShieldCheck, Zap, ArrowUpRight, AlertCircle, Lock, Unlock, FileText, Video, Layout, Image as ImageIcon, Check, X } from "lucide-react"
 import { SECTION_TEMPLATES } from "@/lib/constants/section-templates"
+import { useState } from "react"
 
 interface SectionItemProps {
     section: any
@@ -13,6 +14,9 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
     const hasError = config.hasError || false
     const isLocked = config.isLocked || false
     const coverUrl = config.coverUrl || ""
+    
+    const [isEditingImage, setIsEditingImage] = useState(false)
+    const [tempUrl, setTempUrl] = useState(coverUrl)
 
     const toggleError = () => {
         onUpdate(section.id, { ...config, hasError: !hasError })
@@ -20,6 +24,11 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
 
     const toggleLock = () => {
         onUpdate(section.id, { ...config, isLocked: !isLocked })
+    }
+
+    const handleSaveImage = () => {
+        onUpdate(section.id, { ...config, coverUrl: tempUrl })
+        setIsEditingImage(false)
     }
 
     return (
@@ -41,9 +50,9 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
             </div>
 
             {/* Compact Image - Flush with edges */}
-            <div className="w-28 bg-slate-100 relative shrink-0">
+            <div className="w-28 bg-slate-100 relative shrink-0 overflow-hidden">
                 {coverUrl ? (
-                    <img src={coverUrl} alt={section.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <img src={coverUrl} alt={section.name} className="w-full h-full object-cover transition-transform duration-700" />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-300">
                         {config.template === 'DOCUMENTOS' && <FileText size={32} strokeWidth={1} />}
@@ -57,47 +66,78 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
                         <Lock className="text-white opacity-80" size={24} />
                     </div>
                 )}
+                
+                {/* Image Edit Overlay */}
+                <button 
+                    onClick={() => setIsEditingImage(true)}
+                    className="absolute inset-0 bg-blue-600/60 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                    <ImageIcon size={20} />
+                </button>
             </div>
 
             {/* Content Info - Compact Padding */}
-            <div className="flex-1 min-w-0 p-5 pl-7 flex flex-col justify-center">
-                <div className="space-y-0.5">
-                    <div className="flex items-center gap-2 mb-1">
-                        <p className="text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em]">
-                            {config.template ? SECTION_TEMPLATES[config.template as keyof typeof SECTION_TEMPLATES]?.label : "Sección"}
-                        </p>
-                        {config.template && (
-                            <div className="w-1 h-1 rounded-full bg-slate-300" />
-                        )}
-                        {config.template && (
-                            <p className="text-[8px] font-medium text-slate-400 uppercase tracking-widest">Plantilla</p>
-                        )}
+            <div className="flex-1 min-w-0 p-5 pl-7 flex flex-col justify-center relative">
+                {isEditingImage ? (
+                    <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-30 p-5 flex flex-col justify-center gap-3 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">URL de la Imagen</p>
+                        <div className="flex gap-2">
+                            <input 
+                                autoFocus
+                                value={tempUrl}
+                                onChange={(e) => setTempUrl(e.target.value)}
+                                placeholder="https://..."
+                                className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-xs outline-none focus:border-blue-400 focus:bg-white transition-all"
+                            />
+                            <button onClick={handleSaveImage} className="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+                                <Check size={16} />
+                            </button>
+                            <button onClick={() => { setIsEditingImage(false); setTempUrl(coverUrl); }} className="w-9 h-9 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center">
+                                <X size={16} />
+                            </button>
+                        </div>
                     </div>
-                    <h4 className="text-lg font-bold text-slate-900 tracking-tighter truncate uppercase group-hover:text-blue-600 transition-colors">
-                        {section.name}
-                    </h4>
-                    <p className="text-[9px] text-slate-400 font-semibold font-mono tracking-tight lowercase">/{section.slug}</p>
-                </div>
+                ) : (
+                    <>
+                        <div className="space-y-0.5">
+                            <div className="flex items-center gap-2 mb-1">
+                                <p className="text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em]">
+                                    {config.template ? SECTION_TEMPLATES[config.template as keyof typeof SECTION_TEMPLATES]?.label : "Sección"}
+                                </p>
+                                {config.template && (
+                                    <div className="w-1 h-1 rounded-full bg-slate-300" />
+                                )}
+                                {config.template && (
+                                    <p className="text-[8px] font-medium text-slate-400 uppercase tracking-widest">Plantilla</p>
+                                )}
+                            </div>
+                            <h4 className="text-lg font-bold text-slate-900 tracking-tighter truncate uppercase group-hover:text-blue-600 transition-colors">
+                                {section.name}
+                            </h4>
+                            <p className="text-[9px] text-slate-400 font-semibold font-mono tracking-tight lowercase">/{section.slug}</p>
+                        </div>
 
-                {/* Direct Actions row */}
-                <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-100/30">
-                    <button 
-                        onClick={toggleError}
-                        className={`flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest transition-all ${hasError ? "text-rose-600 bg-rose-50" : "text-slate-400 hover:text-rose-600 hover:bg-rose-50"} px-3 py-1.5 rounded-lg border border-transparent hover:border-rose-100`}
-                    >
-                        {hasError ? "Quitar Error" : "Avisar Error"}
-                    </button>
-                    <button 
-                        onClick={toggleLock}
-                        className={`flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest transition-all ${isLocked ? "text-amber-600 bg-amber-50" : "text-slate-400 hover:text-amber-600 hover:bg-amber-50"} px-3 py-1.5 rounded-lg border border-transparent hover:border-amber-100`}
-                    >
-                        {isLocked ? "Desbloquear" : "Bloqueo Total"}
-                    </button>
-                </div>
+                        {/* Direct Actions row */}
+                        <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-100/30">
+                            <button 
+                                onClick={toggleError}
+                                className={`flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest transition-all ${hasError ? "text-rose-600 bg-rose-50" : "text-slate-400 hover:text-rose-600 hover:bg-rose-50"} px-3 py-1.5 rounded-lg border border-transparent hover:border-rose-100`}
+                            >
+                                {hasError ? "Quitar Error" : "Avisar Error"}
+                            </button>
+                            <button 
+                                onClick={toggleLock}
+                                className={`flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest transition-all ${isLocked ? "text-amber-600 bg-amber-50" : "text-slate-400 hover:text-amber-600 hover:bg-amber-50"} px-3 py-1.5 rounded-lg border border-transparent hover:border-amber-100`}
+                            >
+                                {isLocked ? "Desbloquear" : "Bloqueo Total"}
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Sidebar Actions */}
-            <div className="flex flex-col gap-2 p-4 justify-center opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+            <div className="flex flex-col gap-2 p-4 justify-center opacity-0 group-hover:opacity-100 transition-all">
                 <a 
                     href={`/admin/sections/${section.slug}`}
                     className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-blue-600 transition-all shadow-lg shadow-slate-900/20"
