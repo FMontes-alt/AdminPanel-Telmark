@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { FilePlus, Trash2, Download, X, FileText, Link as LinkIcon, Info, Video, Table as TableIcon, LayoutGrid, List } from "lucide-react"
+import { FilePlus, Trash2, Download, X, FileText, Link as LinkIcon, Info, Video, Table as TableIcon, LayoutGrid, List, ExternalLink } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import ItemForm from "./ItemForm"
 import ContentItem from "./ContentItem"
-import { getSignedUrlAction } from "@/actions/storage"
+import { getSignedUrlAction, getDownloadUrlAction } from "@/actions/storage"
 import { SECTION_TEMPLATES, SectionTemplateType } from "@/lib/constants/section-templates"
 
 interface SubcategoryCardProps {
@@ -49,6 +49,19 @@ export default function SubcategoryCard({
         const vimeoMatch = url.match(/vimeo\.com\/(?:.*#|.*\/videos\/)?([0-9]+)/i);
         if (vimeoMatch && vimeoMatch[1]) {
             return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+        }
+        return url;
+    }
+
+    const getWatchUrl = (url: string) => {
+        if (!url) return url;
+        const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+        if (ytMatch && ytMatch[1]) {
+            return `https://www.youtube.com/watch?v=${ytMatch[1]}`;
+        }
+        const vimeoMatch = url.match(/vimeo\.com\/(?:.*#|.*\/videos\/)?([0-9]+)/i);
+        if (vimeoMatch && vimeoMatch[1]) {
+            return `https://vimeo.com/${vimeoMatch[1]}`;
         }
         return url;
     }
@@ -98,15 +111,35 @@ export default function SubcategoryCard({
         setPreviewUrl(null)
     }
 
-    const handleDownload = () => {
-        if (previewUrl) {
-            const a = document.createElement('a')
-            a.href = previewUrl
-            a.download = selectedItem?.title || 'download'
-            a.target = '_blank'
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
+    const handleDownload = async () => {
+        if (!selectedItem) return
+
+        const isExternal = selectedItem.contentType === 'link' || (selectedItem.contentType === 'video' && selectedItem.externalLink)
+
+        if (isExternal) {
+            let url = selectedItem.externalLink
+            if (url?.trim().startsWith('<iframe')) {
+                const match = url.match(/src=["']([^"']+)["']/)
+                if (match && match[1]) url = match[1]
+            }
+            if (url) window.open(getWatchUrl(url) || url, '_blank')
+            return
+        }
+
+        if (selectedItem.filePath) {
+            try {
+                const downloadUrl = await getDownloadUrlAction(selectedItem.filePath)
+                if (downloadUrl) {
+                    const a = document.createElement('a')
+                    a.href = downloadUrl
+                    a.download = selectedItem.title || 'download'
+                    document.body.appendChild(a)
+                    a.click()
+                    document.body.removeChild(a)
+                }
+            } catch (error) {
+                console.error("Error al forzar la descarga:", error)
+            }
         }
     }
 
@@ -238,8 +271,16 @@ export default function SubcategoryCard({
                                 </div>
                                 <div className="flex items-center gap-1 flex-shrink-0">
                                     {previewUrl && (
-                                        <button onClick={handleDownload} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="Descargar">
-                                            <Download size={16} />
+                                        <button 
+                                            onClick={handleDownload} 
+                                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" 
+                                            title={selectedItem?.contentType === 'link' || (selectedItem?.contentType === 'video' && selectedItem?.externalLink) ? "Abrir enlace externo" : "Descargar"}
+                                        >
+                                            {selectedItem?.contentType === 'link' || (selectedItem?.contentType === 'video' && selectedItem?.externalLink) ? (
+                                                <ExternalLink size={16} />
+                                            ) : (
+                                                <Download size={16} />
+                                            )}
                                         </button>
                                     )}
                                     <button onClick={handleClose} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all" title="Cerrar">

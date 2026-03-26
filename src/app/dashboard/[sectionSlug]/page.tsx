@@ -13,7 +13,8 @@ import {
     LayoutGrid,
     Target,
     Video,
-    X
+    X,
+    ExternalLink
 } from "lucide-react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
@@ -21,7 +22,7 @@ import { getSectionBySlug } from "@/actions/sections"
 import { getCategories } from "@/actions/categories"
 import { getSubcategories } from "@/actions/subcategories"
 import { getItems } from "@/actions/items"
-import { getSignedUrlAction } from "@/actions/storage"
+import { getSignedUrlAction, getDownloadUrlAction } from "@/actions/storage"
 
 // ─── Componente Visor de Subcategoría ──────────────────────────────
 function SubcategoryViewer({ sub }: { sub: any }) {
@@ -60,6 +61,19 @@ function SubcategoryViewer({ sub }: { sub: any }) {
         const vimeoMatch = url.match(/vimeo\.com\/(?:.*#|.*\/videos\/)?([0-9]+)/i);
         if (vimeoMatch && vimeoMatch[1]) {
             return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+        }
+        return url;
+    }
+
+    const getWatchUrl = (url: string) => {
+        if (!url) return url;
+        const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+        if (ytMatch && ytMatch[1]) {
+            return `https://www.youtube.com/watch?v=${ytMatch[1]}`;
+        }
+        const vimeoMatch = url.match(/vimeo\.com\/(?:.*#|.*\/videos\/)?([0-9]+)/i);
+        if (vimeoMatch && vimeoMatch[1]) {
+            return `https://vimeo.com/${vimeoMatch[1]}`;
         }
         return url;
     }
@@ -109,15 +123,35 @@ function SubcategoryViewer({ sub }: { sub: any }) {
         setPreviewUrl(null)
     }
 
-    const handleDownload = () => {
-        if (previewUrl) {
-            const a = document.createElement('a')
-            a.href = previewUrl
-            a.download = selectedItem?.title || 'download'
-            a.target = '_blank'
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
+    const handleDownload = async () => {
+        if (!selectedItem) return
+
+        const isExternal = selectedItem.contentType === 'link' || (selectedItem.contentType === 'video' && selectedItem.externalLink)
+
+        if (isExternal) {
+            let url = selectedItem.externalLink
+            if (url?.trim().startsWith('<iframe')) {
+                const match = url.match(/src=["']([^"']+)["']/)
+                if (match && match[1]) url = match[1]
+            }
+            if (url) window.open(getWatchUrl(url) || url, '_blank')
+            return
+        }
+
+        if (selectedItem.filePath) {
+            try {
+                const downloadUrl = await getDownloadUrlAction(selectedItem.filePath)
+                if (downloadUrl) {
+                    const a = document.createElement('a')
+                    a.href = downloadUrl
+                    a.download = selectedItem.title || 'download'
+                    document.body.appendChild(a)
+                    a.click()
+                    document.body.removeChild(a)
+                }
+            } catch (error) {
+                console.error("Error al forzar la descarga:", error)
+            }
         }
     }
 
@@ -223,9 +257,13 @@ function SubcategoryViewer({ sub }: { sub: any }) {
                                         <button 
                                             onClick={handleDownload}
                                             className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
-                                            title="Descargar"
+                                            title={selectedItem?.contentType === 'link' || (selectedItem?.contentType === 'video' && selectedItem?.externalLink) ? "Abrir enlace externo" : "Descargar"}
                                         >
-                                            <Download size={18} />
+                                            {selectedItem?.contentType === 'link' || (selectedItem?.contentType === 'video' && selectedItem?.externalLink) ? (
+                                                <ExternalLink size={18} />
+                                            ) : (
+                                                <Download size={18} />
+                                            )}
                                         </button>
                                     )}
                                     <button

@@ -63,6 +63,28 @@ export async function getSignedUrlAction(path: string) {
 }
 
 /**
+ * Genera una URL firmada específicamente para forzar la descarga del archivo.
+ */
+export async function getDownloadUrlAction(path: string) {
+    const supabase = await createClient()
+    
+    const cleanPath = path.replace(`${BUCKET_NAME}/`, '')
+
+    const { data, error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .createSignedUrl(cleanPath, 3600, {
+            download: true
+        })
+
+    if (error) {
+        console.error("Error generando URL de descarga:", error)
+        return null
+    }
+
+    return data.signedUrl
+}
+
+/**
  * Elimina un archivo del storage.
  */
 export async function deleteFileAction(path: string) {
