@@ -12,10 +12,22 @@ export const profiles = pgTable("profiles", {
     phone: text("phone"),
     role: userRoleEnum("role").default("usuario").notNull(),
     avatarUrl: text("avatar_url"),
-    assignedSectionIds: uuid("assigned_section_ids").array(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// 0.5. RELACIÓN PERFILES - SECCIONES (Permisos granulares)
+export const profileSections = pgTable("profile_sections", {
+    profileId: uuid("profile_id")
+        .references(() => profiles.id, { onDelete: "cascade" })
+        .notNull(),
+    sectionId: uuid("section_id")
+        .references(() => sections.id, { onDelete: "cascade" })
+        .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+    unique().on(t.profileId, t.sectionId),
+]);
 
 // 1. SECCIONES
 export const sections = pgTable("sections", {
