@@ -1,101 +1,185 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
-import { db } from "@/db"
-import { profiles, sections } from "@/db/schema"
-import { eq, inArray } from "drizzle-orm"
+"use client"
+
+import { createClient } from "@/lib/supabase/client"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { LayoutDashboard, LogOut, ChevronRight } from "lucide-react"
-
+import { LayoutDashboard, LogOut, ChevronRight, User as UserIcon, Sparkles } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { LogoutButton } from "@/components/auth/LogoutButton"
+import { getProfileSections } from "@/actions/users" // I'll create this or use a fetcher
 
-export default async function DashboardPage() {
-    const cookieStore = await cookies()
-    
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll()
-                },
-                setAll() {}
-            },
+import { getDashboardData } from "@/actions/users"
+
+export default function DashboardSelectionPage() {
+    const [profile, setProfile] = useState<any>(null)
+    const [sections, setSections] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+    const router = useRouter()
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const data = await getDashboardData()
+                
+                if (data.profile) {
+                    setProfile(data.profile)
+                    setSections(data.sections)
+                    
+                    // Solo una sección: redirección automática
+                    if (data.sections.length === 1) {
+                        router.push(`/dashboard/${data.sections[0].slug}`)
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error)
+                router.push('/login')
+            } finally {
+                setLoading(false)
+            }
         }
-    )
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) redirect('/login')
+        fetchData()
+    }, [router])
 
-    const profile = await db.query.profiles.findFirst({
-        where: eq(profiles.id, user.id)
-    })
-
-    if (!profile) redirect('/login')
-
-    const sectionIds = profile.assignedSectionIds || []
-    
-    if (sectionIds.length === 0) {
-        redirect('/')
-    }
-
-    // Obtener detalles de las secciones asignadas
-    const assignedSections = await db.select().from(sections).where(inArray(sections.id, sectionIds))
-
-    if (assignedSections.length === 1) {
-        redirect(`/dashboard/${assignedSections[0].slug}`)
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-col items-center gap-4"
+                >
+                    <div className="w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                    <p className="text-blue-500/50 text-[10px] uppercase tracking-[0.3em] font-black">Iniciando Sistema</p>
+                </motion.div>
+            </div>
+        )
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 sm:p-12">
-            <div className="w-full max-w-4xl space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <div className="text-center space-y-4">
-                    <div className="w-20 h-20 bg-blue-600 rounded-[28px] flex items-center justify-center shadow-2xl shadow-blue-500/30 mx-auto transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                        <LayoutDashboard className="text-white w-10 h-10" />
-                    </div>
-                    <div className="space-y-1">
-                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase sm:text-5xl">
-                            Hola, <span className="text-blue-600 font-black">{profile.firstName}</span>
-                        </h1>
-                        <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-[10px]">
-                            Selecciona una sección para continuar
-                        </p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {assignedSections.map((section) => (
-                        <Link 
-                            key={section.id} 
-                            href={`/dashboard/${section.slug}`}
-                            className="group bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 hover:border-blue-100 transition-all duration-500 flex flex-col justify-between aspect-square md:aspect-auto md:min-h-[240px] relative overflow-hidden"
-                        >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700 ease-out" />
-                            
-                            <div className="relative z-10 w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">
-                                <LayoutDashboard size={24} />
-                            </div>
-
-                            <div className="relative z-10 space-y-2 mt-8">
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase group-hover:text-blue-600 transition-colors">
-                                    {section.name}
-                                </h2>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                        Entrar al dashboard
-                                    </span>
-                                    <ChevronRight size={14} className="text-slate-300 group-hover:translate-x-1 group-hover:text-blue-500 transition-all" />
-                                </div>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-
-                <div className="pt-8 border-t border-slate-100 flex justify-center">
-                    <LogoutButton variant="link" />
-                </div>
+        <div className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 selection:text-blue-200 overflow-hidden relative">
+            {/* Background Mesh Gradients */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full animate-pulse" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full animate-pulse [animation-delay:2s]" />
+                <div className="absolute top-[30%] right-[10%] w-[25%] h-[25%] bg-purple-600/10 blur-[100px] rounded-full animate-pulse [animation-delay:4s]" />
             </div>
+
+            {/* Content Container */}
+            <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 lg:py-24 min-h-screen flex flex-col">
+                
+                {/* Header */}
+                <motion.header 
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="flex items-center justify-between mb-20"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            <Sparkles className="text-white w-5 h-5" />
+                        </div>
+                        <span className="text-sm font-black uppercase tracking-[0.4em] text-slate-400">Hub <span className="text-white">Central</span></span>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                        <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full backdrop-blur-md">
+                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{profile?.firstName} {profile?.lastName}</span>
+                        </div>
+                        <LogoutButton variant="link" className="text-slate-500 hover:text-white transition-colors" />
+                    </div>
+                </motion.header>
+
+                {/* Main Selection */}
+                <main className="flex-1 flex flex-col justify-center">
+                    <div className="max-w-3xl mb-16">
+                        <motion.div
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                        >
+                            <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase leading-[0.85] mb-6">
+                                Elige tu <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-indigo-400 to-blue-600 animate-gradient">Espacio</span>
+                            </h1>
+                        </motion.div>
+                        <motion.p 
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="text-slate-400 text-lg max-w-xl font-medium leading-relaxed"
+                        >
+                            Bienvenido de nuevo. Tienes acceso a {sections.length} secciones gestionadas. Selecciona una para empezar a trabajar.
+                        </motion.p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <AnimatePresence>
+                            {sections.map((section, index) => (
+                                <motion.div
+                                    key={section.id}
+                                    initial={{ y: 40, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.4 + index * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                                    whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                                >
+                                    <Link 
+                                        href={`/dashboard/${section.slug}`}
+                                        className="group relative block h-full min-h-[280px] bg-white/5 border border-white/10 rounded-[40px] p-10 backdrop-blur-3xl overflow-hidden hover:bg-white/10 transition-all duration-500 hover:border-blue-500/50"
+                                    >
+                                        {/* Card Decoration */}
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-[60px] group-hover:bg-blue-600/30 transition-all duration-700" />
+                                        
+                                        <div className="relative z-10 h-full flex flex-col justify-between">
+                                            <div className="w-16 h-16 rounded-[22px] bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-blue-600 group-hover:border-blue-500 group-hover:scale-110 transition-all duration-500 shadow-xl group-hover:shadow-blue-500/40">
+                                                <LayoutDashboard className="w-8 h-8 text-white" />
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <h3 className="text-3xl font-black uppercase tracking-tighter leading-none group-hover:text-blue-400 transition-colors">
+                                                    {section.name}
+                                                </h3>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 group-hover:text-slate-300">Entrar Ahora</span>
+                                                    <div className="h-px flex-1 bg-white/5 group-hover:bg-blue-500/20 transition-all" />
+                                                    <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-blue-500 group-hover:translate-x-2 transition-all" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    </div>
+                </main>
+
+                {/* Footer */}
+                <motion.footer 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    className="mt-20 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6"
+                >
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Panel Telmark &copy; 2026 — Advanced Management Suite</p>
+                    <div className="flex items-center gap-8">
+                        <Link href="/soporte" className="text-[10px] font-bold text-slate-600 hover:text-white uppercase tracking-widest transition-colors">Soporte</Link>
+                        <Link href="/manual" className="text-[10px] font-bold text-slate-600 hover:text-white uppercase tracking-widest transition-colors">Manual de Usuario</Link>
+                    </div>
+                </motion.footer>
+            </div>
+
+            <style jsx global>{`
+                @keyframes gradient-move {
+                    0% { background-position: 0% 50%; }
+                    50% { background-position: 100% 50%; }
+                    100% { background-position: 0% 50%; }
+                }
+                .animate-gradient {
+                    background-size: 200% auto;
+                    animation: gradient-move 5s linear infinite;
+                }
+            `}</style>
         </div>
     )
 }

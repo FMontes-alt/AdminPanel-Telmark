@@ -100,6 +100,24 @@ export function AgentForm({ agent, sections, onClose, onSuccess }: AgentFormProp
                     </div>
                 </div>
 
+                <div className="space-y-4">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Rol del Usuario</label>
+                    <div className="grid grid-cols-3 gap-3">
+                        {["usuario", "admin", "superadmin"].map((r) => (
+                            <button
+                                key={r}
+                                type="button"
+                                onClick={() => setFormData({ ...formData, role: r as any })}
+                                className={`py-3 rounded-2xl border text-center transition-all text-[10px] font-black uppercase tracking-widest ${formData.role === r 
+                                    ? "bg-slate-900 border-slate-900 text-white" 
+                                    : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"}`}
+                            >
+                                {r}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Email</label>
                     <input

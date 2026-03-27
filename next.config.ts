@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   /* config options here */
   reactCompiler: true,
   experimental: {
@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "50mb",
     },
   },
-};
+  turbopack: {
+    root: ".",
+  },
+} as any;
 
 export default nextConfig;

@@ -11,7 +11,7 @@ export async function withSecurity(request: NextRequest, response: NextResponse)
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
     // 4. CSP (Content Security Policy)
-    const cspHrader = `
+    const cspHeader = `
         default-src 'self';
         script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
@@ -22,7 +22,7 @@ export async function withSecurity(request: NextRequest, response: NextResponse)
         frame-src 'self' https: http: blob: data:;
     `.replace(/\s{2,}/g, ' ').trim();
 
-    response.headers.set('Content-Security-Policy', cspHrader);
+    response.headers.set('Content-Security-Policy', cspHeader);
 
     return response;
 }

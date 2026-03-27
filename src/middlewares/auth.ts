@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-export async function withAuth(request: NextRequest, response: NextResponse) {
+export async function withAuth(request: NextRequest, response: NextResponse, supabase: any, user: any) {
     const { pathname } = request.nextUrl
 
     // Rutas de interés
@@ -13,21 +13,6 @@ export async function withAuth(request: NextRequest, response: NextResponse) {
     if (!isAdminRoute && !isDashboardRoute && !isLoginRoute) {
         return response
     }
-
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() { return request.cookies.getAll() },
-                setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-                },
-            },
-        }
-    )
-
-    const { data: { user } } = await supabase.auth.getUser()
 
     // 1. REDIRECCIÓN DESDE LOGIN: Si ya está logueado, solo mandamos a /admin si es realmente admin
     if (isLoginRoute && user) {

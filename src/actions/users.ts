@@ -1,8 +1,8 @@
 "use server"
 
 import { db } from "@/db";
-import { profiles } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { profiles, sections } from "@/db/schema";
+import { eq, inArray } from "drizzle-orm";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
@@ -17,6 +17,44 @@ export async function getAgents() {
         console.error("Error al obtener empleados:", error);
         return [];
     }
+}
+
+/**
+ * 1.5 OBTENER DATOS DEL DASHBOARD PARA EL USUARIO ACTUAL
+ */
+export async function getDashboardData() {
+    const { createServerClient } = await import("@supabase/ssr")
+    const { cookies } = await import("next/headers")
+    
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return cookieStore.getAll()
+                },
+                setAll() {}
+            },
+        }
+    )
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error("No autenticado")
+
+    const profile = await db.query.profiles.findFirst({
+        where: eq(profiles.id, user.id)
+    })
+
+    if (!profile) return { profile: null, sections: [] }
+
+    let assignedSections: any[] = []
+    if (profile.assignedSectionIds && profile.assignedSectionIds.length > 0) {
+        assignedSections = await db.select().from(sections).where(inArray(sections.id, profile.assignedSectionIds))
+    }
+
+    return { profile, sections: assignedSections }
 }
 
 /**
