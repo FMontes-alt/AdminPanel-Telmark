@@ -213,6 +213,20 @@ export default function SectionDetailPage() {
                 </div>
             )}
 
+            {section && (section.config as any)?.hasError && (
+                <div className="bg-rose-50 border border-rose-200 rounded-[32px] p-6 flex items-center gap-6 animate-in slide-in-from-top-4 duration-500">
+                    <div className="w-14 h-14 bg-rose-100 rounded-2xl flex items-center justify-center text-rose-600 shrink-0">
+                        <AlertTriangle size={24} />
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="text-rose-900 font-black uppercase tracking-tight text-sm">Sección en Mantenimiento</h3>
+                        <p className="text-rose-700 text-xs font-medium">Se ha activado el aviso de error. Los usuarios verán un mensaje informando que esta sección no está disponible por mantenimiento.</p>
+                    </div>
+
+                </div>
+            )}
+
+
             {/* Header */}
             <div className="flex flex-col gap-4">
                 <Link 

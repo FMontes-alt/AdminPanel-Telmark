@@ -23,6 +23,8 @@ import { getCategories } from "@/actions/categories"
 import { getSubcategories } from "@/actions/subcategories"
 import { getItems } from "@/actions/items"
 import { getSignedUrlAction, getDownloadUrlAction } from "@/actions/storage"
+import AlertModal from "@/components/ui/AlertModal"
+
 
 // ─── Componente Visor de Subcategoría ──────────────────────────────
 function SubcategoryViewer({ sub }: { sub: any }) {
@@ -357,6 +359,8 @@ export default function DashboardSectionPage() {
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
+    const [isErrorModalOpen, setIsErrorModalOpen] = useState(false)
+
 
     useEffect(() => {
         fetchData()
@@ -383,7 +387,13 @@ export default function DashboardSectionPage() {
                 if (catsWithSubs.length > 0) {
                     setSelectedCategoryId(catsWithSubs[0].id)
                 }
+
+                // Mostrar modal de error si está activo en la config
+                if (currentSection.config && (currentSection.config as any).hasError) {
+                    setIsErrorModalOpen(true)
+                }
             }
+
         } catch (error) {
             console.error("Error fetching dashboard content:", error)
         } finally {
@@ -524,6 +534,16 @@ export default function DashboardSectionPage() {
                     </AnimatePresence>
                 </div>
             </main>
+
+            <AlertModal 
+                isOpen={isErrorModalOpen}
+                onClose={() => setIsErrorModalOpen(false)}
+                title="Sección en Mantenimiento"
+                message="Lo sentimos, esta sección se encuentra temporalmente fuera de servicio por tareas de mantenimiento o actualización. Por favor, inténtelo de nuevo más tarde."
+                type="warning"
+            />
+
         </div>
+
     )
 }

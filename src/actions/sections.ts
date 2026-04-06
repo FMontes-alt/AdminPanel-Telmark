@@ -19,8 +19,9 @@ export async function getSectionBySlug(slug: string) {
     const result = await db
         .select()
         .from(sections)
-        .where(eq(sections.slug, slug))
+        .where(eq(sections.slug, slug.toLowerCase()))
         .limit(1)
+
 
     return result[0] ?? null
 }
