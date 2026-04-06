@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, Plus, Trash2, Settings2, Check, X } from "lucide-react"
+import { ChevronRight, Plus, Trash2, Settings2, Check, X, Lock } from "lucide-react"
 import { useState } from "react"
 import SubcategoryForm from "./SubcategoryForm"
 import SubcategoryCard from "./SubcategoryCard"
@@ -28,6 +28,7 @@ interface CategoryItemProps {
     onAddItem: (subId: string, data: any) => Promise<void>
     sectionSlug: string
     sectionTemplate: string
+    isLocked?: boolean
 }
 export default function CategoryItem({
     category,
@@ -47,7 +48,8 @@ export default function CategoryItem({
     onCancelAddingItem,
     onAddItem,
     sectionSlug,
-    sectionTemplate
+    sectionTemplate,
+    isLocked = false
 }: CategoryItemProps) {
     const [isManaging, setIsManaging] = useState(false)
 
@@ -87,19 +89,26 @@ export default function CategoryItem({
                     </div>
                 </div>
                     <button 
+                        disabled={isLocked}
                         onClick={(e) => {
                             e.stopPropagation()
                             setIsManaging(!isManaging)
                         }}
                         className={cn(
                             "group/btn px-4 py-2 border rounded-xl flex items-center gap-2 font-black text-[10px] uppercase tracking-wider transition-all",
-                            isManaging 
-                                ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200" 
-                                : "bg-white border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 shadow-sm"
+                            isLocked 
+                                ? "bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed"
+                                : isManaging 
+                                    ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200" 
+                                    : "bg-white border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 shadow-sm"
                         )}
                     >
-                        <Settings2 size={16} className={cn("transition-transform duration-500", isManaging && "rotate-180")} />
-                        {isManaging ? "Cerrar" : "Gestionar"}
+                        {isLocked ? (
+                            <Lock size={16} />
+                        ) : (
+                            <Settings2 size={16} className={cn("transition-transform duration-500", isManaging && "rotate-180")} />
+                        )}
+                        {isLocked ? "Bloqueado" : isManaging ? "Cerrar" : "Gestionar"}
                     </button>
                 </div>
 
@@ -148,6 +157,7 @@ export default function CategoryItem({
                                         <SubcategoryCard 
                                             key={sub.id}
                                             sub={sub}
+                                            isLocked={isLocked}
                                             isAddingItem={addingItemId === sub.id}
                                             onStartAddingItem={() => onStartAddingItem(sub.id)}
                                             onCancelAddingItem={onCancelAddingItem}

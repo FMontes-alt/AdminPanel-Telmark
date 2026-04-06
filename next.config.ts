@@ -9,7 +9,7 @@ const nextConfig = {
     },
   },
   turbopack: {
-    root: ".",
+    root: process.cwd(),
   },
 } as any;
 

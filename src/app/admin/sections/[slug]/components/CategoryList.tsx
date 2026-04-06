@@ -24,6 +24,7 @@ interface CategoryListProps {
     onAddItem: (subId: string, data: any) => Promise<void>
     sectionSlug: string
     sectionTemplate: string
+    isLocked?: boolean
 }
 
 export default function CategoryList({
@@ -45,19 +46,21 @@ export default function CategoryList({
     onCancelAddingItem,
     onAddItem,
     sectionSlug,
-    sectionTemplate
+    sectionTemplate,
+    isLocked = false
 }: CategoryListProps) {
     return (
         <Reorder.Group 
             axis="y" 
             values={categories} 
-            onReorder={onReorder}
+            onReorder={isLocked ? () => {} : onReorder}
             className="space-y-4"
         >
             {categories?.map((category) => (
                 <CategoryItem 
                     key={category.id}
                     category={category}
+                    isLocked={isLocked}
                     isExpanded={expandedCategoryId === category.id}
                     isAddingSub={addingSubId === category.id}
                     onToggleExpand={() => onToggleExpand(category.id)}

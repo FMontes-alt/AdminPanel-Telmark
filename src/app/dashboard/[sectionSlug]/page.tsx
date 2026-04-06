@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { useParams } from "next/navigation"
-import { 
-    ChevronRight, 
-    FileText, 
-    Download, 
-    Link as LinkIcon, 
-    Info, 
+import {
+    ChevronRight,
+    FileText,
+    Download,
+    Link as LinkIcon,
+    Info,
     ArrowLeft,
     Search,
     LayoutGrid,
@@ -254,7 +254,7 @@ function SubcategoryViewer({ sub }: { sub: any }) {
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
                                     {previewUrl && (
-                                        <button 
+                                        <button
                                             onClick={handleDownload}
                                             className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
                                             title={selectedItem?.contentType === 'link' || (selectedItem?.contentType === 'video' && selectedItem?.externalLink) ? "Abrir enlace externo" : "Descargar"}
@@ -288,31 +288,26 @@ function SubcategoryViewer({ sub }: { sub: any }) {
                                     key={item.id}
                                     whileHover={{ x: -2 }}
                                     onClick={() => handleSelectItem(item)}
-                                    className={`group p-4 rounded-2xl border cursor-pointer transition-all duration-200 ${
-                                        selectedItem?.id === item.id
+                                    className={`group p-4 rounded-2xl border cursor-pointer transition-all duration-200 ${selectedItem?.id === item.id
                                             ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20'
                                             : 'bg-white border-slate-100 hover:border-blue-200 hover:shadow-md'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-1.5 rounded-lg transition-colors ${
-                                            selectedItem?.id === item.id
+                                        <div className={`p-1.5 rounded-lg transition-colors ${selectedItem?.id === item.id
                                                 ? 'bg-white/20 text-white'
                                                 : 'bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500'
-                                        }`}>
+                                            }`}>
                                             {getSmallIcon(item.contentType)}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h4 className={`text-xs font-black leading-tight truncate ${
-                                                selectedItem?.id === item.id ? 'text-white' : 'text-slate-800'
-                                            }`}>{item.title}</h4>
-                                            <p className={`text-[8px] font-bold uppercase tracking-widest mt-0.5 ${
-                                                selectedItem?.id === item.id ? 'text-blue-200' : 'text-slate-400'
-                                            }`}>{item.contentType}</p>
+                                            <h4 className={`text-xs font-black leading-tight truncate ${selectedItem?.id === item.id ? 'text-white' : 'text-slate-800'
+                                                }`}>{item.title}</h4>
+                                            <p className={`text-[8px] font-bold uppercase tracking-widest mt-0.5 ${selectedItem?.id === item.id ? 'text-blue-200' : 'text-slate-400'
+                                                }`}>{item.contentType}</p>
                                         </div>
-                                        <ChevronRight size={14} className={`flex-shrink-0 ${
-                                            selectedItem?.id === item.id ? 'text-white/60' : 'text-slate-200'
-                                        }`} />
+                                        <ChevronRight size={14} className={`flex-shrink-0 ${selectedItem?.id === item.id ? 'text-white/60' : 'text-slate-200'
+                                            }`} />
                                     </div>
                                 </motion.div>
                             ))}
@@ -329,9 +324,9 @@ function SubcategoryViewer({ sub }: { sub: any }) {
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                     >
                         {sub.items?.map((item: any) => (
-                            <motion.div 
+                            <motion.div
                                 whileHover={{ y: -4 }}
-                                key={item.id} 
+                                key={item.id}
                                 onClick={() => handleSelectItem(item)}
                                 className="group bg-white border border-slate-100 p-5 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all cursor-pointer flex flex-col justify-between min-h-[140px]"
                             >
@@ -402,7 +397,7 @@ export default function DashboardSectionPage() {
             ...cat,
             subcategories: cat.subcategories.map((sub: any) => ({
                 ...sub,
-                items: sub.items.filter((item: any) => 
+                items: sub.items.filter((item: any) =>
                     item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     sub.name.toLowerCase().includes(searchTerm.toLowerCase())
                 )
@@ -422,7 +417,7 @@ export default function DashboardSectionPage() {
             {/* Left Sidebar - Categories Navigation */}
             <aside className="w-80 bg-slate-50 border-r border-slate-100 flex flex-col h-full">
                 <div className="p-8 space-y-6">
-                    <Link 
+                    <Link
                         href="/"
                         className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors text-xs font-black uppercase tracking-widest group"
                     >
@@ -440,11 +435,10 @@ export default function DashboardSectionPage() {
                         <button
                             key={cat.id}
                             onClick={() => setSelectedCategoryId(cat.id)}
-                            className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${
-                                selectedCategoryId === cat.id 
-                                ? 'bg-white shadow-xl shadow-blue-500/5 text-blue-600 ring-1 ring-blue-500/10' 
-                                : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
-                            }`}
+                            className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${selectedCategoryId === cat.id
+                                    ? 'bg-white shadow-xl shadow-blue-500/5 text-blue-600 ring-1 ring-blue-500/10'
+                                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                                }`}
                         >
                             <div className={`p-2 rounded-xl transition-colors ${selectedCategoryId === cat.id ? 'bg-blue-600 text-white' : 'bg-white text-slate-300 group-hover:bg-blue-50 group-hover:text-blue-500'}`}>
                                 <LayoutGrid size={18} />
@@ -452,7 +446,7 @@ export default function DashboardSectionPage() {
                             <span className="text-sm font-bold truncate">{cat.name}</span>
                         </button>
                     ))}
-                    
+
                     {filteredCategories.length === 0 && (
                         <div className="p-8 text-center space-y-2">
                             <Info size={24} className="mx-auto text-slate-200" />
@@ -478,7 +472,7 @@ export default function DashboardSectionPage() {
                 <header className="p-8 border-b border-slate-50 flex items-center justify-between gap-8 bg-white/80 backdrop-blur-sm z-10 sticky top-0">
                     <div className="flex-1 max-w-2xl relative group">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
-                        <input 
+                        <input
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
                             placeholder={`¿Qué información buscas en ${section.name}?`}
@@ -497,7 +491,7 @@ export default function DashboardSectionPage() {
                 <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/30">
                     <AnimatePresence mode="wait">
                         {activeCategory ? (
-                            <motion.div 
+                            <motion.div
                                 key={activeCategory.id}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}

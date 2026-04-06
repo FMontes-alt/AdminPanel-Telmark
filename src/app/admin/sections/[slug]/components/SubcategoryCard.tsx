@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { FilePlus, Trash2, Download, X, FileText, Link as LinkIcon, Info, Video, Table as TableIcon, LayoutGrid, List, ExternalLink } from "lucide-react"
+import { FilePlus, Trash2, Download, X, FileText, Link as LinkIcon, Info, Video, Table as TableIcon, LayoutGrid, List, ExternalLink, Lock } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import ItemForm from "./ItemForm"
 import ContentItem from "./ContentItem"
@@ -19,6 +19,7 @@ interface SubcategoryCardProps {
     sectionSlug: string
     categorySlug: string
     sectionTemplate: string
+    isLocked?: boolean
 }
 
 export default function SubcategoryCard({ 
@@ -31,7 +32,8 @@ export default function SubcategoryCard({
     onDeleteItem,
     sectionSlug,
     categorySlug,
-    sectionTemplate
+    sectionTemplate,
+    isLocked = false
 }: SubcategoryCardProps) {
     const [selectedItem, setSelectedItem] = useState<any>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -222,16 +224,26 @@ export default function SubcategoryCard({
                 <div className="flex items-center gap-2 opacity-0 group-hover/sub:opacity-100 transition-opacity">
                     <button 
                         onClick={onStartAddingItem}
-                        className="text-[10px] font-bold text-blue-600 bg-white px-3 py-1.5 rounded-xl uppercase tracking-tight flex items-center gap-1.5 shadow-sm border border-slate-100 hover:bg-blue-50 transition-colors"
+                        disabled={isLocked}
+                        className={`text-[10px] font-bold px-3 py-1.5 rounded-xl uppercase tracking-tight flex items-center gap-1.5 shadow-sm border transition-colors ${
+                            isLocked 
+                                ? "bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed"
+                                : "bg-white border-slate-100 text-blue-600 hover:bg-blue-50"
+                        }`}
                     >
-                        <FilePlus size={14} />
+                        {isLocked ? <Lock size={14} /> : <FilePlus size={14} />}
                         Añadir Item
                     </button>
                     <button 
                         onClick={onDeleteSub}
-                        className="p-2 text-slate-400 hover:text-red-600 transition-colors rounded-xl bg-white border border-slate-100 shadow-sm hover:bg-red-50"
+                        disabled={isLocked}
+                        className={`p-2 rounded-xl border shadow-sm transition-colors ${
+                            isLocked
+                                ? "bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed"
+                                : "text-slate-400 border-slate-100 bg-white hover:text-red-600 hover:bg-red-50"
+                        }`}
                     >
-                        <Trash2 size={16} />
+                        {isLocked ? <Lock size={16} /> : <Trash2 size={16} />}
                     </button>
                 </div>
             </div>
@@ -299,6 +311,7 @@ export default function SubcategoryCard({
                                 <ContentItem
                                     key={item.id}
                                     item={item}
+                                    isLocked={isLocked}
                                     onDelete={onDeleteItem}
                                     onSelect={handleSelectItem}
                                     isSelected={selectedItem?.id === item.id}
@@ -337,6 +350,7 @@ export default function SubcategoryCard({
                                 <ContentItem 
                                     key={item.id} 
                                     item={item} 
+                                    isLocked={isLocked}
                                     onDelete={onDeleteItem}
                                     onSelect={handleSelectItem}
                                     layout={layout}

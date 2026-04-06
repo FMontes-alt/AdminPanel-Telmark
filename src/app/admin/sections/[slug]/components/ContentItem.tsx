@@ -1,6 +1,6 @@
 "use client"
 
-import { Download, Link as LinkIcon, FileText, Info, Trash2, Video } from "lucide-react"
+import { Download, Link as LinkIcon, FileText, Info, Trash2, Video, Lock } from "lucide-react"
 
 interface ContentItemProps {
     item: any
@@ -9,6 +9,7 @@ interface ContentItemProps {
     isSelected?: boolean
     layout?: 'list' | 'grid' | 'table'
     compact?: boolean
+    isLocked?: boolean
 }
 
 const isImage = (path?: string) => {
@@ -16,7 +17,7 @@ const isImage = (path?: string) => {
     return /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(path) || path.startsWith('data:image/')
 }
 
-export default function ContentItem({ item, onDelete, onSelect, isSelected, layout = 'list', compact = false }: ContentItemProps) {
+export default function ContentItem({ item, onDelete, onSelect, isSelected, layout = 'list', compact = false, isLocked = false }: ContentItemProps) {
     const itemImage = isImage(item.filePath) ? item.filePath : isImage(item.externalLink) ? item.externalLink : null
 
     // ─── MODO TABLA ────────────────────────────────────────────────────────
@@ -57,10 +58,15 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
 
                 <div className="col-span-2 flex justify-end gap-1">
                     <button
+                        disabled={isLocked}
                         onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                        className="p-1.5 opacity-0 group-hover/item:opacity-100 text-slate-300 hover:text-red-600 transition-all"
+                        className={`p-1.5 transition-all ${
+                            isLocked 
+                                ? "text-slate-200 cursor-not-allowed" 
+                                : "opacity-0 group-hover/item:opacity-100 text-slate-300 hover:text-red-600"
+                        }`}
                     >
-                        <Trash2 size={14} />
+                        {isLocked ? <Lock size={14} /> : <Trash2 size={14} />}
                     </button>
                 </div>
             </div>
@@ -93,11 +99,17 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                     )}
                     <div className="absolute top-2 right-2">
                         <button
+                            disabled={isLocked}
                             onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                            className={`p-2 rounded-xl backdrop-blur-md transition-all ${isSelected ? 'bg-white/10 text-white/60 hover:text-white' : 'bg-black/5 text-slate-400 hover:text-red-600 hover:bg-red-50'
-                                }`}
+                            className={`p-2 rounded-xl backdrop-blur-md transition-all ${
+                                isLocked
+                                    ? "bg-slate-100/50 text-slate-300 cursor-not-allowed"
+                                    : isSelected 
+                                        ? 'bg-white/10 text-white/60 hover:text-white' 
+                                        : 'bg-black/5 text-slate-400 hover:text-red-600 hover:bg-red-50'
+                            }`}
                         >
-                            <Trash2 size={14} />
+                            {isLocked ? <Lock size={14} /> : <Trash2 size={14} />}
                         </button>
                     </div>
                 </div>
@@ -173,16 +185,20 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                     <span className={`text-[10px] font-extrabold uppercase tracking-widest ${isSelected ? 'text-blue-200' : 'text-slate-300'}`}>{item.contentType}</span>
                 )}
                 <button
+                    disabled={isLocked}
                     onClick={(e) => {
                         e.stopPropagation();
                         onDelete(item.id);
                     }}
-                    className={`p-2 transition-all rounded-xl ${isSelected
-                            ? 'text-white/60 hover:text-white hover:bg-white/10'
-                            : `${compact ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'} text-slate-300 hover:text-red-600 hover:bg-red-50`
-                        }`}
+                    className={`p-2 transition-all rounded-xl ${
+                        isLocked
+                            ? "text-slate-200 cursor-not-allowed"
+                            : isSelected
+                                ? 'text-white/60 hover:text-white hover:bg-white/10'
+                                : `${compact ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'} text-slate-300 hover:text-red-600 hover:bg-red-50`
+                    }`}
                 >
-                    <Trash2 size={compact ? 14 : 16} />
+                    {isLocked ? <Lock size={compact ? 12 : 14} /> : <Trash2 size={compact ? 14 : 16} />}
                 </button>
             </div>
         </div>

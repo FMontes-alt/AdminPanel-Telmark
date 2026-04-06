@@ -68,12 +68,14 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
                 )}
                 
                 {/* Image Edit Overlay */}
-                <button 
-                    onClick={() => setIsEditingImage(true)}
-                    className="absolute inset-0 bg-blue-600/60 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                    <ImageIcon size={20} />
-                </button>
+                {!isLocked && (
+                    <button 
+                        onClick={() => setIsEditingImage(true)}
+                        className="absolute inset-0 bg-blue-600/60 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                        <ImageIcon size={20} />
+                    </button>
+                )}
             </div>
 
             {/* Content Info - Compact Padding */}
@@ -138,17 +140,27 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
 
             {/* Sidebar Actions */}
             <div className="flex flex-col gap-2 p-4 justify-center opacity-0 group-hover:opacity-100 transition-all">
-                <a 
-                    href={`/admin/sections/${section.slug}`}
-                    className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-blue-600 transition-all shadow-lg shadow-slate-900/20"
-                    title="Configurar"
-                >
-                    <ArrowUpRight size={16} />
-                </a>
+                {isLocked ? (
+                    <div 
+                        className="w-9 h-9 rounded-xl bg-slate-200 text-slate-400 flex items-center justify-center cursor-not-allowed shadow-sm"
+                        title="Sección Bloqueada"
+                    >
+                        <Lock size={16} />
+                    </div>
+                ) : (
+                    <a 
+                        href={`/admin/sections/${section.slug}`}
+                        className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-blue-600 transition-all shadow-lg shadow-slate-900/20"
+                        title="Configurar"
+                    >
+                        <ArrowUpRight size={16} />
+                    </a>
+                )}
                 <button 
                     onClick={() => onDelete(section.id, section.name)}
                     className="w-9 h-9 rounded-xl bg-white border border-slate-100 text-slate-300 hover:text-rose-600 hover:border-rose-100 flex items-center justify-center transition-all shadow-sm"
                     title="Eliminar"
+                    disabled={isLocked}
                 >
                     <Trash2 size={16} />
                 </button>

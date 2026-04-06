@@ -6,7 +6,9 @@ import {
     Plus, 
     ArrowLeft,
     Eye,
-    FolderPlus
+    FolderPlus,
+    Lock,
+    AlertTriangle
 } from "lucide-react"
 import Link from "next/link"
 import { AdminPageHeader } from "@/components/ui/admin-page-header"
@@ -175,10 +177,42 @@ export default function SectionDetailPage() {
     }
 
     if (isLoading) return <div className="p-8 text-center animate-pulse text-slate-400 font-medium">Cargando configuración...</div>
-    if (!section) return <div className="p-8 text-center text-red-500 font-bold">Sección no encontrada</div>
+    if (!section) return (
+        <div className="p-8 lg:p-12 max-w-[1400px] mx-auto min-h-screen flex items-center justify-center">
+            <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto text-red-400">
+                    <AlertTriangle size={32} />
+                </div>
+                <h2 className="text-xl font-black text-slate-900">Sección no encontrada</h2>
+                <p className="text-slate-500 text-sm">No existe ninguna sección con el slug <code className="bg-slate-100 px-2 py-0.5 rounded font-mono text-xs">{slug}</code></p>
+                <Link href="/admin/sections" className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all">
+                    Volver a Secciones
+                </Link>
+            </div>
+        </div>
+    )
+    const isLocked = (section.config as any)?.isLocked || false
 
     return (
         <div className="p-8 lg:p-12 space-y-12 max-w-[1400px] mx-auto min-h-screen">
+            {isLocked && (
+                <div className="bg-amber-50 border border-amber-200 rounded-[32px] p-6 flex items-center gap-6 animate-in slide-in-from-top-4 duration-500">
+                    <div className="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 shrink-0">
+                        <Lock size={24} />
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="text-amber-900 font-black uppercase tracking-tight text-sm">Sección Bloqueada</h3>
+                        <p className="text-amber-700 text-xs font-medium">Esta sección tiene activo el bloque total. No se pueden realizar cambios en la estructura ni en los contenidos hasta que se desbloquee.</p>
+                    </div>
+                    <Link 
+                        href="/admin/sections"
+                        className="px-6 py-3 bg-amber-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-800 transition-all shadow-lg shadow-amber-900/20"
+                    >
+                        Volver
+                    </Link>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex flex-col gap-4">
                 <Link 
@@ -204,9 +238,14 @@ export default function SectionDetailPage() {
                     </Link>
                     <button 
                         onClick={() => setIsAddingCategory(true)}
-                        className="bg-blue-600 text-white px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-200 group"
+                        disabled={isLocked}
+                        className={`px-5 py-2.5 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 shadow-lg group ${
+                            isLocked 
+                            ? "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none" 
+                            : "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200"
+                        }`}
                     >
-                        <Plus size={18} className="transition-transform" />
+                        {isLocked ? <Lock size={18} /> : <Plus size={18} className="transition-transform" />}
                         Nueva Categoría
                     </button>
                 </AdminPageHeader>
@@ -226,6 +265,7 @@ export default function SectionDetailPage() {
                 {section.categories.length > 0 ? (
                     <CategoryList 
                         categories={section.categories}
+                        isLocked={isLocked}
                         onReorder={handleReorder}
                         onUpdateCategory={handleUpdateCategory}
                         onUpdateSub={handleUpdateSubcategory}

@@ -5,7 +5,7 @@ import { useState, useRef } from "react"
 import { SECTION_TEMPLATES, SectionTemplateType } from "@/lib/constants/section-templates"
 import { uploadFileAction } from "@/actions/storage"
 import { cn } from "@/lib/utils"
-import AlertModal from "./AlertModal"
+import AlertModal from "@/components/ui/AlertModal"
 
 interface HierarchyBuilderProps {
     sectionSlug: string
