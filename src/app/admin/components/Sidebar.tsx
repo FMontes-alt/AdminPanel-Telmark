@@ -23,7 +23,8 @@ import {
     FolderTree,
     PanelLeftClose,
     PanelRightOpen,
-    Menu
+    Menu,
+    ClipboardList
 } from "lucide-react"
 import { getSections } from "@/actions/sections"
 import { createClient } from "@/lib/supabase/client"
@@ -125,7 +126,8 @@ export function Sidebar() {
                     href: `/admin/sections/${s.slug}`,
                     icon: getIconForSection(s.name),
                     iconColor: getColorForSection(s.name)
-                }))
+                })),
+                { name: 'Cuestionarios', href: '/admin/quizzes', icon: ClipboardList },
             ]
         },
         {
