@@ -1,0 +1,188 @@
+"use server"
+
+import { db } from "@/db"
+import { quizzes, quizQuestions, quizOptions, quizAttempts, sections } from "@/db/schema"
+import { eq, desc, and, count } from "drizzle-orm"
+import { revalidatePath } from "next/cache"
+import { formatError } from "@/lib/error-handler"
+import type { CreateQuizInput } from "@/lib/types/quiz"
+
+// ─── READ ───────────────────────────────────────────────────────────────
+
+export async function getQuizzes(sectionId?: string) {
+    try {
+        const baseQuery = db
+            .select({
+                id: quizzes.id,
+                sectionId: quizzes.sectionId,
+                title: quizzes.title,
+                slug: quizzes.slug,
+                description: quizzes.description,
+                isPublished: quizzes.isPublished,
+                timeLimitMinutes: quizzes.timeLimitMinutes,
+                randomizeQuestions: quizzes.randomizeQuestions,
+                createdAt: quizzes.createdAt,
+                updatedAt: quizzes.updatedAt,
+                sectionName: sections.name,
+            })
+            .from(quizzes)
+            .leftJoin(sections, eq(quizzes.sectionId, sections.id))
+            .orderBy(desc(quizzes.createdAt))
+
+        if (sectionId) {
+            return baseQuery.where(eq(quizzes.sectionId, sectionId))
+        }
+        return baseQuery
+    } catch (error) {
+        console.error("Error fetching quizzes:", error)
+        return []
+    }
+}
+
+export async function getQuizById(quizId: string) {
+    try {
+        const [quiz] = await db
+            .select()
+            .from(quizzes)
+            .where(eq(quizzes.id, quizId))
+            .limit(1)
+
+        if (!quiz) return null
+
+        const questions = await db
+            .select()
+            .from(quizQuestions)
+            .where(eq(quizQuestions.quizId, quizId))
+            .orderBy(quizQuestions.sortOrder)
+
+        const questionsWithOptions = await Promise.all(
+            questions.map(async (q) => {
+                const options = await db
+                    .select()
+                    .from(quizOptions)
+                    .where(eq(quizOptions.questionId, q.id))
+                    .orderBy(quizOptions.sortOrder)
+                return { ...q, options }
+            })
+        )
+
+        return { ...quiz, questions: questionsWithOptions }
+    } catch (error) {
+        console.error("Error fetching quiz:", error)
+        return null
+    }
+}
+
+export async function getQuizBySlug(sectionId: string, slug: string) {
+    try {
+        const [quiz] = await db
+            .select()
+            .from(quizzes)
+            .where(and(eq(quizzes.sectionId, sectionId), eq(quizzes.slug, slug)))
+            .limit(1)
+        return quiz ?? null
+    } catch (error) {
+        console.error("Error fetching quiz by slug:", error)
+        return null
+    }
+}
+
+export async function getPublishedQuizzes(sectionId: string) {
+    try {
+        return db
+            .select()
+            .from(quizzes)
+            .where(and(eq(quizzes.sectionId, sectionId), eq(quizzes.isPublished, true)))
+            .orderBy(desc(quizzes.createdAt))
+    } catch (error) {
+        console.error("Error fetching published quizzes:", error)
+        return []
+    }
+}
+
+export async function getQuizQuestionCount(quizId: string) {
+    try {
+        const [result] = await db
+            .select({ count: count() })
+            .from(quizQuestions)
+            .where(eq(quizQuestions.quizId, quizId))
+        return result?.count ?? 0
+    } catch (error) {
+        return 0
+    }
+}
+
+// ─── CREATE ─────────────────────────────────────────────────────────────
+
+export async function createQuiz(data: CreateQuizInput) {
+    try {
+        const slug = data.title
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9-]/g, "")
+
+        const [newQuiz] = await db
+            .insert(quizzes)
+            .values({
+                sectionId: data.sectionId,
+                title: data.title,
+                slug,
+                description: data.description || null,
+                timeLimitMinutes: data.timeLimitMinutes || null,
+                randomizeQuestions: data.randomizeQuestions || false,
+            })
+            .returning()
+
+        revalidatePath("/admin/quizzes")
+        return { success: true, data: newQuiz }
+    } catch (error) {
+        const formatted = formatError(error)
+        return { error: formatted.message }
+    }
+}
+
+// ─── UPDATE ─────────────────────────────────────────────────────────────
+
+export async function updateQuiz(quizId: string, data: Partial<CreateQuizInput> & { isPublished?: boolean }) {
+    try {
+        const updateData: any = { updatedAt: new Date() }
+        if (data.title !== undefined) {
+            updateData.title = data.title
+            updateData.slug = data.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+        }
+        if (data.description !== undefined) updateData.description = data.description
+        if (data.sectionId !== undefined) updateData.sectionId = data.sectionId
+        if (data.timeLimitMinutes !== undefined) updateData.timeLimitMinutes = data.timeLimitMinutes
+        if (data.randomizeQuestions !== undefined) updateData.randomizeQuestions = data.randomizeQuestions
+        if (data.isPublished !== undefined) updateData.isPublished = data.isPublished
+
+        const [updated] = await db
+            .update(quizzes)
+            .set(updateData)
+            .where(eq(quizzes.id, quizId))
+            .returning()
+
+        revalidatePath("/admin/quizzes")
+        return { success: true, data: updated }
+    } catch (error) {
+        const formatted = formatError(error)
+        return { error: formatted.message }
+    }
+}
+
+export async function publishQuiz(quizId: string, publish: boolean) {
+    return updateQuiz(quizId, { isPublished: publish })
+}
+
+// ─── DELETE ─────────────────────────────────────────────────────────────
+
+export async function deleteQuiz(quizId: string) {
+    try {
+        await db.delete(quizzes).where(eq(quizzes.id, quizId))
+        revalidatePath("/admin/quizzes")
+        return { success: true }
+    } catch (error) {
+        const formatted = formatError(error)
+        return { error: formatted.message }
+    }
+}
