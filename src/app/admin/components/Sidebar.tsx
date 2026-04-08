@@ -26,6 +26,7 @@ import {
     Menu
 } from "lucide-react"
 import { getSections } from "@/actions/sections"
+import { getUnreadAlertsCount } from "@/actions/alerts"
 import { createClient } from "@/lib/supabase/client"
 import { useSidebar } from "./SidebarProvider"
 import { Button } from "@/components/ui/button"
@@ -64,6 +65,7 @@ export function Sidebar() {
     const [collapsedSections, setCollapsedSections] = useState<string[]>([])
     const [dbSections, setDbSections] = useState<{name: string, slug: string}[]>([])
     const [profile, setProfile] = useState<{ firstName?: string; lastName?: string; avatarUrl?: string; email?: string } | null>(null)
+    const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false)
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -93,6 +95,22 @@ export function Sidebar() {
             }
         }
         fetchSections()
+    }, [])
+
+    useEffect(() => {
+        const fetchUnread = async () => {
+            try {
+                const count = await getUnreadAlertsCount()
+                setHasUnreadAlerts(count > 0)
+            } catch (error) {
+                console.error("Error fetching unread status:", error)
+            }
+        }
+        fetchUnread()
+        
+        // Polling cada 30 segundos
+        const timer = setInterval(fetchUnread, 30000)
+        return () => clearInterval(timer)
     }, [])
 
     const toggleSection = (group: string) => {
@@ -228,6 +246,12 @@ export function Sidebar() {
                                         >
                                             <item.icon size={18} className={isActive(item.href) ? 'text-white' : item.iconColor || 'text-slate-400 group-hover:text-blue-600'} />
                                             {!isCollapsed && <span className="truncate">{item.name}</span>}
+                                            {item.name === 'Alertas' && hasUnreadAlerts && (
+                                                <span className={`absolute flex h-2 w-2 ${isCollapsed ? 'top-1.5 right-1.5' : 'right-4'}`}>
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                                </span>
+                                            )}
                                         </Link>
                                     ))}
                                 </div>

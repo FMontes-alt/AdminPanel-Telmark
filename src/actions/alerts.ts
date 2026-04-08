@@ -2,7 +2,7 @@
 
 import { db } from "@/db"
 import { alerts } from "@/db/schema"
-import { desc, eq } from "drizzle-orm"
+import { desc, eq, isNull } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 
 // --- ACCIÓN PARA CREAR LAS ALERTAS
@@ -39,4 +39,18 @@ export async function markAlertAsRead(alertId: string) {
     
     revalidatePath("/admin/alerts")
     return { success: true }
+}
+
+export async function getUnreadAlertsCount() {
+    try {
+        const data = await db
+            .select()
+            .from(alerts)
+            .where(isNull(alerts.isRead))
+        
+        return data.length
+    } catch (error) {
+        console.error("Error fetching unread count:", error)
+        return 0
+    }
 }
