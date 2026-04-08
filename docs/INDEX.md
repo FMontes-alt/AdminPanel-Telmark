@@ -28,6 +28,7 @@ Documentación técnica de los módulos principales.
 
 - 🎨 **[Campaign Builder](features/campaign-builder.md)**: Motor de diseño de campañas premium.
 - 🔔 **[Sistema de Alertas](features/alerts-system.md)**: Trazabilidad total de eventos del sistema.
+- 📝 **[Sistema de Cuestionarios](SISTEMA_CUESTIONARIOS.md)**: Evaluaciones, formación y gestión de multimedia segura.
 
 ## 📋 [Gestión del Proyecto](project/epics.md)
 
