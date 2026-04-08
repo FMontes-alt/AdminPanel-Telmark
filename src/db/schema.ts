@@ -89,3 +89,36 @@ export const alerts = pgTable("alerts", {
     isRead: timestamp("is_read", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// 6. GRUPOS Y PERMISOS AVANZADOS
+export const permissionTargetEnum = pgEnum("permission_target", ["section", "category", "subcategory", "item"]);
+
+export const groups = pgTable("groups", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    description: text("description"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const userGroups = pgTable("user_groups", {
+    userId: uuid("user_id")
+        .references(() => profiles.id, { onDelete: "cascade" })
+        .notNull(),
+    groupId: uuid("group_id")
+        .references(() => groups.id, { onDelete: "cascade" })
+        .notNull(),
+}, (t) => [
+    unique().on(t.userId, t.groupId),
+]);
+
+export const permissions = pgTable("permissions", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+        .references(() => profiles.id, { onDelete: "cascade" }),
+    groupId: uuid("group_id")
+        .references(() => groups.id, { onDelete: "cascade" }),
+    targetType: permissionTargetEnum("target_type").notNull(),
+    targetId: uuid("target_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});

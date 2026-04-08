@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getAgents, deleteAgent } from "@/actions/users"
+import { getAgents, deleteAgent, getAgentById } from "@/actions/users"
+import { getGroups } from "@/actions/groups"
+import { getHierarchy } from "@/actions/permissions"
 import { getSections } from "@/actions/sections"
 import { AgentsList } from "./AgentsList"
 import { AgentForm } from "./AgentForm"
@@ -11,9 +13,12 @@ import { Plus, Users, Loader2 } from "lucide-react"
 export default function AgentsPage() {
     const [agents, setAgents] = useState<any[]>([])
     const [sections, setSections] = useState<any[]>([])
+    const [groups, setGroups] = useState<any[]>([])
+    const [hierarchy, setHierarchy] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [editingAgent, setEditingAgent] = useState<any>(null)
+    const [loadingAgent, setLoadingAgent] = useState(false)
 
     useEffect(() => {
         fetchData()
@@ -22,12 +27,16 @@ export default function AgentsPage() {
     const fetchData = async () => {
         setLoading(true)
         try {
-            const [agentsData, sectionsData] = await Promise.all([
+            const [agentsData, sectionsData, groupsData, hierarchyData] = await Promise.all([
                 getAgents(),
-                getSections()
+                getSections(),
+                getGroups(),
+                getHierarchy()
             ])
             setAgents(agentsData)
             setSections(sectionsData)
+            setGroups(groupsData)
+            setHierarchy(hierarchyData)
         } catch (error) {
             console.error("Error fetching data:", error)
         } finally {
@@ -36,7 +45,7 @@ export default function AgentsPage() {
     }
 
     const handleDelete = async (id: string) => {
-        if (!confirm("¿Estás seguro de que deseas eliminar este empleado?")) return
+        if (!confirm("¿Estás seguro de que deseas eliminar este usuario?")) return
         try {
             const result = await deleteAgent(id)
             if (result.success) fetchData()
@@ -45,9 +54,17 @@ export default function AgentsPage() {
         }
     }
 
-    const handleEdit = (agent: any) => {
-        setEditingAgent(agent)
-        setIsFormOpen(true)
+    const handleEdit = async (agent: any) => {
+        setLoadingAgent(true)
+        try {
+            const fullAgent = await getAgentById(agent.id)
+            setEditingAgent(fullAgent)
+            setIsFormOpen(true)
+        } catch (error) {
+            console.error("Error fetching agent details:", error)
+        } finally {
+            setLoadingAgent(false)
+        }
     }
 
     const handleCloseForm = () => {
@@ -59,7 +76,7 @@ export default function AgentsPage() {
         <div className="p-8 lg:p-12 space-y-12 max-w-[1400px] mx-auto min-h-screen">
             <AdminPageHeader
                 category="Sistema"
-                title={<>Gestión de <span className="text-blue-600">Empleados</span></>}
+                title={<>Gestión de <span className="text-blue-600">Usuarios</span></>}
                 description="Administra los accesos y permisos de las secciones para cada usuario."
             >
                 <button
@@ -67,7 +84,7 @@ export default function AgentsPage() {
                     className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-xl shadow-blue-500/20"
                 >
                     <Plus size={18} />
-                    Nuevo Empleado
+                    Nuevo Usuario
                 </button>
             </AdminPageHeader>
 
@@ -76,6 +93,8 @@ export default function AgentsPage() {
                     <AgentForm
                         agent={editingAgent}
                         sections={sections}
+                        groups={groups}
+                        hierarchy={hierarchy}
                         onClose={handleCloseForm}
                         onSuccess={() => {
                             handleCloseForm()
@@ -85,10 +104,10 @@ export default function AgentsPage() {
                 </div>
             )}
 
-            {loading ? (
+            {(loading || loadingAgent) ? (
                 <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-4">
                     <Loader2 className="animate-spin" size={32} />
-                    <p className="text-xs font-bold uppercase tracking-widest">Cargando nómina...</p>
+                    <p className="text-xs font-bold uppercase tracking-widest">{loadingAgent ? 'Cargando detalles...' : 'Cargando usuarios...'}</p>
                 </div>
             ) : agents.length > 0 ? (
                 <AgentsList

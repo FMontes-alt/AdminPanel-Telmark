@@ -7,7 +7,7 @@ import Link from "next/link"
 import { LayoutDashboard, LogOut, ChevronRight, User as UserIcon, Sparkles } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { LogoutButton } from "@/components/auth/LogoutButton"
-import { getProfileSections } from "@/actions/users" // I'll create this or use a fetcher
+
 
 import { getDashboardData } from "@/actions/users"
 

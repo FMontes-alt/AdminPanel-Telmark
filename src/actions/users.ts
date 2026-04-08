@@ -1,10 +1,12 @@
 "use server"
 
 import { db } from "@/db";
-import { profiles, sections } from "@/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { profiles, sections, userGroups, permissions } from "@/db/schema";
+import { eq, inArray, sql } from "drizzle-orm";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 /**
  * 1.OBTENER EMPLEADOS 
@@ -20,12 +22,37 @@ export async function getAgents() {
 }
 
 /**
+ * 1.2 OBTENER EMPLEADO POR ID (con grupos y permisos)
+ */
+export async function getAgentById(id: string) {
+    try {
+        const profile = await db.query.profiles.findFirst({
+            where: eq(profiles.id, id)
+        });
+
+        if (!profile) return null;
+
+        const groups = await db.select({ id: userGroups.groupId })
+            .from(userGroups)
+            .where(eq(userGroups.userId, id));
+
+        const userPermissions = await db.select().from(permissions).where(eq(permissions.userId, id));
+
+        return {
+            ...profile,
+            groupIds: groups.map(g => g.id),
+            permissions: userPermissions
+        };
+    } catch (error) {
+        console.error("Error al obtener empleado por ID:", error);
+        return null;
+    }
+}
+
+/**
  * 1.5 OBTENER DATOS DEL DASHBOARD PARA EL USUARIO ACTUAL
  */
 export async function getDashboardData() {
-    const { createServerClient } = await import("@supabase/ssr")
-    const { cookies } = await import("next/headers")
-    
     const cookieStore = await cookies()
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,9 +76,24 @@ export async function getDashboardData() {
 
     if (!profile) return { profile: null, sections: [] }
 
+    // Obtenemos todas las secciones a las que tiene acceso (Directo + Grupos)
+    const userPermissions = await db.select({ targetId: permissions.targetId })
+        .from(permissions)
+        .where(
+            sql`${permissions.userId} = ${user.id} OR ${permissions.groupId} IN (
+                SELECT group_id FROM user_groups WHERE user_id = ${user.id}
+            )`
+        );
+    
+    const sectionIds = new Set(userPermissions.map(p => p.targetId));
+    // También incluimos las antiguas por si acaso para migración suave
+    if (profile.assignedSectionIds) {
+        profile.assignedSectionIds.forEach(id => sectionIds.add(id));
+    }
+
     let assignedSections: any[] = []
-    if (profile.assignedSectionIds && profile.assignedSectionIds.length > 0) {
-        assignedSections = await db.select().from(sections).where(inArray(sections.id, profile.assignedSectionIds))
+    if (sectionIds.size > 0) {
+        assignedSections = await db.select().from(sections).where(inArray(sections.id, Array.from(sectionIds)))
     }
 
     return { profile, sections: assignedSections }
@@ -66,7 +108,8 @@ export async function createAgent(data: {
     lastName: string;
     phone?: string;
     role: "admin" | "usuario" | "superadmin";
-    assignedSectionIds?: string[];
+    groupIds?: string[];
+    permissionItems?: { targetType: "section" | "category" | "subcategory" | "item", targetId: string }[];
     password?: string;
 }) {
     const supabaseAdmin = getAdminClient();
@@ -91,20 +134,26 @@ export async function createAgent(data: {
             lastName: data.lastName,
             phone: data.phone,
             role: data.role,
-            assignedSectionIds: data.assignedSectionIds || [],
-        }).onConflictDoUpdate({
-            target: [profiles.id],
-            set: {
-                firstName: data.firstName,
-                lastName: data.lastName,
-                phone: data.phone,
-                role: data.role,
-                assignedSectionIds: data.assignedSectionIds || [],
-                updatedAt: new Date(),
-            }
         }).returning();
 
-        //Refrecamos la ruta para que vea al momento 
+        // Asignar grupos
+        if (data.groupIds && data.groupIds.length > 0) {
+            await db.insert(userGroups).values(
+                data.groupIds.map(groupId => ({ userId: profile.id, groupId }))
+            );
+        }
+
+        // Asignar permisos individuales
+        if (data.permissionItems && data.permissionItems.length > 0) {
+            await db.insert(permissions).values(
+                data.permissionItems.map(p => ({
+                    userId: profile.id,
+                    targetType: p.targetType,
+                    targetId: p.targetId,
+                }))
+            );
+        }
+
         revalidatePath("/admin/agents");
         return { success: true, data: profile };
     } catch (error: any) {
@@ -121,17 +170,45 @@ export async function updateAgent(id: string, data: Partial<{
     lastName: string;
     phone: string;
     role: "admin" | "usuario" | "superadmin";
-    assignedSectionIds: string[];
+    groupIds: string[];
+    permissionItems: { targetType: "section" | "category" | "subcategory" | "item", targetId: string }[];
 }>) {
     try {
-        const [updated] = await db.update(profiles)
+        const { groupIds, permissionItems, ...profileData } = data;
+
+        // Actualizar perfil
+        await db.update(profiles)
             .set({
-                ...data,
+                ...profileData,
                 updatedAt: new Date(),
-            }).where(eq(profiles.id, id)).returning();
+            }).where(eq(profiles.id, id));
+
+        // Actualizar grupos
+        if (groupIds !== undefined) {
+            await db.delete(userGroups).where(eq(userGroups.userId, id));
+            if (groupIds.length > 0) {
+                await db.insert(userGroups).values(
+                    groupIds.map(groupId => ({ userId: id, groupId }))
+                );
+            }
+        }
+
+        // Actualizar permisos
+        if (permissionItems !== undefined) {
+            await db.delete(permissions).where(eq(permissions.userId, id));
+            if (permissionItems.length > 0) {
+                await db.insert(permissions).values(
+                    permissionItems.map(p => ({
+                        userId: id,
+                        targetType: p.targetType,
+                        targetId: p.targetId,
+                    }))
+                );
+            }
+        }
 
         revalidatePath("/admin/agents");
-        return { success: true, data: updated }
+        return { success: true }
     } catch (error: any) {
         console.error("error al actualizar", error);
         return { success: false, error: error.message };

@@ -18,9 +18,9 @@ import {
     ShieldCheck,
     Flame,
     BellRing,
+    FolderTree,
     ChevronDown,
     PlusCircle,
-    FolderTree,
     PanelLeftClose,
     PanelRightOpen,
     Menu
@@ -149,7 +149,8 @@ export function Sidebar() {
         {
             group: "Operativa",
             items: [
-                { name: 'Empleados', href: '/admin/agents', icon: Users },
+                { name: 'Usuarios', href: '/admin/agents', icon: Users },
+                { name: 'Grupos', href: '/admin/groups', icon: FolderTree },
                 { name: 'Monitoreo', href: '/admin/monitoring', icon: Eye },
                 { name: 'Analíticas', href: '/admin/analytics', icon: BarChart3 },
             ]

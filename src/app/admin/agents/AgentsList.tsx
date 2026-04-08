@@ -59,7 +59,7 @@ export function AgentsList({ agents, sections, onEdit, onDelete }: AgentsListPro
                                     <tr className="border-b border-slate-50">
                                         <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-300">Usuario</th>
                                         <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-300">Contacto</th>
-                                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-300">Secciones</th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-300">Accesos</th>
                                         <th className="px-8 py-5 text-right text-[10px] font-black uppercase tracking-widest text-slate-300">Acciones</th>
                                     </tr>
                                 </thead>
@@ -91,15 +91,9 @@ export function AgentsList({ agents, sections, onEdit, onDelete }: AgentsListPro
                                             </td>
                                             <td className="px-8 py-5">
                                                 <div className="flex flex-wrap gap-1.5 max-w-[250px]">
-                                                    {agent.assignedSectionIds && agent.assignedSectionIds.length > 0 ? (
-                                                        sections.filter(s => agent.assignedSectionIds.includes(s.id)).map(s => (
-                                                            <span key={s.id} className="px-2 py-1 bg-slate-100 text-slate-500 text-[9px] font-black uppercase rounded-lg tracking-tight">
-                                                                {s.name}
-                                                            </span>
-                                                        ))
-                                                    ) : (
-                                                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">Global / Admin</span>
-                                                    )}
+                                                    <span className="px-2 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase rounded-lg tracking-tight">
+                                                        Configurado
+                                                    </span>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5 text-right">
