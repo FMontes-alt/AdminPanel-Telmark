@@ -19,9 +19,7 @@ import {
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { getSectionBySlug } from "@/actions/sections"
-import { getCategories } from "@/actions/categories"
-import { getSubcategories } from "@/actions/subcategories"
-import { getItems } from "@/actions/items"
+import { getFilteredHierarchy } from "@/actions/hierarchy"
 import { getSignedUrlAction, getDownloadUrlAction } from "@/actions/storage"
 import AlertModal from "@/components/ui/AlertModal"
 
@@ -327,21 +325,28 @@ function SubcategoryViewer({ sub }: { sub: any }) {
                     >
                         {sub.items?.map((item: any) => (
                             <motion.div
-                                whileHover={{ y: -4 }}
+                                whileHover={{ y: -6, scale: 1.02 }}
                                 key={item.id}
                                 onClick={() => handleSelectItem(item)}
-                                className="group bg-white border border-slate-100 p-5 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all cursor-pointer flex flex-col justify-between min-h-[140px]"
+                                className="group bg-white border border-slate-100 p-6 rounded-[32px] shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 transition-all cursor-pointer flex flex-col justify-between min-h-[160px] relative overflow-hidden"
                             >
-                                <div className="space-y-3">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50/50 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-blue-100/50 transition-colors" />
+                                <div className="space-y-4 relative z-10">
                                     <div className="flex items-center justify-between">
-                                        <div className="p-2.5 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                        <div className="p-3 rounded-2xl bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                                             {getContentIcon(item.contentType)}
                                         </div>
-                                        <ChevronRight size={16} className="text-slate-200 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-all" />
+                                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-50 text-slate-300 group-hover:bg-blue-50 group-hover:text-blue-500 transition-all">
+                                            <ChevronRight size={16} />
+                                        </div>
                                     </div>
-                                    <h4 className="text-sm font-black text-slate-800 leading-tight pr-4">{item.title}</h4>
+                                    <h4 className="text-sm font-black text-slate-800 leading-snug pr-4 group-hover:text-blue-600 transition-colors">{item.title}</h4>
                                 </div>
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4">Acceder {item.contentType}</p>
+                                <div className="flex items-center gap-2 mt-6 relative z-10">
+                                    <span className="text-[8px] font-black text-blue-600/40 uppercase tracking-[0.2em] group-hover:text-blue-600 transition-colors">Sistema Telmark</span>
+                                    <div className="h-px flex-1 bg-slate-100" />
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{item.contentType}</p>
+                                </div>
                             </motion.div>
                         ))}
                     </motion.div>
@@ -350,6 +355,7 @@ function SubcategoryViewer({ sub }: { sub: any }) {
         </section>
     )
 }
+
 
 // ─── Página Principal ──────────────────────────────────────────────
 export default function DashboardSectionPage() {
@@ -361,7 +367,6 @@ export default function DashboardSectionPage() {
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
     const [isErrorModalOpen, setIsErrorModalOpen] = useState(false)
 
-
     useEffect(() => {
         fetchData()
     }, [sectionSlug])
@@ -372,16 +377,9 @@ export default function DashboardSectionPage() {
             const currentSection = await getSectionBySlug(sectionSlug as string)
             if (currentSection) {
                 setSection(currentSection)
-                const cats = await getCategories(currentSection.id)
-
-                const catsWithSubs = await Promise.all(cats.map(async (cat: any) => {
-                    const subs = await getSubcategories(cat.id)
-                    const subsWithItems = await Promise.all(subs.map(async (sub: any) => {
-                        const its = await getItems(sub.id)
-                        return { ...sub, items: its }
-                    }))
-                    return { ...cat, subcategories: subsWithItems }
-                }))
+                
+                // USAMOS LA NUEVA ACCIÓN FILTRADA POR PERMISOS
+                const catsWithSubs = await getFilteredHierarchy(currentSection.id)
 
                 setCategories(catsWithSubs)
                 if (catsWithSubs.length > 0) {
@@ -393,7 +391,6 @@ export default function DashboardSectionPage() {
                     setIsErrorModalOpen(true)
                 }
             }
-
         } catch (error) {
             console.error("Error fetching dashboard content:", error)
         } finally {
@@ -423,20 +420,22 @@ export default function DashboardSectionPage() {
     if (!section) return <div className="h-screen bg-slate-50 flex items-center justify-center p-8 text-red-500 font-bold">Error: Sección no encontrada</div>
 
     return (
-        <div className="h-screen bg-white flex overflow-hidden font-sans">
+        <div className="h-screen bg-[#fafafa] flex overflow-hidden font-sans">
             {/* Left Sidebar - Categories Navigation */}
-            <aside className="w-80 bg-slate-50 border-r border-slate-100 flex flex-col h-full">
-                <div className="p-8 space-y-6">
+            <aside className="w-80 bg-white border-r border-slate-100 flex flex-col h-full shadow-sm z-30">
+                <div className="p-8 space-y-8">
                     <Link
-                        href="/"
-                        className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors text-xs font-black uppercase tracking-widest group"
+                        href="/dashboard"
+                        className="inline-flex items-center gap-3 text-slate-400 hover:text-blue-600 transition-all text-[10px] font-black uppercase tracking-[0.2em] group"
                     >
-                        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-                        Inicio
+                        <div className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+                            <ArrowLeft size={12} className="group-hover:-translate-x-0.5 transition-transform" />
+                        </div>
+                        Volver al Hub
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">{section.name}</h1>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-2">Centro de Información</p>
+                        <div className="inline-block px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-[8px] font-black uppercase tracking-widest mb-3">Unidad de Negocio</div>
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">{section.name}</h1>
                     </div>
                 </div>
 

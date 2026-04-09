@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/db";
-import { profiles, sections, userGroups, permissions } from "@/db/schema";
+import { profiles, sections, userGroups, permissions, categories, subcategories, items } from "@/db/schema";
 import { eq, inArray, sql } from "drizzle-orm";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
@@ -76,24 +76,64 @@ export async function getDashboardData() {
 
     if (!profile) return { profile: null, sections: [] }
 
-    // Obtenemos todas las secciones a las que tiene acceso (Directo + Grupos)
-    const userPermissions = await db.select({ targetId: permissions.targetId })
-        .from(permissions)
-        .where(
-            sql`${permissions.userId} = ${user.id} OR ${permissions.groupId} IN (
-                SELECT group_id FROM user_groups WHERE user_id = ${user.id}
-            )`
-        );
-    
-    const sectionIds = new Set(userPermissions.map(p => p.targetId));
-    // También incluimos las antiguas por si acaso para migración suave
+    // Si es superadmin, ve todo
+    if (profile.role === 'superadmin') {
+        const allSections = await db.select().from(sections).orderBy(sections.name)
+        return { profile, sections: allSections }
+    }
+
+    // Obtenemos todos los permisos del usuario (Directos + Grupos)
+    const allPerms = await db.select({ 
+        targetId: permissions.targetId,
+        targetType: permissions.targetType
+    })
+    .from(permissions)
+    .where(
+        sql`${permissions.userId} = ${user.id} OR ${permissions.groupId} IN (
+            SELECT group_id FROM user_groups WHERE user_id = ${user.id}
+        )`
+    );
+
+    const sectionIds = new Set<string>();
+
+    // Añadimos las antiguas asignaciones directas por compatibilidad
     if (profile.assignedSectionIds) {
         profile.assignedSectionIds.forEach(id => sectionIds.add(id));
     }
 
+    // Resolvimos cada permiso hasta su ID de sección correspondiente
+    for (const perm of allPerms) {
+        if (perm.targetType === 'section') {
+            sectionIds.add(perm.targetId);
+        } else if (perm.targetType === 'category') {
+            const cat = await db.select({ sectionId: categories.sectionId })
+                .from(categories)
+                .where(eq(categories.id, perm.targetId))
+                .limit(1);
+            if (cat[0]) sectionIds.add(cat[0].sectionId);
+        } else if (perm.targetType === 'subcategory') {
+            const sub = await db.select({ sectionId: categories.sectionId })
+                .from(subcategories)
+                .innerJoin(categories, eq(subcategories.categoryId, categories.id))
+                .where(eq(subcategories.id, perm.targetId))
+                .limit(1);
+            if (sub[0]) sectionIds.add(sub[0].sectionId);
+        } else if (perm.targetType === 'item') {
+            const item = await db.select({ sectionId: categories.sectionId })
+                .from(items)
+                .innerJoin(subcategories, eq(items.subcategoryId, subcategories.id))
+                .innerJoin(categories, eq(subcategories.categoryId, categories.id))
+                .where(eq(items.id, perm.targetId))
+                .limit(1);
+            if (item[0]) sectionIds.add(item[0].sectionId);
+        }
+    }
+
     let assignedSections: any[] = []
     if (sectionIds.size > 0) {
-        assignedSections = await db.select().from(sections).where(inArray(sections.id, Array.from(sectionIds)))
+        assignedSections = await db.select().from(sections)
+            .where(inArray(sections.id, Array.from(sectionIds)))
+            .orderBy(sections.name)
     }
 
     return { profile, sections: assignedSections }
@@ -155,6 +195,7 @@ export async function createAgent(data: {
         }
 
         revalidatePath("/admin/agents");
+        revalidatePath("/dashboard");
         return { success: true, data: profile };
     } catch (error: any) {
         console.error("Error al crear empleado:", error);
@@ -208,6 +249,7 @@ export async function updateAgent(id: string, data: Partial<{
         }
 
         revalidatePath("/admin/agents");
+        revalidatePath("/dashboard");
         return { success: true }
     } catch (error: any) {
         console.error("error al actualizar", error);
@@ -225,6 +267,7 @@ export async function deleteAgent(id: string) {
         await db.delete(profiles).where(eq(profiles.id, id));
 
         revalidatePath("/admin/agents");
+        revalidatePath("/dashboard");
         return { success: true };
     } catch (error: any) {
         console.error("Error al eliminar", error);

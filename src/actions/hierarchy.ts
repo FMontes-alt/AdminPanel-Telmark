@@ -1,133 +1,127 @@
 "use server"
 
 import { db } from "@/db"
-import { sections, categories, subcategories, items } from "@/db/schema"
-import { eq } from "drizzle-orm"
+import { sections, categories, subcategories, items, permissions, profiles, userGroups } from "@/db/schema"
+import { eq, sql, inArray } from "drizzle-orm"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
 
-// ─── TIPOS ──────────────────────────────────────────────────────────────
-
-type ItemNode = {
-    id: string
-    title: string
-    slug: string
-    body: string | null
-    filePath: string | null
-    externalLink: string | null
-    contentType: string | null
-    attributes: unknown
+// Tipos para la jerarquía
+export type SectionHierarchy = typeof sections.$inferSelect & {
+    categories: (typeof categories.$inferSelect & {
+        subcategories: (typeof subcategories.$inferSelect & {
+            items: (typeof items.$inferSelect)[]
+        })[]
+    })[]
 }
-
-type SubcategoryNode = {
-    id: string
-    name: string
-    slug: string
-    items: ItemNode[]
-}
-
-type CategoryNode = {
-    id: string
-    name: string
-    slug: string
-    subcategories: SubcategoryNode[]
-}
-
-export type SectionHierarchy = {
-    id: string
-    name: string
-    slug: string
-    config: unknown
-    categories: CategoryNode[]
-}
-
-// ─── FETCHER PRINCIPAL ──────────────────────────────────────────────────
 
 /**
- * Devuelve el árbol jerárquico COMPLETO de una sección dado su slug.
- *
- * Estructura devuelta:
- * Section
- *   └── Category[]
- *         └── Subcategory[]
- *               └── Item[]
- *
- * Se realizan 4 consultas secuenciales (una por nivel) y se ensambla
- * el árbol en memoria. Es más eficiente que JOINs anidados para este
- * volumen de datos y permite caché granular en el futuro.
+ * [ADMIN] Obtiene la jerarquía completa de una sección por su slug
  */
-export async function getSectionHierarchy(sectionSlug: string): Promise<SectionHierarchy | null> {
-    // 1. Buscar la sección por slug
-    const [section] = await db
-        .select()
-        .from(sections)
-        .where(eq(sections.slug, sectionSlug))
-        .limit(1)
+export async function getSectionHierarchy(slug: string): Promise<SectionHierarchy | null> {
+    const section = await db.query.sections.findFirst({
+        where: eq(sections.slug, slug.toLowerCase())
+    })
 
     if (!section) return null
 
-    // 2. Obtener las categorías de esa sección
-    const sectionCategories = await db
-        .select()
-        .from(categories)
+    const allCategories = await db.select().from(categories)
         .where(eq(categories.sectionId, section.id))
         .orderBy(categories.sortOrder, categories.createdAt)
 
-    if (sectionCategories.length === 0) {
-        return { ...section, categories: [] }
-    }
+    const categoriesWithHierarchy = await Promise.all(allCategories.map(async (cat) => {
+        const allSubs = await db.select().from(subcategories)
+            .where(eq(subcategories.categoryId, cat.id))
+            .orderBy(subcategories.createdAt)
 
-    // 3. Obtener las subcategorías de todas las categorías (en una sola query)
-    const categoryIds = sectionCategories.map((c) => c.id)
-    const allSubcategories = await db
-        .select()
-        .from(subcategories)
-        .orderBy(subcategories.createdAt)
+        const subsWithItems = await Promise.all(allSubs.map(async (sub) => {
+            const its = await db.select().from(items)
+                .where(eq(items.subcategoryId, sub.id))
+                .orderBy(items.createdAt)
+            return { ...sub, items: its }
+        }))
 
-    const filteredSubcategories = allSubcategories.filter((sc) =>
-        categoryIds.includes(sc.categoryId)
+        return { ...cat, subcategories: subsWithItems }
+    }))
+
+    return { ...section, categories: categoriesWithHierarchy }
+}
+
+/**
+ * [DASHBOARD] Obtiene la jerarquía filtrada por los permisos del usuario
+ */
+export async function getFilteredHierarchy(sectionId: string) {
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return cookieStore.getAll()
+                },
+                setAll() {}
+            },
+        }
     )
 
-    // 4. Obtener los items de todas las subcategorías
-    const subcategoryIds = filteredSubcategories.map((sc) => sc.id)
-    const allItems = await db
-        .select()
-        .from(items)
-        .orderBy(items.createdAt)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error("No autenticado")
 
-    const filteredItems = allItems.filter((item) =>
-        subcategoryIds.includes(item.subcategoryId)
+    return fetchHierarchy(user.id, sectionId)
+}
+
+async function fetchHierarchy(userId: string, sectionId: string) {
+    const profile = await db.query.profiles.findFirst({
+        where: (profiles, { eq }) => eq(profiles.id, userId)
+    })
+
+    if (!profile) return []
+
+    const allPerms = await db.select().from(permissions).where(
+        sql`${permissions.userId} = ${userId} OR ${permissions.groupId} IN (
+            SELECT ${userGroups.groupId} FROM ${userGroups} WHERE ${userGroups.userId} = ${userId}
+        )`
     )
 
-    // 5. Ensamblar el árbol
-    const tree: SectionHierarchy = {
-        id: section.id,
-        name: section.name,
-        slug: section.slug,
-        config: section.config,
-        categories: sectionCategories.map((cat) => ({
-            id: cat.id,
-            name: cat.name,
-            slug: cat.slug,
-            subcategories: filteredSubcategories
-                .filter((sc) => sc.categoryId === cat.id)
-                .map((sc) => ({
-                    id: sc.id,
-                    name: sc.name,
-                    slug: sc.slug,
-                    items: filteredItems
-                        .filter((item) => item.subcategoryId === sc.id)
-                        .map((item) => ({
-                            id: item.id,
-                            title: item.title,
-                            slug: item.slug,
-                            body: item.body,
-                            filePath: item.filePath,
-                            externalLink: item.externalLink,
-                            contentType: item.contentType,
-                            attributes: item.attributes,
-                        })),
-                })),
-        })),
+    const isSuperAdmin = profile.role === 'superadmin'
+
+    const allCategories = await db.select().from(categories)
+        .where(eq(categories.sectionId, sectionId))
+        .orderBy(categories.sortOrder, categories.createdAt)
+
+    const filteredHierarchy = []
+
+    for (const cat of allCategories) {
+        const hasSectionPerm = allPerms.some(p => p.targetType === 'section' && p.targetId === sectionId)
+        const hasCatPerm = isSuperAdmin || hasSectionPerm || allPerms.some(p => p.targetType === 'category' && p.targetId === cat.id)
+
+        const allSubs = await db.select().from(subcategories)
+            .where(eq(subcategories.categoryId, cat.id))
+            .orderBy(subcategories.createdAt)
+
+        const filteredSubs = []
+
+        for (const sub of allSubs) {
+            const hasSubPerm = hasCatPerm || allPerms.some(p => p.targetType === 'subcategory' && p.targetId === sub.id)
+
+            const allItems = await db.select().from(items)
+                .where(eq(items.subcategoryId, sub.id))
+                .orderBy(items.createdAt)
+
+            const filteredItems = allItems.filter(item => 
+                hasSubPerm || allPerms.some(p => p.targetType === 'item' && p.targetId === item.id)
+            )
+
+            if (filteredItems.length > 0 || hasSubPerm) {
+                filteredSubs.push({ ...sub, items: filteredItems })
+            }
+        }
+
+        if (filteredSubs.length > 0 || hasCatPerm) {
+            filteredHierarchy.push({ ...cat, subcategories: filteredSubs })
+        }
     }
 
-    return tree
+    return filteredHierarchy
 }

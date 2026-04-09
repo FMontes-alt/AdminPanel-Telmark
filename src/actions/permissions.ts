@@ -3,6 +3,7 @@
 import { db } from "@/db";
 import { sections, categories, subcategories, items, permissions, userGroups } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 
 /**
  * 1. OBTENER TODA LA HIERARQUIA PARA EL SELECTOR
@@ -85,6 +86,7 @@ export async function updateUserPermissions(userId: string, itemsList: { targetT
             );
         }
         
+        revalidatePath("/dashboard");
         return { success: true };
     } catch (error: any) {
         console.error("Error al actualizar permisos:", error);
