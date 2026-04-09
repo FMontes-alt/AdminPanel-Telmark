@@ -4,17 +4,12 @@ Este módulo permite la administración centralizada de los accesos de los emple
 
 ---
 
-## 🏗️ Arquitectura de Datos
+## 🏗️ Arquitectura de Datos (Nueva)
 
-Se ha simplificado el modelo relacional para mejorar el rendimiento y la mantenibilidad.
+El sistema ha evolucionado de un modelo de asignación directa de secciones a un sistema jerárquico y granular basado en **Equipos** y **Permisos Especiales**.
 
-- **Tabla**: `profiles`
-- **Cambio**: Se eliminó la tabla intermedia `profile_sections`.
-- **Implementación**: Atributo `assigned_section_ids` tipo `UUID Array` nativo de PostgreSQL.
-- **Drizzle Schema**:
-  ```typescript
-  assignedSectionIds: uuid("assigned_section_ids").array()
-  ```
+- **Entidades Clave**: `groups`, `user_groups` y `permissions`.
+- **Drizzle Schema**: Para más detalles técnicos, ver [Arquitectura de Permisos](file:///c:/Users/Fran/Desktop/AdminPanel-Telmark/docs/architecture/sistema-permisos-grupos.md).
 
 ---
 

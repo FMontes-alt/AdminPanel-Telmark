@@ -10,6 +10,7 @@ Conceptos base y estructura del sistema.
 
 - 🗄️ **[Base de Datos](architecture/database.md)**: Esquema relacional, filosofía UUID y tablas core.
 - 🔐 **[Seguridad y RLS](architecture/security-rls.md)**: Políticas de Row Level Security y gestión de sesiones.
+- 🛡️ **[Sistema de Permisos](architecture/sistema-permisos-grupos.md)**: Herencia por Equipos, granularidad y lógica de Dashboard.
 - ⚙️ **[Middleware](architecture/middleware.md)**: Roadmap y lógica de las capas de control (Auth, Security, Maintenance).
 
 ## 📘 [Guías de Desarrollo](guides/setup.md)

@@ -107,12 +107,13 @@ export function PermissionSelector({ hierarchy, selectedItems, inheritedPermissi
         const parentUnlockSource = getParentUnlockSource(item, path)
         
         // Estado final: ¿Está activo?
-        const isActive = selectedManually || !!groupSource || !!parentUnlockSource
+        const isInherited = !!groupSource || !!parentUnlockSource
+        const isActive = selectedManually || isInherited
         
         // Tooltip o mensaje de estado
         let statusLabel = ""
-        if (parentUnlockSource) statusLabel = `Desbloqueado por ${parentUnlockSource}`
-        else if (groupSource) statusLabel = `Heredado de Grupo: ${groupSource}`
+        if (parentUnlockSource) statusLabel = `Acceso via ${parentUnlockSource}`
+        else if (groupSource) statusLabel = `Asignado por Grupo: ${groupSource}`
 
         // Filtro de búsqueda
         const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase())
@@ -123,7 +124,11 @@ export function PermissionSelector({ hierarchy, selectedItems, inheritedPermissi
         return (
             <div key={item.id} className="select-none">
                 <div 
-                    className={`flex items-center gap-2 py-2 px-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer ${isActive ? 'bg-blue-50/30' : ''}`}
+                    className={`flex items-center gap-2 py-2 px-3 rounded-xl transition-all ${
+                        isInherited 
+                            ? 'bg-blue-50/20 grayscale-[0.2] cursor-default opacity-80' 
+                            : 'hover:bg-slate-50 cursor-pointer'
+                    } ${selectedManually ? 'bg-blue-50/40' : ''}`}
                     style={{ marginLeft: `${depth * 20}px` }}
                 >
                     <button 
@@ -134,14 +139,16 @@ export function PermissionSelector({ hierarchy, selectedItems, inheritedPermissi
                         {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </button>
 
-                    <div onClick={() => handleToggle(item)} className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="relative">
+                    <div 
+                        onClick={() => !isInherited && handleToggle(item)} 
+                        className={`flex items-center gap-2 flex-1 min-w-0 ${isInherited ? 'pointer-events-none' : ''}`}
+                    >
+                        <div className="relative flex items-center justify-center w-5 h-5">
                             {selectedManually ? (
                                 <CheckSquare size={16} className="text-blue-600" />
-                            ) : (isActive) ? (
-                                <div className="relative">
-                                    <Square size={16} className="text-blue-200" />
-                                    <ShieldCheck size={10} className="absolute inset-0 m-auto text-blue-600" />
+                            ) : isInherited ? (
+                                <div className="bg-blue-600/10 p-1 rounded-md">
+                                    <ShieldCheck size={12} className="text-blue-600" />
                                 </div>
                             ) : (
                                 <Square size={16} className="text-slate-300" />
@@ -152,18 +159,18 @@ export function PermissionSelector({ hierarchy, selectedItems, inheritedPermissi
                         
                         <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-2">
-                                <span className={`text-xs truncate ${isActive ? 'font-bold text-blue-900' : 'text-slate-600 font-medium'}`}>
+                                <span className={`text-[11px] truncate ${isActive ? 'font-black text-blue-900 uppercase tracking-tight' : 'text-slate-500 font-bold'}`}>
                                     {item.name}
                                 </span>
                                 {groupSource && (
-                                    <div className="flex items-center gap-1 bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter">
+                                    <div className="flex items-center gap-1 bg-blue-600 text-white px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-widest shadow-sm shadow-blue-500/10">
                                         <Users size={8} />
-                                        Grupo
+                                        Equipo
                                     </div>
                                 )}
                             </div>
                             {statusLabel && (
-                                <span className="text-[8px] text-blue-400 font-bold uppercase tracking-widest leading-none mt-0.5">
+                                <span className="text-[7px] text-blue-400 font-black uppercase tracking-[0.1em] leading-none mt-0.5 opacity-70">
                                     {statusLabel}
                                 </span>
                             )}
