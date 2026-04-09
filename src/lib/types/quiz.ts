@@ -30,6 +30,7 @@ export interface QuizQuestion {
     maxSelections: number | null;
     sortOrder: number;
     points: number;
+    topic: string | null;
     createdAt: Date;
     // Relaciones opcionales
     options?: QuizOption[];
@@ -84,6 +85,7 @@ export interface CreateQuestionInput {
     mediaType?: MediaType;
     maxSelections?: number;
     points?: number;
+    topic?: string;
     options?: { text: string; isCorrect: boolean }[];
 }
 

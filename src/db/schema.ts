@@ -145,6 +145,7 @@ export const quizQuestions = pgTable("quiz_questions", {
     maxSelections: integer("max_selections"), // solo para multiple_choice
     sortOrder: integer("sort_order").default(0).notNull(),
     points: integer("points").default(1).notNull(),
+    topic: text("topic"), // null = sin tema específico
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
