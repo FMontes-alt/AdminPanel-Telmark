@@ -80,6 +80,7 @@ export async function createQuestion(data: CreateQuestionInput) {
                 maxSelections: data.type === "multiple_choice" ? (data.maxSelections || 2) : null,
                 sortOrder: nextOrder,
                 points: data.points || 1,
+                topic: data.topic || null,
             })
             .returning()
 
@@ -122,6 +123,7 @@ export async function updateQuestion(
         mediaType?: MediaType;
         maxSelections?: number | null;
         points?: number;
+        topic?: string;
         options?: { id?: string; text: string; isCorrect: boolean }[];
     }
 ) {
@@ -133,6 +135,7 @@ export async function updateQuestion(
         if (data.mediaType !== undefined) updateData.mediaType = data.mediaType
         if (data.maxSelections !== undefined) updateData.maxSelections = data.maxSelections
         if (data.points !== undefined) updateData.points = data.points
+        if (data.topic !== undefined) updateData.topic = data.topic
 
         if (Object.keys(updateData).length > 0) {
             await db
