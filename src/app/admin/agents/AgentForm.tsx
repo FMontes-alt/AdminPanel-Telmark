@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createAgent, updateAgent } from "@/actions/users"
 import { X, Save, Loader2, User, Mail, Phone, Lock, ShieldCheck, FolderTree, Info } from "lucide-react"
 import { PermissionSelector } from "../components/PermissionSelector"
@@ -86,6 +86,24 @@ export function AgentForm({ agent, sections, groups, hierarchy, onClose, onSucce
                 : [...prev.groupIds, id]
         }))
     }
+
+    useEffect(() => {
+        // Recalcular permisos heredados cuando cambian los grupos seleccionados
+        const newInherited: any[] = []
+        formData.groupIds.forEach(gId => {
+            const group = groups.find(g => g.id === gId)
+            if (group && group.permissions) {
+                group.permissions.forEach((p: any) => {
+                    newInherited.push({
+                        targetType: p.targetType,
+                        targetId: p.targetId,
+                        sourceName: group.name
+                    })
+                })
+            }
+        })
+        setFormData(prev => ({ ...prev, inheritedPermissions: newInherited }))
+    }, [formData.groupIds, groups])
 
     return (
         <div className="bg-white rounded-[40px] border border-slate-200 shadow-2xl overflow-hidden max-w-4xl w-full mx-auto flex flex-col max-h-[90vh]">

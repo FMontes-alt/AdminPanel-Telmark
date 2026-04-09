@@ -30,7 +30,7 @@ export default function AgentsPage() {
             const [agentsData, sectionsData, groupsData, hierarchyData] = await Promise.all([
                 getAgents(),
                 getSections(),
-                getGroups(),
+                getGroups(undefined, true),
                 getHierarchy()
             ])
             setAgents(agentsData)

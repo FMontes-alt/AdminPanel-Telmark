@@ -1,49 +1,13 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { db } from "@/db"
-import { profiles, sections } from "@/db/schema"
-import { eq, inArray } from "drizzle-orm"
 
+import { getDashboardData } from "@/actions/users"
 import { LogoutButton } from "@/components/auth/LogoutButton"
 
 export default async function Home() {
-    const cookieStore = await cookies()
-    
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll()
-                },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        )
-                    } catch {
-                        // Ignorado en server components
-                    }
-                },
-            },
-        }
-    )
-
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-        redirect('/login')
-    }
-
-    // Obtener el perfil del usuario para ver su rol y secciones
-    const profile = await db.query.profiles.findFirst({
-        where: eq(profiles.id, user.id)
-    })
+    const data = await getDashboardData()
+    const { profile, sections: userSections } = data
 
     if (!profile) {
-        // Si no hay perfil, algo va mal, redirigimos a login
         redirect('/login')
     }
 
@@ -52,10 +16,8 @@ export default async function Home() {
         redirect('/admin')
     }
 
-    // 2. Si es USUARIO NORMAL -> Miramos sus secciones
-    const sectionIds = profile.assignedSectionIds || []
-
-    if (sectionIds.length === 0) {
+    // 2. Si es USUARIO NORMAL -> Miramos sus secciones obtenidas por el nuevo sistema
+    if (userSections.length === 0) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
                 <div className="bg-white p-12 rounded-[40px] shadow-2xl border border-slate-100 max-w-md text-center space-y-6">
@@ -74,12 +36,9 @@ export default async function Home() {
         )
     }
 
-    if (sectionIds.length === 1) {
-        // Solo una sección: buscamos el slug para redirigir
-        const [userSection] = await db.select({ slug: sections.slug }).from(sections).where(inArray(sections.id, sectionIds))
-        if (userSection) {
-            redirect(`/dashboard/${userSection.slug}`)
-        }
+    if (userSections.length === 1) {
+        // Solo una sección: redirigimos al slug correspondiente
+        redirect(`/dashboard/${userSections[0].slug}`)
     }
 
     // Si tiene varias secciones o no encontramos la única, vamos a la selección

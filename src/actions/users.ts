@@ -1,20 +1,42 @@
 "use server"
 
 import { db } from "@/db";
-import { profiles, sections, userGroups, permissions, categories, subcategories, items } from "@/db/schema";
-import { eq, inArray, sql } from "drizzle-orm";
+import { profiles, sections, userGroups, permissions, categories, subcategories, items, groups } from "@/db/schema";
+import { eq, inArray, sql, or } from "drizzle-orm";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 /**
- * 1.OBTENER EMPLEADOS 
+ * 1.OBTENER EMPLEADOS (con grupos para visualización)
  */
 export async function getAgents() {
     try {
         const agents = await db.select().from(profiles).orderBy(profiles.createdAt);
-        return agents;
+        
+        // Obtenemos grupos para todos los agentes de una vez
+        const allUserGroups = await db.select({
+            userId: userGroups.userId,
+            groupName: groups.name
+        })
+        .from(userGroups)
+        .innerJoin(groups, eq(userGroups.groupId, groups.id));
+
+        // Obtenemos conteo de permisos individuales
+        const allPerms = await db.select({
+            userId: permissions.userId,
+            count: sql<number>`count(*)`
+        })
+        .from(permissions)
+        .where(sql`${permissions.userId} IS NOT NULL`)
+        .groupBy(permissions.userId);
+
+        return agents.map(agent => ({
+            ...agent,
+            groups: allUserGroups.filter(ug => ug.userId === agent.id).map(ug => ug.groupName),
+            directPermissionCount: Number(allPerms.find(p => p.userId === agent.id)?.count || 0)
+        }));
     } catch (error) {
         console.error("Error al obtener empleados:", error);
         return [];
@@ -86,16 +108,24 @@ export async function getDashboardData() {
         return { profile, sections: allSections }
     }
 
-    // Obtenemos todos los permisos del usuario (Directos + Grupos)
+    // Obtenemos los IDs de los grupos del usuario de forma explícita
+    const userGroupsQuery = await db.select({ groupId: userGroups.groupId })
+        .from(userGroups)
+        .where(eq(userGroups.userId, user.id));
+    
+    const userGroupIds = userGroupsQuery.map(g => g.groupId);
+
+    // Obtenemos todos los permisos del usuario (Directos + Grupos) con una consulta robusta
     const allPerms = await db.select({ 
         targetId: permissions.targetId,
         targetType: permissions.targetType
     })
     .from(permissions)
     .where(
-        sql`${permissions.userId} = ${user.id} OR ${permissions.groupId} IN (
-            SELECT group_id FROM user_groups WHERE user_id = ${user.id}
-        )`
+        or(
+            eq(permissions.userId, user.id),
+            userGroupIds.length > 0 ? inArray(permissions.groupId, userGroupIds) : sql`FALSE`
+        )
     );
 
     const sectionIds = new Set<string>();
@@ -105,32 +135,39 @@ export async function getDashboardData() {
         profile.assignedSectionIds.forEach(id => sectionIds.add(id));
     }
 
-    // Resolvimos cada permiso hasta su ID de sección correspondiente
-    for (const perm of allPerms) {
-        if (perm.targetType === 'section') {
-            sectionIds.add(perm.targetId);
-        } else if (perm.targetType === 'category') {
-            const cat = await db.select({ sectionId: categories.sectionId })
-                .from(categories)
-                .where(eq(categories.id, perm.targetId))
-                .limit(1);
-            if (cat[0]) sectionIds.add(cat[0].sectionId);
-        } else if (perm.targetType === 'subcategory') {
-            const sub = await db.select({ sectionId: categories.sectionId })
-                .from(subcategories)
-                .innerJoin(categories, eq(subcategories.categoryId, categories.id))
-                .where(eq(subcategories.id, perm.targetId))
-                .limit(1);
-            if (sub[0]) sectionIds.add(sub[0].sectionId);
-        } else if (perm.targetType === 'item') {
-            const item = await db.select({ sectionId: categories.sectionId })
-                .from(items)
-                .innerJoin(subcategories, eq(items.subcategoryId, subcategories.id))
-                .innerJoin(categories, eq(subcategories.categoryId, categories.id))
-                .where(eq(items.id, perm.targetId))
-                .limit(1);
-            if (item[0]) sectionIds.add(item[0].sectionId);
-        }
+    // --- Resolución Optimizada de Secciones ---
+    
+    // 1. Directas desde secciones
+    allPerms.filter(p => p.targetType === 'section').forEach(p => sectionIds.add(p.targetId));
+
+    // 2. Desde categorías
+    const categoryIds = allPerms.filter(p => p.targetType === 'category').map(p => p.targetId);
+    if (categoryIds.length > 0) {
+        const cats = await db.select({ sectionId: categories.sectionId })
+            .from(categories)
+            .where(inArray(categories.id, categoryIds));
+        cats.forEach(c => sectionIds.add(c.sectionId));
+    }
+
+    // 3. Desde subcategorías
+    const subcategoryIds = allPerms.filter(p => p.targetType === 'subcategory').map(p => p.targetId);
+    if (subcategoryIds.length > 0) {
+        const subs = await db.select({ sectionId: categories.sectionId })
+            .from(subcategories)
+            .innerJoin(categories, eq(subcategories.categoryId, categories.id))
+            .where(inArray(subcategories.id, subcategoryIds));
+        subs.forEach(s => sectionIds.add(s.sectionId));
+    }
+
+    // 4. Desde ítems
+    const itemIds = allPerms.filter(p => p.targetType === 'item').map(p => p.targetId);
+    if (itemIds.length > 0) {
+        const itms = await db.select({ sectionId: categories.sectionId })
+            .from(items)
+            .innerJoin(subcategories, eq(items.subcategoryId, subcategories.id))
+            .innerJoin(categories, eq(subcategories.categoryId, categories.id))
+            .where(inArray(items.id, itemIds));
+        itms.forEach(i => sectionIds.add(i.sectionId));
     }
 
     let assignedSections: any[] = []
@@ -200,6 +237,7 @@ export async function createAgent(data: {
 
         revalidatePath("/admin/agents");
         revalidatePath("/dashboard");
+        revalidatePath("/", "layout");
         return { success: true, data: profile };
     } catch (error: any) {
         console.error("Error al crear empleado:", error);
@@ -255,6 +293,7 @@ export async function updateAgent(id: string, data: Partial<{
 
         revalidatePath("/admin/agents");
         revalidatePath("/dashboard");
+        revalidatePath("/", "layout");
         return { success: true }
     } catch (error: any) {
         console.error("error al actualizar", error);
@@ -273,6 +312,7 @@ export async function deleteAgent(id: string) {
 
         revalidatePath("/admin/agents");
         revalidatePath("/dashboard");
+        revalidatePath("/", "layout");
         return { success: true };
     } catch (error: any) {
         console.error("Error al eliminar", error);

@@ -2,13 +2,13 @@
 
 import { db } from "@/db";
 import { groups, userGroups, profiles, permissions } from "@/db/schema";
-import { eq, inArray, ilike, or } from "drizzle-orm";
+import { eq, inArray, ilike, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 /**
- * 1. OBTENER GRUPOS
+ * 1. OBTENER GRUPOS (con metadatos para visualización)
  */
-export async function getGroups(search?: string) {
+export async function getGroups(search?: string, includePermissions = false) {
     try {
         let query = db.select().from(groups);
         
@@ -21,7 +21,37 @@ export async function getGroups(search?: string) {
             ) as any;
         }
 
-        return await query.orderBy(groups.name);
+        const allGroups = await query.orderBy(groups.name);
+
+        // Obtenemos conteo de miembros
+        const memberCounts = await db.select({
+            groupId: userGroups.groupId,
+            count: sql<number>`count(*)`
+        })
+        .from(userGroups)
+        .groupBy(userGroups.groupId);
+
+        // Obtenemos conteo de permisos
+        const permissionCounts = await db.select({
+            groupId: permissions.groupId,
+            count: sql<number>`count(*)`
+        })
+        .from(permissions)
+        .where(sql`${permissions.groupId} IS NOT NULL`)
+        .groupBy(permissions.groupId);
+
+        // Obtenemos todos los permisos de grupos si se requiere
+        let allGroupPerms: any[] = [];
+        if (includePermissions) {
+            allGroupPerms = await db.select().from(permissions).where(sql`${permissions.groupId} IS NOT NULL`);
+        }
+
+        return allGroups.map(g => ({
+            ...g,
+            memberCount: Number(memberCounts.find(mc => mc.groupId === g.id)?.count || 0),
+            permissionCount: Number(permissionCounts.find(pc => pc.groupId === g.id)?.count || 0),
+            permissions: includePermissions ? allGroupPerms.filter(p => p.groupId === g.id) : undefined
+        }));
     } catch (error) {
         console.error("Error al obtener grupos:", error);
         return [];
@@ -114,6 +144,7 @@ export async function upsertGroup(data: {
         revalidatePath("/admin/groups");
         revalidatePath("/admin/agents");
         revalidatePath("/dashboard");
+        revalidatePath("/", "layout");
         return { success: true, id: groupId };
     } catch (error: any) {
         console.error("Error en upsertGroup:", error);
@@ -129,6 +160,7 @@ export async function deleteGroup(id: string) {
         await db.delete(groups).where(eq(groups.id, id));
         revalidatePath("/admin/groups");
         revalidatePath("/dashboard");
+        revalidatePath("/", "layout");
         return { success: true };
     } catch (error: any) {
         console.error("Error al eliminar grupo:", error);

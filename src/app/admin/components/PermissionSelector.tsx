@@ -28,15 +28,20 @@ export function PermissionSelector({ hierarchy, selectedItems, inheritedPermissi
     const [search, setSearch] = useState("")
 
     // 1. Verificar si está seleccionado individualmente
+    const [alert, setAlert] = useState<{ message: string, type: 'info' | 'warning' } | null>(null)
+
     const isIndividuallySelected = (id: string) => selectedItems.some(i => i.targetId === id)
 
-    // 2. Verificar si está heredado de un grupo
+    // Helper para limpiar la alerta tras unos segundos
+    const triggerAlert = (message: string) => {
+        setAlert({ message, type: 'warning' })
+        setTimeout(() => setAlert(null), 4000)
+    }
+
     const getInheritanceSource = (id: string) => inheritedPermissions.find(i => i.targetId === id)?.sourceName
 
-    // 3. Verificar si está desbloqueado por un ancestro (Sección o Categoría padre)
     const getParentUnlockSource = (item: PermissionItem, currentPath: PermissionItem[]): string | null => {
         for (const ancestor of currentPath) {
-            // Si el ancestro está seleccionado (individual o por grupo), este item está desbloqueado
             if (isIndividuallySelected(ancestor.id)) return `Individual (${ancestor.type})`
             const groupSource = getInheritanceSource(ancestor.id)
             if (groupSource) return `Grupo: ${groupSource} (${ancestor.type})`
@@ -65,7 +70,14 @@ export function PermissionSelector({ hierarchy, selectedItems, inheritedPermissi
         const currentlySelectedCount = itemAndChildren.filter(i => isIndividuallySelected(i.targetId)).length
         const shouldSelect = currentlySelectedCount < itemAndChildren.length
 
-        if (shouldSelect) {
+        if (!shouldSelect) {
+            // Si vamos a desmarcar, comprobamos si algún hijo o el propio item tiene herencia
+            const hasGroupPerm = itemAndChildren.some(i => !!getInheritanceSource(i.targetId))
+            if (hasGroupPerm) {
+                triggerAlert(`Atención: Algunos elementos seguirán activos porque pertenecen a un grupo asignado al usuario.`)
+            }
+            onChange(selectedItems.filter(i => !itemIds.includes(i.targetId)))
+        } else {
             const newItems = [...selectedItems]
             itemAndChildren.forEach(i => {
                 if (!isIndividuallySelected(i.targetId)) {
@@ -73,8 +85,6 @@ export function PermissionSelector({ hierarchy, selectedItems, inheritedPermissi
                 }
             })
             onChange(newItems)
-        } else {
-            onChange(selectedItems.filter(i => !itemIds.includes(i.targetId)))
         }
     }
 
@@ -182,6 +192,15 @@ export function PermissionSelector({ hierarchy, selectedItems, inheritedPermissi
                     className="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-11 pr-4 text-xs font-bold text-slate-700 outline-none focus:border-blue-300 transition-all shadow-sm"
                 />
             </div>
+
+            {alert && (
+                <div className="bg-amber-50 border border-amber-100 p-3 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                    <ShieldCheck className="text-amber-500" size={16} />
+                    <p className="text-[10px] text-amber-800 font-bold uppercase leading-tight selection:bg-amber-200">
+                        {alert.message}
+                    </p>
+                </div>
+            )}
 
             <div className="max-h-[400px] overflow-y-auto custom-scrollbar pr-2 space-y-1">
                 {hierarchy.length > 0 ? (

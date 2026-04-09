@@ -1,6 +1,6 @@
 "use client"
 
-import { Pencil, Trash2, Mail, Phone, Shield, User, Star } from "lucide-react"
+import { Pencil, Trash2, Mail, Phone, Shield, User, Star, FolderTree } from "lucide-react"
 
 interface AgentsListProps {
     agents: any[];
@@ -90,10 +90,24 @@ export function AgentsList({ agents, sections, onEdit, onDelete }: AgentsListPro
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5">
-                                                <div className="flex flex-wrap gap-1.5 max-w-[250px]">
-                                                    <span className="px-2 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase rounded-lg tracking-tight">
-                                                        Configurado
-                                                    </span>
+                                                <div className="flex flex-wrap gap-1.5 max-w-[300px]">
+                                                    {agent.groups && agent.groups.map((groupName: string) => (
+                                                        <span key={groupName} className="px-2 py-1 bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase rounded-lg tracking-tight border border-indigo-100 flex items-center gap-1">
+                                                            <FolderTree size={10} />
+                                                            {groupName}
+                                                        </span>
+                                                    ))}
+                                                    {agent.directPermissionCount > 0 && (
+                                                        <span className="px-2 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase rounded-lg tracking-tight border border-blue-100 flex items-center gap-1">
+                                                            <Shield size={10} />
+                                                            {agent.directPermissionCount} Especiales
+                                                        </span>
+                                                    )}
+                                                    {(!agent.groups || agent.groups.length === 0) && agent.directPermissionCount === 0 && (
+                                                        <span className="px-2 py-1 bg-slate-50 text-slate-400 text-[9px] font-black uppercase rounded-lg tracking-tight">
+                                                            Sin accesos
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5 text-right">

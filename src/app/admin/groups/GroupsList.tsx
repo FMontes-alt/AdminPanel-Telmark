@@ -1,6 +1,6 @@
 "use client"
 
-import { Pencil, Trash2, Users, FolderTree, ArrowRight } from "lucide-react"
+import { Pencil, Trash2, Users, FolderTree, ArrowRight, Shield } from "lucide-react"
 
 interface GroupsListProps {
     groups: any[];
@@ -46,19 +46,19 @@ export function GroupsList({ groups, onEdit, onDelete }: GroupsListProps) {
                     </div>
 
                     <div className="pt-6 border-t border-slate-50 flex items-center justify-between relative">
-                        <div className="flex items-center gap-2">
-                            <div className="flex -space-x-2">
-                                {[1, 2, 3].map((i) => (
-                                    <div key={i} className="w-7 h-7 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-black text-slate-400">
-                                        {i === 3 ? "+" : "U"}
-                                    </div>
-                                ))}
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                                <Users size={14} className="text-blue-600" />
+                                <span className="text-[10px] font-black uppercase text-slate-600 tracking-widest">{group.memberCount || 0} Miembros</span>
                             </div>
-                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Usuarios Activos</span>
+                            <div className="flex items-center gap-2">
+                                <Shield size={14} className="text-amber-500" />
+                                <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{group.permissionCount || 0} Permisos asignados</span>
+                            </div>
                         </div>
                         <button 
                             onClick={() => onEdit(group)}
-                            className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                            className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm group-hover:bg-blue-600 group-hover:text-white"
                         >
                             <ArrowRight size={18} />
                         </button>
