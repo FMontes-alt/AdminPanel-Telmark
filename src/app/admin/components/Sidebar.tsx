@@ -127,12 +127,12 @@ export function Sidebar() {
                     icon: getIconForSection(s.name),
                     iconColor: getColorForSection(s.name)
                 })),
-                { name: 'Cuestionarios', href: '/admin/quizzes', icon: ClipboardList },
             ]
         },
         {
             group: "Operativa",
             items: [
+                { name: 'Cuestionarios', href: '/admin/quizzes', icon: ClipboardList },
                 { name: 'Empleados', href: '/admin/agents', icon: Users },
                 { name: 'Monitoreo', href: '/admin/monitoring', icon: Eye },
                 { name: 'Analíticas', href: '/admin/analytics', icon: BarChart3 },

@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import { getQuizzes, createQuiz, deleteQuiz, publishQuiz } from "@/actions/quizzes"
 import { getSections } from "@/actions/sections"
+import DeleteConfirmModal from "@/components/ui/DeleteConfirmModal"
 
 export default function AdminQuizzesPage() {
     const router = useRouter()
@@ -27,6 +28,9 @@ export default function AdminQuizzesPage() {
     const [loading, setLoading] = useState(true)
     const [isCreating, setIsCreating] = useState(false)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+    const [itemToDeleteId, setItemToDeleteId] = useState<string | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
 
     // Form
     const [newTitle, setNewTitle] = useState("")
@@ -76,10 +80,18 @@ export default function AdminQuizzesPage() {
         fetchData()
     }
 
-    const handleDelete = async (quizId: string) => {
-        setDeletingId(quizId)
-        await deleteQuiz(quizId)
-        setDeletingId(null)
+    const triggerDeleteQuiz = (id: string | null) => {
+        setItemToDeleteId(id)
+        setIsDeleteModalOpen(true)
+    }
+
+    const handleDelete = async () => {
+        if (!itemToDeleteId) return
+        setIsDeleting(true)
+        await deleteQuiz(itemToDeleteId)
+        setIsDeleting(false)
+        setIsDeleteModalOpen(false)
+        setItemToDeleteId(null)
         fetchData()
     }
 
@@ -324,7 +336,7 @@ export default function AdminQuizzesPage() {
                                         <Play size={16} />
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(quiz.id)}
+                                        onClick={() => triggerDeleteQuiz(quiz.id)}
                                         disabled={deletingId === quiz.id}
                                         className="p-2 rounded-xl hover:bg-white transition-all text-slate-400 hover:text-red-600 disabled:opacity-50"
                                         title="Eliminar"
@@ -344,6 +356,16 @@ export default function AdminQuizzesPage() {
                     ))}
                 </div>
             )}
+
+            {/* Custom Delete Confirmation Modal */}
+            <DeleteConfirmModal
+                isOpen={isDeleteModalOpen}
+                isDeleting={isDeleting}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDelete}
+                title="¿Eliminar Cuestionario?"
+                description="Esta acción eliminará permanentemente el cuestionario, todas sus preguntas y los resultados de los usuarios. Esta acción no se puede deshacer."
+            />
         </div>
     )
 }
