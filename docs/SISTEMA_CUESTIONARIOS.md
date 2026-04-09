@@ -1,49 +1,58 @@
 # Implementación del Sistema de Cuestionarios (Quizzes)
 
-Este documento describe el desarrollo y las funcionalidades del nuevo módulo de Cuestionarios, diseñado para la evaluación y formación dentro de la plataforma AdminPanel-Telmark.
+Este documento describe el desarrollo y las funcionalidades del módulo de Cuestionarios, diseñado para la evaluación y formación dentro de la plataforma AdminPanel-Telmark.
 
 ## 1. Gestión Administrativa de Cuestionarios
 Se ha implementado una interfaz completa de administración en `src/app/admin/quizzes` que permite el ciclo de vida completo (CRUD) de las evaluaciones.
 
 ### Configuración Global
 - **Metadatos**: Título y descripción detallada.
+- **Categorización**: Vinculación obligatoria a una Sección/Categoría para organizar el contenido.
 - **Temporizador**: Capacidad de definir un tiempo límite en minutos para realizar el cuestionario.
 - **Aleatorización**: Opción para mostrar las preguntas en orden aleatorio para cada intento.
 - **Estado de Publicación**: Control de visibilidad (Borrador vs. Publicado) mediante un interruptor dinámico.
 
-## 2. Editor de Preguntas Inteligente
-El editor (`src/app/admin/quizzes/[quizId]/page.tsx`) permite gestionar el contenido pedagógico con gran flexibilidad:
+## 2. Editor de Preguntas con Categorización por Temas
+El editor (`src/app/admin/quizzes/[quizId]/page.tsx`) permite gestionar el contenido pedagógico con gran detalle:
 
 ### Tipos de Preguntas Soportados:
 - **Opción Única**: Selección de una respuesta entre varias.
-- **Multi-Respuesta**: Marcado de múltiples opciones correctas con límite configurable de selecciones.
+- **Multi-Respuesta**: Marcado de múltiples opciones correctas con límite configurable.
 - **Verdadero / Falso**: Formato simplificado de dos opciones.
 - **Respuesta Corta**: Campo de texto libre para respuestas abiertas.
 
+### Etiquetas de Temas (Knowledge Areas):
+Cada pregunta puede ser etiquetada con un **Tema** (ej: "Procesos", "Producto", "Legales"). Esto permite que el sistema de analíticas agrupe los aciertos y errores por área de conocimiento, identificando debilidades específicas del alumno.
+
 ### Integración Multimedia Avanzada:
-Se ha integrado un sistema robusto de carga de archivos directamente a **Supabase Storage**:
-- **Detección Automática**: Reconoce si el archivo es imagen o vídeo para adaptar la visualización.
-- **Resolución de URLs Firmadas**: El sistema no almacena URLs públicas, sino rutas internas seguras. Tanto el editor como la previsualización resuelven estas rutas en **URLs firmadas temporales** dinámicamente, garantizando la seguridad del contenido multimedia.
-- **Vista Previa en Edición**: Al editar una pregunta existente, se muestra una miniatura del archivo cargado actualmente antes de decidir si reemplazarlo.
+- **Detección Automática**: Reconoce imagen o vídeo para adaptar la visualización.
+- **Seguridad**: Uso de URLs firmadas temporales resueltas dinámicamente desde Supabase Storage.
 
-## 3. Modo Previsualización (Preview)
-Ubicado en `src/app/admin/quizzes/[quizId]/preview/page.tsx`, este modo permite a los administradores probar la experiencia exacta que tendrá el usuario final.
+## 3. Modo Previsualización y Motor de Examen
+El motor de cuestionarios (`src/app/admin/quizzes/[quizId]/preview/page.tsx` y versión de usuario) ofrece una experiencia de alta fidelidad:
+- **Layout Fijo**: Botones de navegación siempre visibles (sticky layout).
+- **Barra de Progreso**: Indicador visual superior del avance real.
+- **Temporizador Inteligente**: Alertas visuales cuando queda menos de un minuto.
+- **Navegación Fluida**: Botón de "Volver a Cuestionarios" integrado para un flujo de trabajo sin interrupciones.
 
-### Mejoras de UX/UI en la Previsualización:
-- **Layout Fijo**: Se ha modificado el diseño para que los botones de navegación (**Anterior, Siguiente, Finalizar**) estén siempre visibles en la parte inferior de la pantalla (sticky layout), eliminando la necesidad de hacer scroll infinito en preguntas con mucho contenido.
-- **Contenido Adaptable**: El área central de la pregunta cuenta con scroll independiente si el texto o la multimedia son muy extensos.
-- **Barra de Progreso**: Indicador visual superior del avance real del cuestionario.
-- **Temporizador en Tiempo Real**: Sincronizado con la configuración del cuestionario, con alertas visuales (parpadeo en rojo) cuando queda menos de un minuto.
-
-## 4. Arquitectura Técnica
-- **Base de Datos**: Esquema diseñado en `src/db/schema.ts` utilizando Drizzle ORM, incluyendo tablas para `quizzes`, `quiz_questions`, `quiz_options`, `quiz_attempts` y `quiz_answers`.
-- **Acciones del Servidor (Server Actions)**: 
-  - `src/actions/quizzes.ts`: Gestión de niveles lógicos de cuestionarios.
-  - `src/actions/quiz-questions.ts`: CRUD profundo de preguntas y sus opciones.
-  - `src/actions/quiz-attempts.ts`: Lógica de negocio para iniciar, guardar respuestas parciales y calcular resultados finales.
-- **Seguridad Multimedia**: Uso de `getSignedUrlAction` de Supabase para servir archivos privados.
+## 4. Dashboard de Analíticas Avanzadas
+La sección de resultados se ha transformado en un centro de datos educativos dividido en 4 pilares:
+1.  **Resumen (Overview)**: Métricas globales (éxito medio, participación) y gráficos de barras por Temas. Identificación automática del "Punto Crítico" (área con peor rendimiento).
+2.  **Clasificación (Ranking)**: Top 10 de usuarios basado en precisión y puntuación.
+3.  **Análisis por Temas**: Feedback cualitativo generado automáticamente según el porcentaje de asimilación de cada área.
+4.  **Mapa de Preguntas (Heatmap)**: Desglose individual por pregunta para detectar enunciados confusos o conceptos mal explicados.
 
 ## 5. Sistema de Calificación
 Al finalizar un cuestionario en modo prueba, se genera un resumen de resultados detallado:
 - **Puntuación porcentual** con feedback visual basado en el rendimiento (verde/ámbar/rojo).
 - **Revisión pregunta por pregunta**, indicando qué respondió el usuario, cuál era la correcta y si el sistema la marcó como acertada.
+
+## 6. Arquitectura Técnica y Modularidad
+- **Base de Datos**: Esquema relacional con Drizzle ORM incluyendo tablas para seguimiento de intentos y respuestas individuales.
+- **Acciones del Servidor (Server Actions)**: 
+  - `src/actions/quizzes.ts`: Gestión de niveles lógicos de cuestionarios.
+  - `src/actions/quiz-questions.ts`: CRUD profundo de preguntas y sus opciones.
+  - `src/actions/quiz-attempts.ts`: Lógica de negocio para iniciar, guardar respuestas parciales y calcular resultados finales.
+- **Seguridad Multimedia**: Uso de `getSignedUrlAction` de Supabase para servir archivos privados.
+- **Modularización**: Para mantener la escalabilidad, las páginas complejas se han dividido en sub-componentes especializados (ver `docs/ARQUITECTURA_MODULAR_QUIZZES.md`).
+- **Lógica de Servidor**: Server Actions dedicados para CRUD, estadísticas y gestión de intentos.
