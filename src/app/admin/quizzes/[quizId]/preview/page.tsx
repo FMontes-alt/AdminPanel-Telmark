@@ -312,6 +312,14 @@ export default function AdminQuizPreviewPage() {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 py-12">
                 <div className="max-w-2xl mx-auto space-y-8">
+                    <button
+                        onClick={() => router.push("/admin/quizzes")}
+                        className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors text-xs font-black uppercase tracking-widest group"
+                    >
+                        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                        Volver a Cuestionarios
+                    </button>
+
                     {/* Score Card */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

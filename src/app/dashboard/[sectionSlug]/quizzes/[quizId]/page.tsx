@@ -278,6 +278,14 @@ export default function QuizTakePage() {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 py-12">
                 <div className="max-w-2xl mx-auto space-y-8">
+                    <button
+                        onClick={() => router.push(`/dashboard/${sectionSlug}/quizzes`)}
+                        className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors text-xs font-black uppercase tracking-widest group"
+                    >
+                        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                        Volver a Cuestionarios
+                    </button>
+
                     {/* Score Card */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -325,13 +333,12 @@ export default function QuizTakePage() {
                                             return (
                                                 <div
                                                     key={opt.id}
-                                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                                                        opt.isCorrect
+                                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${opt.isCorrect
                                                             ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
                                                             : userSelected
                                                                 ? "bg-red-50 text-red-600 ring-1 ring-red-200"
                                                                 : "bg-slate-50 text-slate-400"
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {opt.isCorrect && <CheckCircle2 size={12} className="text-emerald-500" />}
                                                     {!opt.isCorrect && userSelected && <XCircle size={12} className="text-red-500" />}
@@ -372,7 +379,7 @@ export default function QuizTakePage() {
                             onClick={() => router.push(`/dashboard/${sectionSlug}/quizzes`)}
                             className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
                         >
-                            <ChevronLeft size={16} /> Volver
+                            <ChevronLeft size={16} /> Volver a Cuestionarios
                         </button>
                     </div>
                 </div>
@@ -472,20 +479,18 @@ export default function QuizTakePage() {
                                             whileTap={!disabled ? { scale: 0.98 } : {}}
                                             onClick={() => !disabled && handleSelectOption(opt.id)}
                                             disabled={disabled}
-                                            className={`w-full text-left px-6 py-4 rounded-2xl border-2 transition-all ${
-                                                isSelected
+                                            className={`w-full text-left px-6 py-4 rounded-2xl border-2 transition-all ${isSelected
                                                     ? "border-blue-600 bg-blue-50 text-blue-800 shadow-lg shadow-blue-500/10"
                                                     : disabled
                                                         ? "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed opacity-50"
                                                         : "border-slate-100 bg-white hover:border-blue-200 hover:bg-blue-50/30 text-slate-700"
-                                            }`}
+                                                }`}
                                         >
                                             <div className="flex items-center gap-4">
-                                                <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                                                    isSelected
+                                                <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${isSelected
                                                         ? "border-blue-600 bg-blue-600"
                                                         : "border-slate-200"
-                                                }`}>
+                                                    }`}>
                                                     {isSelected && <CheckCircle2 size={14} className="text-white" />}
                                                 </div>
                                                 <span className="text-sm font-bold">{opt.text}</span>
@@ -507,13 +512,12 @@ export default function QuizTakePage() {
                                             key={opt.id}
                                             whileTap={{ scale: 0.97 }}
                                             onClick={() => handleSelectOption(opt.id)}
-                                            className={`py-6 rounded-2xl font-black text-lg transition-all border-2 ${
-                                                isSelected
+                                            className={`py-6 rounded-2xl font-black text-lg transition-all border-2 ${isSelected
                                                     ? isTrue
                                                         ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-lg shadow-emerald-500/10"
                                                         : "border-red-500 bg-red-50 text-red-700 shadow-lg shadow-red-500/10"
                                                     : "border-slate-100 bg-white text-slate-500 hover:border-slate-200"
-                                            }`}
+                                                }`}
                                         >
                                             {opt.text}
                                         </motion.button>
@@ -552,13 +556,12 @@ export default function QuizTakePage() {
                         <button
                             key={i}
                             onClick={() => setCurrentIndex(i)}
-                            className={`w-2.5 h-2.5 rounded-full transition-all ${
-                                i === currentIndex
+                            className={`w-2.5 h-2.5 rounded-full transition-all ${i === currentIndex
                                     ? "bg-blue-600 w-6"
                                     : answers[questions[i].id]
                                         ? "bg-emerald-400"
                                         : "bg-slate-200"
-                            }`}
+                                }`}
                         />
                     ))}
                 </div>
