@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/db";
-import { sections, categories, subcategories, items, permissions, userGroups } from "@/db/schema";
+import { sections, categories, subcategories, items, permissions, userGroups, groups } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -44,24 +44,38 @@ export async function getHierarchy() {
  */
 export async function getUserPermissions(userId: string) {
     try {
-        // Individuales
+        // 1. Permisos individuales
         const individual = await db.select().from(permissions).where(eq(permissions.userId, userId));
         
-        // De sus grupos
-        const userGroupIds = (await db.select({ id: userGroups.groupId })
-            .from(userGroups)
-            .where(eq(userGroups.userId, userId)))
-            .map(g => g.id);
+        // 2. Información de Grupos del usuario
+        const userGroupsList = await db.select({ 
+            groupId: userGroups.groupId,
+            groupName: groups.name
+        })
+        .from(userGroups)
+        .innerJoin(groups, eq(userGroups.groupId, groups.id))
+        .where(eq(userGroups.userId, userId));
 
-        let groupPerms: any[] = [];
-        if (userGroupIds.length > 0) {
-            groupPerms = await db.select().from(permissions).where(inArray(permissions.groupId, userGroupIds));
+        const groupIds = userGroupsList.map(g => g.groupId);
+
+        // 3. Permisos de sus grupos
+        let fromGroups: any[] = [];
+        if (groupIds.length > 0) {
+            const groupPerms = await db.select().from(permissions).where(inArray(permissions.groupId, groupIds));
+            // Mapeamos cada permiso con el nombre de su grupo
+            fromGroups = groupPerms.map(p => {
+                const group = userGroupsList.find(g => g.groupId === p.groupId);
+                return { ...p, sourceName: group?.groupName || "Grupo" };
+            });
         }
 
         return {
-            individual,
-            fromGroups: groupPerms,
-            all: [...individual, ...groupPerms]
+            individual: individual.map(p => ({ ...p, sourceName: "Individual" })),
+            fromGroups,
+            all: [
+                ...individual.map(p => ({ ...p, sourceName: "Individual" })),
+                ...fromGroups
+            ]
         };
     } catch (error) {
         console.error("Error al obtener permisos de usuario:", error);

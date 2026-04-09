@@ -113,6 +113,7 @@ export async function upsertGroup(data: {
 
         revalidatePath("/admin/groups");
         revalidatePath("/admin/agents");
+        revalidatePath("/dashboard");
         return { success: true, id: groupId };
     } catch (error: any) {
         console.error("Error en upsertGroup:", error);
@@ -127,6 +128,7 @@ export async function deleteGroup(id: string) {
     try {
         await db.delete(groups).where(eq(groups.id, id));
         revalidatePath("/admin/groups");
+        revalidatePath("/dashboard");
         return { success: true };
     } catch (error: any) {
         console.error("Error al eliminar grupo:", error);

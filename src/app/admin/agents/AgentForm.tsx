@@ -30,6 +30,11 @@ export function AgentForm({ agent, sections, groups, hierarchy, onClose, onSucce
             targetType: p.targetType,
             targetId: p.targetId
         })) as { targetType: string, targetId: string }[],
+        inheritedPermissions: (agent?.inheritedPermissions || []).map((p: any) => ({
+            targetType: p.targetType,
+            targetId: p.targetId,
+            sourceName: p.sourceName
+        })) as { targetType: string, targetId: string, sourceName: string }[],
         password: "",
     })
 
@@ -221,6 +226,18 @@ export function AgentForm({ agent, sections, groups, hierarchy, onClose, onSucce
                                 ))}
                             </div>
                         </div>
+
+                        {formData.role === "superadmin" && (
+                            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-4 items-start animate-in fade-in slide-in-from-top-2 duration-300">
+                                <ShieldCheck className="text-amber-500 mt-1 flex-shrink-0" size={16} />
+                                <div className="space-y-1">
+                                    <p className="text-xs text-amber-900 font-black uppercase tracking-widest">Rol: Super Administrador</p>
+                                    <p className="text-[10px] text-amber-700 leading-relaxed font-bold uppercase">
+                                        Este rol tiene acceso total a todas las secciones y configuraciones del sistema. Los límites de permisos no se aplican a este nivel.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -276,6 +293,7 @@ export function AgentForm({ agent, sections, groups, hierarchy, onClose, onSucce
                         <PermissionSelector
                             hierarchy={hierarchy}
                             selectedItems={formData.permissionItems}
+                            inheritedPermissions={formData.inheritedPermissions}
                             onChange={(items) => setFormData({ ...formData, permissionItems: items })}
                         />
                     </div>

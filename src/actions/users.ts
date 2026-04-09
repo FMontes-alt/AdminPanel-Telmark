@@ -21,13 +21,15 @@ export async function getAgents() {
     }
 }
 
+import { getUserPermissions } from "./permissions";
+
 /**
  * 1.2 OBTENER EMPLEADO POR ID (con grupos y permisos)
  */
 export async function getAgentById(id: string) {
     try {
         const profile = await db.query.profiles.findFirst({
-            where: eq(profiles.id, id)
+            where: (profiles, { eq }) => eq(profiles.id, id)
         });
 
         if (!profile) return null;
@@ -36,12 +38,14 @@ export async function getAgentById(id: string) {
             .from(userGroups)
             .where(eq(userGroups.userId, id));
 
-        const userPermissions = await db.select().from(permissions).where(eq(permissions.userId, id));
+        const permissionsData = await getUserPermissions(id);
 
         return {
             ...profile,
             groupIds: groups.map(g => g.id),
-            permissions: userPermissions
+            permissions: permissionsData.individual,
+            inheritedPermissions: permissionsData.fromGroups,
+            allPermissions: permissionsData.all
         };
     } catch (error) {
         console.error("Error al obtener empleado por ID:", error);
@@ -217,10 +221,11 @@ export async function updateAgent(id: string, data: Partial<{
     try {
         const { groupIds, permissionItems, ...profileData } = data;
 
-        // Actualizar perfil
+        // Actualizar perfil (y limpiar legado de secciones para asegurar integridad)
         await db.update(profiles)
             .set({
                 ...profileData,
+                assignedSectionIds: null, // Limpiamos el campo antiguo
                 updatedAt: new Date(),
             }).where(eq(profiles.id, id));
 

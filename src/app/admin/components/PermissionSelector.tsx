@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { ChevronRight, ChevronDown, CheckSquare, Square, Search, Layers, Folder, FileText, Info } from "lucide-react"
+import { useState } from "react"
+import { ChevronRight, ChevronDown, CheckSquare, Square, Search, Layers, Folder, FileText, Info, Users, ShieldCheck } from "lucide-react"
 
 interface PermissionItem {
     id: string;
@@ -10,17 +10,39 @@ interface PermissionItem {
     children?: PermissionItem[];
 }
 
+interface InheritedPermission {
+    targetId: string;
+    targetType: string;
+    sourceName: string;
+}
+
 interface PermissionSelectorProps {
     hierarchy: PermissionItem[];
     selectedItems: { targetType: string, targetId: string }[];
+    inheritedPermissions: InheritedPermission[];
     onChange: (items: { targetType: string, targetId: string }[]) => void;
 }
 
-export function PermissionSelector({ hierarchy, selectedItems, onChange }: PermissionSelectorProps) {
+export function PermissionSelector({ hierarchy, selectedItems, inheritedPermissions = [], onChange }: PermissionSelectorProps) {
     const [expanded, setExpanded] = useState<string[]>([])
     const [search, setSearch] = useState("")
 
-    const isSelected = (id: string) => selectedItems.some(i => i.targetId === id)
+    // 1. Verificar si está seleccionado individualmente
+    const isIndividuallySelected = (id: string) => selectedItems.some(i => i.targetId === id)
+
+    // 2. Verificar si está heredado de un grupo
+    const getInheritanceSource = (id: string) => inheritedPermissions.find(i => i.targetId === id)?.sourceName
+
+    // 3. Verificar si está desbloqueado por un ancestro (Sección o Categoría padre)
+    const getParentUnlockSource = (item: PermissionItem, currentPath: PermissionItem[]): string | null => {
+        for (const ancestor of currentPath) {
+            // Si el ancestro está seleccionado (individual o por grupo), este item está desbloqueado
+            if (isIndividuallySelected(ancestor.id)) return `Individual (${ancestor.type})`
+            const groupSource = getInheritanceSource(ancestor.id)
+            if (groupSource) return `Grupo: ${groupSource} (${ancestor.type})`
+        }
+        return null
+    }
 
     const toggleExpand = (id: string) => {
         setExpanded(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
@@ -40,20 +62,18 @@ export function PermissionSelector({ hierarchy, selectedItems, onChange }: Permi
         const itemAndChildren = getAllChildren(item)
         const itemIds = itemAndChildren.map(i => i.targetId)
         
-        const currentlySelectedCount = itemAndChildren.filter(i => isSelected(i.targetId)).length
+        const currentlySelectedCount = itemAndChildren.filter(i => isIndividuallySelected(i.targetId)).length
         const shouldSelect = currentlySelectedCount < itemAndChildren.length
 
         if (shouldSelect) {
-            // Add missing children
             const newItems = [...selectedItems]
             itemAndChildren.forEach(i => {
-                if (!isSelected(i.targetId)) {
+                if (!isIndividuallySelected(i.targetId)) {
                     newItems.push({ targetType: i.targetType, targetId: i.targetId })
                 }
             })
             onChange(newItems)
         } else {
-            // Remove all
             onChange(selectedItems.filter(i => !itemIds.includes(i.targetId)))
         }
     }
@@ -68,12 +88,23 @@ export function PermissionSelector({ hierarchy, selectedItems, onChange }: Permi
         }
     }
 
-    const renderItem = (item: PermissionItem, depth = 0) => {
+    const renderItem = (item: PermissionItem, depth = 0, path: PermissionItem[] = []) => {
         const hasChildren = item.children && item.children.length > 0
         const isExpanded = expanded.includes(item.id)
-        const selected = isSelected(item.id)
         
-        // Filter by search
+        const selectedManually = isIndividuallySelected(item.id)
+        const groupSource = getInheritanceSource(item.id)
+        const parentUnlockSource = getParentUnlockSource(item, path)
+        
+        // Estado final: ¿Está activo?
+        const isActive = selectedManually || !!groupSource || !!parentUnlockSource
+        
+        // Tooltip o mensaje de estado
+        let statusLabel = ""
+        if (parentUnlockSource) statusLabel = `Desbloqueado por ${parentUnlockSource}`
+        else if (groupSource) statusLabel = `Heredado de Grupo: ${groupSource}`
+
+        // Filtro de búsqueda
         const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase())
         const hasMatchingChild = item.children?.some(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.children?.some(sc => sc.name.toLowerCase().includes(search.toLowerCase())))
 
@@ -82,7 +113,7 @@ export function PermissionSelector({ hierarchy, selectedItems, onChange }: Permi
         return (
             <div key={item.id} className="select-none">
                 <div 
-                    className={`flex items-center gap-2 py-2 px-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer ${selected ? 'bg-blue-50/50' : ''}`}
+                    className={`flex items-center gap-2 py-2 px-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer ${isActive ? 'bg-blue-50/30' : ''}`}
                     style={{ marginLeft: `${depth * 20}px` }}
                 >
                     <button 
@@ -94,20 +125,45 @@ export function PermissionSelector({ hierarchy, selectedItems, onChange }: Permi
                     </button>
 
                     <div onClick={() => handleToggle(item)} className="flex items-center gap-2 flex-1 min-w-0">
-                        {selected ? <CheckSquare size={16} className="text-blue-600" /> : <Square size={16} className="text-slate-300" />}
+                        <div className="relative">
+                            {selectedManually ? (
+                                <CheckSquare size={16} className="text-blue-600" />
+                            ) : (isActive) ? (
+                                <div className="relative">
+                                    <Square size={16} className="text-blue-200" />
+                                    <ShieldCheck size={10} className="absolute inset-0 m-auto text-blue-600" />
+                                </div>
+                            ) : (
+                                <Square size={16} className="text-slate-300" />
+                            )}
+                        </div>
+
                         {renderIcon(item.type)}
-                        <span className={`text-xs truncate ${selected ? 'font-bold text-blue-900' : 'text-slate-600 font-medium'}`}>
-                            {item.name}
-                        </span>
-                        <span className="text-[9px] font-black uppercase text-slate-300 tracking-tighter ml-1">
-                            {item.type}
-                        </span>
+                        
+                        <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                                <span className={`text-xs truncate ${isActive ? 'font-bold text-blue-900' : 'text-slate-600 font-medium'}`}>
+                                    {item.name}
+                                </span>
+                                {groupSource && (
+                                    <div className="flex items-center gap-1 bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter">
+                                        <Users size={8} />
+                                        Grupo
+                                    </div>
+                                )}
+                            </div>
+                            {statusLabel && (
+                                <span className="text-[8px] text-blue-400 font-bold uppercase tracking-widest leading-none mt-0.5">
+                                    {statusLabel}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {(isExpanded || (search && hasMatchingChild)) && item.children && (
                     <div className="mt-1">
-                        {item.children.map(child => renderItem(child, depth + 1))}
+                        {item.children.map(child => renderItem(child, depth + 1, [...path, item]))}
                     </div>
                 )}
             </div>
@@ -141,15 +197,22 @@ export function PermissionSelector({ hierarchy, selectedItems, onChange }: Permi
             </div>
 
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    {selectedItems.length} Elementos Seleccionados
-                </p>
+                <div className="flex flex-col">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        {selectedItems.length} Permisos Individuales
+                    </p>
+                    {inheritedPermissions.length > 0 && (
+                        <p className="text-[8px] font-bold text-blue-500 uppercase tracking-widest">
+                            + {inheritedPermissions.length} Permisos por Grupos
+                        </p>
+                    )}
+                </div>
                 <button 
                     type="button" 
                     onClick={() => onChange([])}
                     className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:text-blue-700"
                 >
-                    Limpiar Todo
+                    Limpiar Individuales
                 </button>
             </div>
         </div>

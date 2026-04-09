@@ -1,54 +1,13 @@
 "use server"
 
 import { db } from "@/db"
-import { sections, categories, subcategories, items, permissions, profiles, userGroups } from "@/db/schema"
-import { eq, sql, inArray } from "drizzle-orm"
+import { sections, categories, subcategories, items, permissions } from "@/db/schema"
+import { eq, sql } from "drizzle-orm"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
-// Tipos para la jerarquía
-export type SectionHierarchy = typeof sections.$inferSelect & {
-    categories: (typeof categories.$inferSelect & {
-        subcategories: (typeof subcategories.$inferSelect & {
-            items: (typeof items.$inferSelect)[]
-        })[]
-    })[]
-}
-
 /**
- * [ADMIN] Obtiene la jerarquía completa de una sección por su slug
- */
-export async function getSectionHierarchy(slug: string): Promise<SectionHierarchy | null> {
-    const section = await db.query.sections.findFirst({
-        where: eq(sections.slug, slug.toLowerCase())
-    })
-
-    if (!section) return null
-
-    const allCategories = await db.select().from(categories)
-        .where(eq(categories.sectionId, section.id))
-        .orderBy(categories.sortOrder, categories.createdAt)
-
-    const categoriesWithHierarchy = await Promise.all(allCategories.map(async (cat) => {
-        const allSubs = await db.select().from(subcategories)
-            .where(eq(subcategories.categoryId, cat.id))
-            .orderBy(subcategories.createdAt)
-
-        const subsWithItems = await Promise.all(allSubs.map(async (sub) => {
-            const its = await db.select().from(items)
-                .where(eq(items.subcategoryId, sub.id))
-                .orderBy(items.createdAt)
-            return { ...sub, items: its }
-        }))
-
-        return { ...cat, subcategories: subsWithItems }
-    }))
-
-    return { ...section, categories: categoriesWithHierarchy }
-}
-
-/**
- * [DASHBOARD] Obtiene la jerarquía filtrada por los permisos del usuario
+ * Obtiene la jerarquía de una sección filtrada por los permisos del usuario actual
  */
 export async function getFilteredHierarchy(sectionId: string) {
     const cookieStore = await cookies()
@@ -78,14 +37,16 @@ async function fetchHierarchy(userId: string, sectionId: string) {
 
     if (!profile) return []
 
+    // 1. Obtener todos los permisos del usuario
     const allPerms = await db.select().from(permissions).where(
         sql`${permissions.userId} = ${userId} OR ${permissions.groupId} IN (
-            SELECT ${userGroups.groupId} FROM ${userGroups} WHERE ${userGroups.userId} = ${userId}
+            SELECT group_id FROM user_groups WHERE user_id = ${userId}
         )`
     )
 
     const isSuperAdmin = profile.role === 'superadmin'
 
+    // 2. Obtener categorías
     const allCategories = await db.select().from(categories)
         .where(eq(categories.sectionId, sectionId))
         .orderBy(categories.sortOrder, categories.createdAt)
@@ -93,9 +54,10 @@ async function fetchHierarchy(userId: string, sectionId: string) {
     const filteredHierarchy = []
 
     for (const cat of allCategories) {
-        const hasSectionPerm = allPerms.some(p => p.targetType === 'section' && p.targetId === sectionId)
-        const hasCatPerm = isSuperAdmin || hasSectionPerm || allPerms.some(p => p.targetType === 'category' && p.targetId === cat.id)
+        const hasCatPerm = isSuperAdmin || allPerms.some(p => p.targetType === 'section' && p.targetId === sectionId) ||
+                           allPerms.some(p => p.targetType === 'category' && p.targetId === cat.id)
 
+        // Obtener subcategorías
         const allSubs = await db.select().from(subcategories)
             .where(eq(subcategories.categoryId, cat.id))
             .orderBy(subcategories.createdAt)
@@ -105,6 +67,7 @@ async function fetchHierarchy(userId: string, sectionId: string) {
         for (const sub of allSubs) {
             const hasSubPerm = hasCatPerm || allPerms.some(p => p.targetType === 'subcategory' && p.targetId === sub.id)
 
+            // Obtener ítems
             const allItems = await db.select().from(items)
                 .where(eq(items.subcategoryId, sub.id))
                 .orderBy(items.createdAt)
