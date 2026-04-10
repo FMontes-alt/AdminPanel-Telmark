@@ -43,6 +43,9 @@ export default function QuestionForm({
         editingQuestion?.options?.map((o: any) => ({ id: o.id, text: o.text, isCorrect: o.isCorrect })) || 
         [{ text: "", isCorrect: false }, { text: "", isCorrect: false }]
     )
+    const [referenceAnswer, setReferenceAnswer] = useState(
+        (type === "short_answer" && editingQuestion?.options?.[0]?.text) || ""
+    )
 
     useEffect(() => {
         const loadMedia = async () => {
@@ -79,7 +82,9 @@ export default function QuestionForm({
                 ? options.filter(o => o.text.trim())
                 : type === "true_false"
                     ? options.slice(0, 2)
-                    : []
+                    : type === "short_answer" && referenceAnswer.trim()
+                        ? [{ text: referenceAnswer.trim(), isCorrect: true }]
+                        : []
 
             const questionData = {
                 quizId,
@@ -203,6 +208,19 @@ export default function QuestionForm({
 
                 {type === "true_false" && (
                     <TrueFalseEditor options={options} setOptions={setOptions} />
+                )}
+
+                {type === "short_answer" && (
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Respuesta de Referencia (Opcional)</label>
+                        <input
+                            value={referenceAnswer}
+                            onChange={(e) => setReferenceAnswer(e.target.value)}
+                            placeholder="Ej: La fotosíntesis..."
+                            className="w-full bg-slate-50 rounded-2xl py-3 px-5 text-sm font-bold text-slate-700 outline-none border border-transparent focus:border-blue-200 focus:bg-white transition-all shadow-sm"
+                        />
+                        <p className="text-[10px] text-slate-400 italic">Esta respuesta servirá de guía al administrador durante la revisión manual.</p>
+                    </div>
                 )}
 
                 {/* Form Actions */}

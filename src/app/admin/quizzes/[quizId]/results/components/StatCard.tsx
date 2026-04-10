@@ -31,8 +31,12 @@ export default function StatCard({ label, value, icon: Icon, color, description,
                     <Icon size={28} />
                 </div>
             </div>
-            <div className="space-y-1">
-                <p className="text-4xl font-black text-slate-900 tracking-tighter">{value}</p>
+            <div className="space-y-1 overflow-hidden">
+                <p className={`font-black text-slate-900 tracking-tighter leading-none break-words ${
+                    typeof value === 'string' && value.length > 10 ? 'text-2xl' : 'text-4xl'
+                }`}>
+                    {value}
+                </p>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</p>
             </div>
             <p className="text-[11px] text-slate-500 font-medium leading-relaxed border-t border-slate-50 pt-4">

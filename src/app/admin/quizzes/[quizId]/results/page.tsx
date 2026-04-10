@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { getQuizById } from "@/actions/quizzes"
 import { getQuizAnalytics } from "@/actions/quiz-stats"
+import { getPendingReviewsCount } from "@/actions/quiz-attempts"
 
 // Modular Components
 import StatCard from "./components/StatCard"
@@ -23,22 +24,26 @@ import OverviewTab from "./components/OverviewTab"
 import RankingTab from "./components/RankingTab"
 import TopicsTab from "./components/TopicsTab"
 import QuestionsTab from "./components/QuestionsTab"
+import ReviewTab from "./components/ReviewTab"
 
 export default function QuizResultsPage() {
     const { quizId } = useParams()
     const [activeTab, setActiveTab] = useState("overview")
     const [stats, setStats] = useState<any>(null)
     const [quiz, setQuiz] = useState<any>(null)
+    const [pendingCount, setPendingCount] = useState(0)
     const [loading, setLoading] = useState(true)
 
     const fetchData = useCallback(async () => {
         setLoading(true)
-        const [quizData, analyticsData] = await Promise.all([
+        const [quizData, analyticsData, pCount] = await Promise.all([
             getQuizById(quizId as string),
             getQuizAnalytics(quizId as string),
+            getPendingReviewsCount(quizId as string),
         ])
         setQuiz(quizData)
         setStats(analyticsData)
+        setPendingCount(pCount)
         setLoading(false)
     }, [quizId])
 
@@ -65,6 +70,7 @@ export default function QuizResultsPage() {
     const TABS = [
         { id: "overview", label: "Resumen", icon: BarChart3 },
         { id: "ranking", label: "Clasificación", icon: Trophy },
+        { id: "review", label: "Revisiones", icon: CheckCircle2, badge: pendingCount },
         { id: "topics", label: "Temas", icon: Layers },
         { id: "questions", label: "Mapa de Preguntas", icon: Target },
     ]
@@ -91,7 +97,7 @@ export default function QuizResultsPage() {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${
                                 activeTab === tab.id
                                     ? "bg-white text-blue-600 shadow-sm"
                                     : "text-slate-400 hover:text-slate-600"
@@ -99,6 +105,11 @@ export default function QuizResultsPage() {
                         >
                             <tab.icon size={14} />
                             {tab.label}
+                            {tab.badge !== undefined && tab.badge > 0 && (
+                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+                                    {tab.badge}
+                                </span>
+                            )}
                         </button>
                     ))}
                 </div>
@@ -125,15 +136,15 @@ export default function QuizResultsPage() {
                     value={stats.topicStats[stats.topicStats.length - 1]?.topic || "N/A"} 
                     icon={CheckCircle2} 
                     color="emerald"
-                    description={stats.topicStats[stats.topicStats.length - 1]?.avgSuccessRate + "% de éxito medio"}
+                    description={(stats.topicStats[stats.topicStats.length - 1]?.avgSuccessRate || 0) + "% de éxito medio"}
                 />
                 <StatCard 
                     label="Punto Crítico" 
-                    value={stats.topicStats[0]?.topic || "N/A"} 
+                    value={stats.topicStats[0]?.avgSuccessRate < 100 ? (stats.topicStats[0]?.topic || "General") : "Ninguno"} 
                     icon={XCircle} 
-                    color="red"
-                    description="Requiere refuerzo inmediato"
-                    danger={stats.topicStats[0]?.avgSuccessRate < 50}
+                    color={stats.topicStats[0]?.avgSuccessRate < 100 ? "red" : "emerald"}
+                    description={stats.topicStats[0]?.avgSuccessRate < 100 ? "Requiere refuerzo inmediato" : "Todos los temas dominados"}
+                    danger={stats.topicStats[0]?.avgSuccessRate < 60}
                 />
             </div>
 
@@ -152,6 +163,10 @@ export default function QuizResultsPage() {
 
                 {activeTab === "topics" && (
                     <TopicsTab stats={stats} />
+                )}
+
+                {activeTab === "review" && (
+                    <ReviewTab quizId={quizId as string} onGrated={fetchData} />
                 )}
             </AnimatePresence>
         </div>
