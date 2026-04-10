@@ -114,6 +114,8 @@ export const questionTypeEnum = pgEnum("question_type", [
 
 export const mediaTypeEnum = pgEnum("media_type", ["image", "video", "none"]);
 
+export const attemptStatusEnum = pgEnum("attempt_status", ["in_progress", "pending_review", "completed"]);
+
 // 6. CUESTIONARIOS
 export const quizzes = pgTable("quizzes", {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -171,6 +173,7 @@ export const quizAttempts = pgTable("quiz_attempts", {
         .notNull(),
     score: integer("score"),
     maxScore: integer("max_score"),
+    status: attemptStatusEnum("status").default("completed").notNull(),
     startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
 });
