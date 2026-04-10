@@ -235,7 +235,7 @@ export async function createAgent(data: {
             );
         }
 
-        revalidatePath("/admin/agents");
+        revalidatePath("/admin/usuarios");
         revalidatePath("/dashboard");
         revalidatePath("/", "layout");
         return { success: true, data: profile };
@@ -291,7 +291,7 @@ export async function updateAgent(id: string, data: Partial<{
             }
         }
 
-        revalidatePath("/admin/agents");
+        revalidatePath("/admin/usuarios");
         revalidatePath("/dashboard");
         revalidatePath("/", "layout");
         return { success: true }
@@ -310,7 +310,7 @@ export async function deleteAgent(id: string) {
         await supabaseAdmin.auth.admin.deleteUser(id);
         await db.delete(profiles).where(eq(profiles.id, id));
 
-        revalidatePath("/admin/agents");
+        revalidatePath("/admin/usuarios");
         revalidatePath("/dashboard");
         revalidatePath("/", "layout");
         return { success: true };

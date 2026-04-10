@@ -141,8 +141,8 @@ export async function upsertGroup(data: {
             );
         }
 
-        revalidatePath("/admin/groups");
-        revalidatePath("/admin/agents");
+        revalidatePath("/admin/grupos");
+        revalidatePath("/admin/usuarios");
         revalidatePath("/dashboard");
         revalidatePath("/", "layout");
         return { success: true, id: groupId };
@@ -158,7 +158,7 @@ export async function upsertGroup(data: {
 export async function deleteGroup(id: string) {
     try {
         await db.delete(groups).where(eq(groups.id, id));
-        revalidatePath("/admin/groups");
+        revalidatePath("/admin/grupos");
         revalidatePath("/dashboard");
         revalidatePath("/", "layout");
         return { success: true };
