@@ -73,17 +73,51 @@ export async function getQuizAnalytics(quizId: string) {
             }
         }).sort((a, b) => a.avgSuccessRate - b.avgSuccessRate)
 
-        // 6. Ranking de Usuarios (Todos)
-        const userRanking = attempts.map((a, index) => ({
-            id: a.id,
-            rank: index + 1,
-            name: `${a.firstName || ''} ${a.lastName || ''}`.trim() || 'Usuario',
-            email: a.email,
-            score: a.score,
-            maxScore: a.maxScore,
-            percentage: a.maxScore ? Math.round((a.score! / a.maxScore) * 100) : 0,
-            date: a.completedAt
-        }))
+        // 6. Ranking de Usuarios (Agrupado por mejor marca personal)
+        const userBestAttemptsMap = new Map<string, any>();
+
+        attempts.forEach((a) => {
+            const userId = a.userId!;
+            const attemptData = {
+                id: a.id,
+                score: a.score,
+                maxScore: a.maxScore,
+                percentage: a.maxScore ? Math.round((a.score! / a.maxScore) * 100) : 0,
+                date: a.completedAt
+            };
+
+            if (!userBestAttemptsMap.has(userId)) {
+                userBestAttemptsMap.set(userId, {
+                    userId,
+                    name: `${a.firstName || ''} ${a.lastName || ''}`.trim() || 'Usuario',
+                    email: a.email,
+                    bestAttempt: attemptData,
+                    history: [attemptData]
+                });
+            } else {
+                const user = userBestAttemptsMap.get(userId);
+                user.history.push(attemptData);
+                // Si este intento es mejor que el guardado, lo actualizamos como "mejor marca"
+                // (Aunque la query ya venga por score DESC, esto asegura robustez)
+                if (attemptData.score! > user.bestAttempt.score!) {
+                    user.bestAttempt = attemptData;
+                }
+            }
+        });
+
+        const userRanking = Array.from(userBestAttemptsMap.values())
+            .sort((a, b) => b.bestAttempt.score - a.bestAttempt.score)
+            .map((u, index) => ({
+                id: u.bestAttempt.id, // ID del mejor intento para key de React
+                rank: index + 1,
+                name: u.name,
+                email: u.email,
+                score: u.bestAttempt.score,
+                maxScore: u.bestAttempt.maxScore,
+                percentage: u.bestAttempt.percentage,
+                date: u.bestAttempt.date,
+                history: u.history
+            }))
 
         return {
             attemptsCount: attempts.length,
