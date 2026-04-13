@@ -73,11 +73,11 @@ export async function getQuizAnalytics(quizId: string) {
             }
         }).sort((a, b) => a.avgSuccessRate - b.avgSuccessRate)
 
-        // 6. Ranking de Usuarios (Top 10)
-        const userRanking = attempts.slice(0, 10).map((a, index) => ({
+        // 6. Ranking de Usuarios (Todos)
+        const userRanking = attempts.map((a, index) => ({
             id: a.id,
             rank: index + 1,
-            name: `${a.firstName} ${a.lastName}`,
+            name: `${a.firstName || ''} ${a.lastName || ''}`.trim() || 'Usuario',
             email: a.email,
             score: a.score,
             maxScore: a.maxScore,

@@ -19,7 +19,7 @@ export default function RankingTab({ stats }: RankingTabProps) {
             <div className="px-10 py-8 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
                 <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Clasificación de Usuarios</h2>
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    Mostrando el Top 10 según rendimiento
+                    Listado completo según rendimiento
                 </div>
             </div>
             <div className="overflow-x-auto">
