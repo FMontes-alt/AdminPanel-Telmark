@@ -1,8 +1,10 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { User as UserIcon, History, X, Calendar, Target, Trophy } from "lucide-react"
+import { User as UserIcon, History, X, Calendar, Target, Trophy, Loader2 } from "lucide-react"
 import { useState } from "react"
+import { getAttemptResults } from "@/actions/quiz-attempts"
+import PersonalResults from "../../preview/components/PersonalResults"
 
 interface RankingTabProps {
     stats: any
@@ -10,6 +12,21 @@ interface RankingTabProps {
 
 export default function RankingTab({ stats }: RankingTabProps) {
     const [selectedUser, setSelectedUser] = useState<any>(null)
+    const [selectedAttemptId, setSelectedAttemptId] = useState<string | null>(null)
+    const [attemptResults, setAttemptResults] = useState<any>(null)
+    const [loadingAttempt, setLoadingAttempt] = useState(false)
+
+    const handleViewAttempt = async (attemptId: string) => {
+        setLoadingAttempt(true)
+        setSelectedAttemptId(attemptId)
+        try {
+            const data = await getAttemptResults(attemptId)
+            setAttemptResults(data)
+        } catch (error) {
+            console.error("Error loading attempt results:", error)
+        }
+        setLoadingAttempt(false)
+    }
 
     return (
         <motion.div
@@ -124,10 +141,11 @@ export default function RankingTab({ stats }: RankingTabProps) {
                             {/* Listado de Intentos */}
                             <div className="p-8 max-h-[400px] overflow-y-auto space-y-4">
                                 {selectedUser.history.map((h: any, i: number) => (
-                                    <div 
+                                    <button 
                                         key={h.id}
-                                        className={`flex items-center justify-between p-5 rounded-3xl border transition-all ${
-                                            i === 0 ? "bg-blue-50/50 border-blue-100" : "bg-white border-slate-50 shadow-sm"
+                                        onClick={() => handleViewAttempt(h.id)}
+                                        className={`w-full text-left flex items-center justify-between p-5 rounded-3xl border transition-all cursor-pointer hover:shadow-md ${
+                                            i === 0 ? "bg-blue-50/50 border-blue-100 hover:bg-blue-50" : "bg-white border-slate-50 shadow-sm hover:border-blue-100"
                                         }`}
                                     >
                                         <div className="space-y-1">
@@ -167,7 +185,7 @@ export default function RankingTab({ stats }: RankingTabProps) {
                                                 </div>
                                             )}
                                         </div>
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
 
@@ -178,6 +196,61 @@ export default function RankingTab({ stats }: RankingTabProps) {
                             </div>
                         </motion.div>
                     </div>
+                )}
+            </AnimatePresence>
+
+            {/* Renderizar Intento Específico por encima */}
+            <AnimatePresence>
+                {selectedAttemptId && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 50 }}
+                        className="fixed inset-0 z-[200] overflow-y-auto bg-white"
+                    >
+                        {loadingAttempt ? (
+                            <div className="flex flex-col items-center justify-center min-h-screen">
+                                <Loader2 className="animate-spin text-blue-600 mb-4" size={32} />
+                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Cargando revisión...</p>
+                            </div>
+                        ) : attemptResults ? (
+                            <div className="relative isolate px-4">
+                                <div className="absolute top-8 left-8 right-8 flex justify-between items-center z-10 pointer-events-none">
+                                    <div />
+                                    <button
+                                        onClick={() => {
+                                            setSelectedAttemptId(null)
+                                            setAttemptResults(null)
+                                        }}
+                                        className="p-3 bg-white hover:bg-slate-100 rounded-full shadow-lg border border-slate-100 text-slate-600 transition-all pointer-events-auto"
+                                    >
+                                        <X size={24} />
+                                    </button>
+                                </div>
+                                <PersonalResults 
+                                    results={attemptResults} 
+                                    onRepeat={() => {}} 
+                                    onBackToQuizzes={() => {
+                                        setSelectedAttemptId(null)
+                                        setAttemptResults(null)
+                                    }} 
+                                />
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center min-h-screen">
+                                <p className="text-slate-500 font-bold mb-4">No se pudo cargar el intento</p>
+                                <button
+                                    onClick={() => {
+                                        setSelectedAttemptId(null)
+                                        setAttemptResults(null)
+                                    }}
+                                    className="text-blue-600 hover:underline font-bold"
+                                >
+                                    Cerrar y volver
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
                 )}
             </AnimatePresence>
         </motion.div>

@@ -1,7 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Trophy, TrendingUp, Target, ChevronRight } from "lucide-react"
+import { Target, TrendingUp, Users, CheckCircle2, XCircle } from "lucide-react"
+import StatCard from "./StatCard"
 
 interface OverviewTabProps {
     stats: any
@@ -15,11 +16,10 @@ export default function OverviewTab({ stats, onSeeAllRanking }: OverviewTabProps
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="space-y-10"
         >
-            <div className="grid grid-cols-1 gap-10">
-                {/* Performance by Topic */}
-                <div className="bg-white rounded-[40px] border border-slate-100 p-10 space-y-8 shadow-sm">
+            <div className="space-y-6">
+                {/* Performance by Topic (Top) */}
+                <div className="bg-white rounded-[40px] border border-slate-100 p-10 space-y-8 shadow-sm h-fit">
                     <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-3">
                         <Target className="text-blue-500" /> Rendimiento por Campo
                     </h2>
@@ -43,6 +43,39 @@ export default function OverviewTab({ stats, onSeeAllRanking }: OverviewTabProps
                             </div>
                         ))}
                     </div>
+                </div>
+
+                {/* Global Stats Grid (Bottom) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-fit pt-6">
+                    <StatCard 
+                        label="Puntuación Media" 
+                        value={`${stats.overallSuccessRate}%`} 
+                        icon={TrendingUp} 
+                        color="blue"
+                        description="Rendimiento global de todos los usuarios"
+                    />
+                    <StatCard 
+                        label="Participación" 
+                        value={stats.uniqueUsersCount} 
+                        icon={Users} 
+                        color="purple"
+                        description="Usuarios únicos"
+                    />
+                    <StatCard 
+                        label="Tema más fuerte" 
+                        value={stats.topicStats[stats.topicStats.length - 1]?.topic || "N/A"} 
+                        icon={CheckCircle2} 
+                        color="emerald"
+                        description={`${stats.topicStats[stats.topicStats.length - 1]?.avgSuccessRate || 0}% de éxito`}
+                    />
+                    <StatCard 
+                        label="Punto Crítico" 
+                        value={stats.topicStats[0]?.avgSuccessRate < 100 ? (stats.topicStats[0]?.topic || "General") : "Ninguno"} 
+                        icon={XCircle} 
+                        color={stats.topicStats[0]?.avgSuccessRate < 100 ? "red" : "emerald"}
+                        description={stats.topicStats[0]?.avgSuccessRate < 100 ? "Requiere refuerzo" : "Todo dominado"}
+                        danger={stats.topicStats[0]?.avgSuccessRate < 60}
+                    />
                 </div>
             </div>
         </motion.div>

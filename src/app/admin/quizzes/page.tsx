@@ -318,13 +318,7 @@ export default function AdminQuizzesPage() {
                                     >
                                         {quiz.isPublished ? <EyeOff size={16} /> : <Eye size={16} />}
                                     </button>
-                                    <button
-                                        onClick={() => router.push(`/admin/quizzes/${quiz.id}/results`)}
-                                        className="p-2 rounded-xl hover:bg-white transition-all text-slate-400 hover:text-emerald-600"
-                                        title="Ver resultados"
-                                    >
-                                        <BarChart3 size={16} />
-                                    </button>
+
                                     <button
                                         onClick={() => router.push(`/admin/quizzes/${quiz.id}/preview`)}
                                         className="p-2 rounded-xl hover:bg-white transition-all text-slate-400 hover:text-blue-600"

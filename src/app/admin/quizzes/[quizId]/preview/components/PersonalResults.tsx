@@ -13,7 +13,7 @@ interface PersonalResultsProps {
 export default function PersonalResults({ results, onRepeat, onBackToQuizzes, onBackToEdition }: PersonalResultsProps) {
     const attempt = results.attempt
     const percentage = attempt?.maxScore ? Math.round((attempt.score / attempt.maxScore) * 100) : 0
-    const details = results.details?.questions || []
+    const details = results.details?.questions || results.questions || []
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 py-12">
@@ -54,7 +54,7 @@ export default function PersonalResults({ results, onRepeat, onBackToQuizzes, on
                         {attempt?.status === "pending_review" && (
                             <p className="text-xs text-slate-400 mt-2 font-medium">
                                 Como administrador, puedes ver esta prueba en la sección de <br/>
-                                <strong className="text-blue-600">Resultados → Revisiones</strong> para probar el sistema.
+                                <strong className="text-blue-600">Monitoreo → Ver Resultados → Revisiones</strong> para probar el sistema.
                             </p>
                         )}
                     </div>

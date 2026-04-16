@@ -121,6 +121,7 @@ export async function getQuizAnalytics(quizId: string) {
 
         return {
             attemptsCount: attempts.length,
+            uniqueUsersCount: userRanking.length,
             questionStats,
             topicStats,
             userRanking,

@@ -79,11 +79,11 @@ export default function QuizResultsPage() {
     return (
         <div className="p-8 lg:p-12 space-y-10 max-w-[1400px] mx-auto min-h-screen">
             <button
-                onClick={() => window.location.href = "/admin/quizzes"}
+                onClick={() => window.location.href = "/admin/monitoring"}
                 className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors text-xs font-black uppercase tracking-widest group"
             >
                 <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-                Volver a Cuestionarios
+                Volver al Monitoreo
             </button>
 
             <AdminPageHeader
@@ -114,38 +114,7 @@ export default function QuizResultsPage() {
                 ))}
             </div>
 
-            {/* Global Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard 
-                    label="Puntuación Media" 
-                    value={`${stats.overallSuccessRate}%`} 
-                    icon={TrendingUp} 
-                    color="blue"
-                    description="Rendimiento global de todos los usuarios"
-                />
-                <StatCard 
-                    label="Participación" 
-                    value={stats.attemptsCount} 
-                    icon={Users} 
-                    color="purple"
-                    description="Usuarios únicos que han completado el quiz"
-                />
-                <StatCard 
-                    label="Tema más fuerte" 
-                    value={stats.topicStats[stats.topicStats.length - 1]?.topic || "N/A"} 
-                    icon={CheckCircle2} 
-                    color="emerald"
-                    description={(stats.topicStats[stats.topicStats.length - 1]?.avgSuccessRate || 0) + "% de éxito medio"}
-                />
-                <StatCard 
-                    label="Punto Crítico" 
-                    value={stats.topicStats[0]?.avgSuccessRate < 100 ? (stats.topicStats[0]?.topic || "General") : "Ninguno"} 
-                    icon={XCircle} 
-                    color={stats.topicStats[0]?.avgSuccessRate < 100 ? "red" : "emerald"}
-                    description={stats.topicStats[0]?.avgSuccessRate < 100 ? "Requiere refuerzo inmediato" : "Todos los temas dominados"}
-                    danger={stats.topicStats[0]?.avgSuccessRate < 60}
-                />
-            </div>
+
 
             <AnimatePresence mode="wait">
                 {activeTab === "overview" && (
