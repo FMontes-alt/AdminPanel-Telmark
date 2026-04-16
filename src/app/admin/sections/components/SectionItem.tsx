@@ -89,15 +89,25 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
             {/* Compact Image - Flush with edges */}
             <div className="w-28 bg-slate-100 relative shrink-0 overflow-hidden">
                 {resolvedUrl ? (
-                    <img key={resolvedUrl} src={resolvedUrl} alt={section?.name || 'Sección'} className="w-full h-full object-cover transition-transform duration-700" />
-                ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-300">
-                        {config?.template === 'DOCUMENTOS' && <FileText size={32} strokeWidth={1} />}
-                        {config?.template === 'VIDEOS' && <Video size={32} strokeWidth={1} />}
-                        {config?.template === 'POLIZAS' && <ShieldCheck size={32} strokeWidth={1} />}
-                        {(!config?.template || config?.template === 'GENERICO') && <Layout size={32} strokeWidth={1} />}
-                    </div>
-                )}
+                    <img 
+                        key={resolvedUrl} 
+                        src={resolvedUrl} 
+                        alt={section?.name || 'Sección'} 
+                        className="w-full h-full object-cover transition-transform duration-700"
+                        onError={(e) => {
+                            // Si la URL falla, ocultamos la imagen y mostramos el fallback
+                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                            (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove('hidden');
+                        }}
+                    />
+                ) : null}
+                {/* Fallback icon - visible si no hay URL o si carga falla */}
+                <div className={`w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-300 absolute inset-0 ${resolvedUrl ? 'hidden' : ''}`}>
+                    {config?.template === 'DOCUMENTOS' && <FileText size={32} strokeWidth={1} />}
+                    {config?.template === 'VIDEOS' && <Video size={32} strokeWidth={1} />}
+                    {config?.template === 'POLIZAS' && <ShieldCheck size={32} strokeWidth={1} />}
+                    {(!config?.template || config?.template === 'GENERICO') && <Layout size={32} strokeWidth={1} />}
+                </div>
                 {isLocked && (
                     <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-[1px] flex items-center justify-center">
                         <Lock className="text-white opacity-80" size={24} />

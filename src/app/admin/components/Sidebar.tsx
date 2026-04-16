@@ -239,7 +239,7 @@ export function Sidebar() {
                                             key={item.name}
                                             href={item.href}
                                             title={isCollapsed ? item.name : undefined}
-                                            className={`flex items-center rounded-xl text-sm font-semibold transition-all group ${
+                                            className={`relative flex items-center rounded-xl text-sm font-semibold transition-all group ${
                                                 isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-4 py-2.5'
                                             } ${
                                                 isActive(item.href) 
