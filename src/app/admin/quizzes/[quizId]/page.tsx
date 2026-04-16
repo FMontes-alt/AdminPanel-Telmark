@@ -11,6 +11,7 @@ import { getSections } from "@/actions/sections"
 import QuizEditorHeader from "./components/QuizEditorHeader"
 import QuestionList from "./components/QuestionList"
 import DeleteConfirmModal from "@/components/ui/DeleteConfirmModal"
+import { AdminPageHeader } from "@/components/ui/admin-page-header"
 
 export default function QuizEditorPage() {
     const { quizId } = useParams()
@@ -103,6 +104,13 @@ export default function QuizEditorPage() {
                 <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                 Volver a Cuestionarios
             </button>
+
+            <AdminPageHeader
+                category="Editor"
+                title={<>Editar <span className="text-blue-600">{quiz.title}</span></>}
+                description={`${quiz.questions?.length || 0} pregunta${(quiz.questions?.length || 0) !== 1 ? "s" : ""} configurada${(quiz.questions?.length || 0) !== 1 ? "s" : ""}`}
+                size="sm"
+            />
 
             <QuizEditorHeader 
                 editTitle={editTitle} setEditTitle={setEditTitle}

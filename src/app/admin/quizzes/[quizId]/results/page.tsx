@@ -17,6 +17,7 @@ import {
 import { getQuizById } from "@/actions/quizzes"
 import { getQuizAnalytics } from "@/actions/quiz-stats"
 import { getPendingReviewsCount } from "@/actions/quiz-attempts"
+import { AdminPageHeader } from "@/components/ui/admin-page-header"
 
 // Modular Components
 import StatCard from "./components/StatCard"
@@ -77,42 +78,40 @@ export default function QuizResultsPage() {
 
     return (
         <div className="p-8 lg:p-12 space-y-10 max-w-[1400px] mx-auto min-h-screen">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-4">
-                    <button
-                        onClick={() => window.location.href = "/admin/quizzes"}
-                        className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors text-xs font-black uppercase tracking-widest group"
-                    >
-                        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-                        Volver a Cuestionarios
-                    </button>
-                    <div>
-                        <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight leading-tight">{quiz.title}</h1>
-                        <p className="text-sm text-slate-400 font-medium mt-1">Análisis profundo de asimilación de conceptos</p>
-                    </div>
-                </div>
+            <button
+                onClick={() => window.location.href = "/admin/quizzes"}
+                className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors text-xs font-black uppercase tracking-widest group"
+            >
+                <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                Volver a Cuestionarios
+            </button>
 
-                <div className="flex bg-slate-100/50 p-1.5 rounded-[24px] gap-1">
-                    {TABS.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${
-                                activeTab === tab.id
-                                    ? "bg-white text-blue-600 shadow-sm"
-                                    : "text-slate-400 hover:text-slate-600"
-                            }`}
-                        >
-                            <tab.icon size={14} />
-                            {tab.label}
-                            {tab.badge !== undefined && tab.badge > 0 && (
-                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white animate-pulse">
-                                    {tab.badge}
-                                </span>
-                            )}
-                        </button>
-                    ))}
-                </div>
+            <AdminPageHeader
+                category="Estadísticas"
+                title={<>Resultados de <span className="text-blue-600">{quiz.title}</span></>}
+                description="Análisis profundo de asimilación de conceptos"
+            />
+
+            <div className="flex bg-slate-100/50 p-1.5 rounded-[24px] gap-1 w-fit">
+                {TABS.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${
+                            activeTab === tab.id
+                                ? "bg-white text-blue-600 shadow-sm"
+                                : "text-slate-400 hover:text-slate-600"
+                        }`}
+                    >
+                        <tab.icon size={14} />
+                        {tab.label}
+                        {tab.badge !== undefined && tab.badge > 0 && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+                                {tab.badge}
+                            </span>
+                        )}
+                    </button>
+                ))}
             </div>
 
             {/* Global Stats Cards */}

@@ -20,6 +20,7 @@ import {
 import { getQuizzes, createQuiz, deleteQuiz, publishQuiz } from "@/actions/quizzes"
 import { getSections } from "@/actions/sections"
 import DeleteConfirmModal from "@/components/ui/DeleteConfirmModal"
+import { AdminPageHeader } from "@/components/ui/admin-page-header"
 
 export default function AdminQuizzesPage() {
     const router = useRouter()
@@ -109,25 +110,21 @@ export default function AdminQuizzesPage() {
     }
 
     return (
-        <div className="p-8 lg:p-12 space-y-10 max-w-[1400px] mx-auto min-h-screen">
+        <div className="p-8 lg:p-12 space-y-12 max-w-[1400px] mx-auto min-h-screen">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">
-                        Cuestionarios
-                    </h1>
-                    <p className="text-sm text-slate-400 font-medium">
-                        {quizzes.length} cuestionario{quizzes.length !== 1 ? "s" : ""} creado{quizzes.length !== 1 ? "s" : ""}
-                    </p>
-                </div>
+            <AdminPageHeader
+                category="Formación"
+                title={<>Gestión de <span className="text-blue-600">Cuestionarios</span></>}
+                description={`${quizzes.length} cuestionario${quizzes.length !== 1 ? "s" : ""} creado${quizzes.length !== 1 ? "s" : ""}`}
+            >
                 <button
                     onClick={() => setIsCreating(!isCreating)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-xl shadow-blue-500/20"
                 >
-                    <Plus size={16} />
+                    <Plus size={18} />
                     Nuevo
                 </button>
-            </div>
+            </AdminPageHeader>
 
             {/* Create Form */}
             <AnimatePresence>
