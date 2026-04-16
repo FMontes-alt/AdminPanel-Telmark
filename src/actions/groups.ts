@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { groups, userGroups, profiles, permissions } from "@/db/schema";
 import { eq, inArray, ilike, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth-guard";
 
 /**
  * 1. OBTENER GRUPOS (con metadatos para visualización)
@@ -98,6 +99,7 @@ export async function upsertGroup(data: {
     memberIds: string[];
     permissionItems: { targetType: "section" | "category" | "subcategory" | "item", targetId: string }[];
 }) {
+    await requireAdmin();
     try {
         let groupId = data.id;
 
@@ -156,6 +158,7 @@ export async function upsertGroup(data: {
  * 4. ELIMINAR GRUPO
  */
 export async function deleteGroup(id: string) {
+    await requireAdmin();
     try {
         await db.delete(groups).where(eq(groups.id, id));
         revalidatePath("/admin/grupos");

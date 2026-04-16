@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { sanitizeFileName, getStoragePath } from "@/lib/storage-utils"
 import { revalidatePath } from "next/cache"
+import { requireAdmin } from "@/lib/auth-guard"
 
 const BUCKET_NAME = 'telmark-media'
 
@@ -11,6 +12,7 @@ const BUCKET_NAME = 'telmark-media'
  * Retorna la ruta interna si tiene éxito.
  */
 export async function uploadFileAction(formData: FormData, sectionSlug: string, categorySlug: string) {
+    await requireAdmin()
     const supabase = await createClient()
     const file = formData.get('file') as File
     
@@ -88,6 +90,7 @@ export async function getDownloadUrlAction(path: string) {
  * Elimina un archivo del storage.
  */
 export async function deleteFileAction(path: string) {
+    await requireAdmin()
     const supabase = await createClient()
     const cleanPath = path.replace(`${BUCKET_NAME}/`, '')
 

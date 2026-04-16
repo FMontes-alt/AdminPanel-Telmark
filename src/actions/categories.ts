@@ -4,6 +4,7 @@ import { db } from "@/db"
 import { categories } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
+import { requireAdmin } from "@/lib/auth-guard"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
@@ -16,6 +17,7 @@ export async function getCategories(sectionId: string) {
 }
 
 export async function reorderCategories(ids: string[]) {
+    await requireAdmin()
     // We update each category's sortOrder based on its index in the array
     await Promise.all(
         ids.map((id, index) => 
@@ -47,6 +49,7 @@ type CreateCategoryInput = {
 }
 
 export async function createCategory(data: CreateCategoryInput) {
+    await requireAdmin()
     const [newCategory] = await db
         .insert(categories)
         .values({
@@ -68,6 +71,7 @@ type UpdateCategoryInput = {
 }
 
 export async function updateCategory(id: string, data: UpdateCategoryInput) {
+    await requireAdmin()
     const [updated] = await db
         .update(categories)
         .set(data)
@@ -81,6 +85,7 @@ export async function updateCategory(id: string, data: UpdateCategoryInput) {
 // ─── DELETE ─────────────────────────────────────────────────────────────
 
 export async function deleteCategory(id: string) {
+    await requireAdmin()
     await db.delete(categories).where(eq(categories.id, id))
     revalidatePath("/admin")
     return { success: true }

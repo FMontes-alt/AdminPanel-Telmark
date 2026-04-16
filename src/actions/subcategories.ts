@@ -4,6 +4,7 @@ import { db } from "@/db"
 import { subcategories } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
+import { requireAdmin } from "@/lib/auth-guard"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ type CreateSubcategoryInput = {
 }
 
 export async function createSubcategory(data: CreateSubcategoryInput) {
+    await requireAdmin()
     const [newSubcategory] = await db
         .insert(subcategories)
         .values({
@@ -55,6 +57,7 @@ type UpdateSubcategoryInput = {
 }
 
 export async function updateSubcategory(id: string, data: UpdateSubcategoryInput) {
+    await requireAdmin()
     const [updated] = await db
         .update(subcategories)
         .set(data)
@@ -68,6 +71,7 @@ export async function updateSubcategory(id: string, data: UpdateSubcategoryInput
 // ─── DELETE ─────────────────────────────────────────────────────────────
 
 export async function deleteSubcategory(id: string) {
+    await requireAdmin()
     await db.delete(subcategories).where(eq(subcategories.id, id))
     revalidatePath("/admin")
     return { success: true }

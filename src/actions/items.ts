@@ -4,6 +4,7 @@ import { db } from "@/db"
 import { items } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
+import { requireAdmin } from "@/lib/auth-guard"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
@@ -51,6 +52,7 @@ type CreateItemInput = {
 }
 
 export async function createItem(data: CreateItemInput) {
+    await requireAdmin()
     const [newItem] = await db
         .insert(items)
         .values({
@@ -83,6 +85,7 @@ type UpdateItemInput = {
 }
 
 export async function updateItem(id: string, data: UpdateItemInput) {
+    await requireAdmin()
     const [updated] = await db
         .update(items)
         .set(data)
@@ -97,6 +100,7 @@ export async function updateItem(id: string, data: UpdateItemInput) {
 // ─── DELETE ─────────────────────────────────────────────────────────────
 
 export async function deleteItem(id: string) {
+    await requireAdmin()
     await db.delete(items).where(eq(items.id, id))
     revalidatePath("/admin")
     revalidatePath("/")
@@ -114,6 +118,7 @@ export async function setItemAttribute(
     key: string,
     value: unknown
 ) {
+    await requireAdmin()
     const item = await getItemById(itemId)
     if (!item) throw new Error(`Item con id ${itemId} no encontrado`)
 
@@ -127,6 +132,7 @@ export async function setItemAttribute(
  * Elimina un atributo concreto del campo JSONB `attributes`.
  */
 export async function removeItemAttribute(itemId: string, key: string) {
+    await requireAdmin()
     const item = await getItemById(itemId)
     if (!item) throw new Error(`Item con id ${itemId} no encontrado`)
 

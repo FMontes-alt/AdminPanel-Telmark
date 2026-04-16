@@ -5,6 +5,7 @@ import { sections, categories, subcategories } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { AlertService } from "@/services/alerts/alert-services"
+import { requireAdmin } from "@/lib/auth-guard"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
@@ -45,6 +46,7 @@ type CreateSectionInput = {
 }
 
 export async function createSection(data: CreateSectionInput) {
+    await requireAdmin()
     const [newSection] = await db
         .insert(sections)
         .values({
@@ -92,6 +94,7 @@ type UpdateSectionInput = {
 }
 
 export async function updateSection(id: string, data: UpdateSectionInput) {
+    await requireAdmin()
     const section = await getSectionById(id) // Obtenemos el nombre para la alerta
     const [updated] = await db.update(sections).set(data).where(eq(sections.id, id)).returning()
     // Lógica inteligente de alertas
@@ -121,6 +124,7 @@ export async function updateSection(id: string, data: UpdateSectionInput) {
 // ─── DELETE ─────────────────────────────────────────────────────────────
 
 export async function deleteSection(id: string) {
+    await requireAdmin()
     // 1. Obtenemos la sección antes de que desaparezca
     const section = await getSectionById(id)
     const sectionName = section?.name || "Desconocida"

@@ -7,6 +7,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { requireAdmin, getCurrentUser } from "@/lib/auth-guard";
 
 /**
  * 1.OBTENER EMPLEADOS (con grupos para visualización)
@@ -79,28 +80,9 @@ export async function getAgentById(id: string) {
  * 1.5 OBTENER DATOS DEL DASHBOARD PARA EL USUARIO ACTUAL
  */
 export async function getDashboardData() {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll()
-                },
-                setAll() {}
-            },
-        }
-    )
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error("No autenticado")
-
-    const profile = await db.query.profiles.findFirst({
-        where: eq(profiles.id, user.id)
-    })
-
-    if (!profile) return { profile: null, sections: [] }
+    const auth = await getCurrentUser()
+    if (!auth) return { profile: null, sections: [] }
+    const { user, profile } = auth
 
     // Si es superadmin, ve todo
     if (profile.role === 'superadmin') {
@@ -193,6 +175,7 @@ export async function createAgent(data: {
     permissionItems?: { targetType: "section" | "category" | "subcategory" | "item", targetId: string }[];
     password?: string;
 }) {
+    await requireAdmin();
     const supabaseAdmin = getAdminClient();
     try {
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -256,6 +239,7 @@ export async function updateAgent(id: string, data: Partial<{
     groupIds: string[];
     permissionItems: { targetType: "section" | "category" | "subcategory" | "item", targetId: string }[];
 }>) {
+    await requireAdmin();
     try {
         const { groupIds, permissionItems, ...profileData } = data;
 
@@ -305,6 +289,7 @@ export async function updateAgent(id: string, data: Partial<{
  * 4. ELIMINAR EMPLEADO
  */
 export async function deleteAgent(id: string) {
+    await requireAdmin();
     const supabaseAdmin = getAdminClient();
     try {
         await supabaseAdmin.auth.admin.deleteUser(id);

@@ -3,6 +3,7 @@
 import { db } from "@/db"
 import { categories, subcategories, items } from "@/db/schema"
 import { revalidatePath } from "next/cache"
+import { requireAdmin } from "@/lib/auth-guard"
 
 function generateSlug(text: string) {
     return text
@@ -32,6 +33,7 @@ type BulkHierarchyInput = {
 }
 
 export async function bulkCreateHierarchy(data: BulkHierarchyInput) {
+    await requireAdmin()
     try {
         const result = await db.transaction(async (tx) => {
             // 1. Create Category

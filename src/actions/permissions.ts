@@ -4,12 +4,14 @@ import { db } from "@/db";
 import { sections, categories, subcategories, items, permissions, userGroups, groups } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth-guard";
 
 /**
  * 1. OBTENER TODA LA HIERARQUIA PARA EL SELECTOR
  * Esto devuelve secciones con sus hijos anidados
  */
 export async function getHierarchy() {
+    await requireAdmin();
     try {
         const allSections = await db.select().from(sections);
         const allCategories = await db.select().from(categories);
@@ -43,6 +45,7 @@ export async function getHierarchy() {
  * 2. OBTENER PERMISOS DE UN USUARIO (Individuales + Grupos)
  */
 export async function getUserPermissions(userId: string) {
+    await requireAdmin();
     try {
         // 1. Permisos individuales
         const individual = await db.select().from(permissions).where(eq(permissions.userId, userId));
@@ -87,6 +90,7 @@ export async function getUserPermissions(userId: string) {
  * 3. ACTUALIZAR PERMISOS INDIVIDUALES
  */
 export async function updateUserPermissions(userId: string, itemsList: { targetType: "section" | "category" | "subcategory" | "item", targetId: string }[]) {
+    await requireAdmin();
     try {
         await db.delete(permissions).where(eq(permissions.userId, userId));
         

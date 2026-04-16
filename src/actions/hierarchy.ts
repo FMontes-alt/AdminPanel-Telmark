@@ -3,31 +3,15 @@
 import { db } from "@/db"
 import { sections, categories, subcategories, items, permissions } from "@/db/schema"
 import { eq, sql } from "drizzle-orm"
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { requireAdmin, getCurrentUser } from "@/lib/auth-guard"
 
 /**
  * Obtiene la jerarquía de una sección filtrada por los permisos del usuario actual
  */
 export async function getFilteredHierarchy(sectionId: string) {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll()
-                },
-                setAll() {}
-            },
-        }
-    )
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error("No autenticado")
-
-    return fetchHierarchy(user.id, sectionId)
+    const auth = await getCurrentUser()
+    if (!auth) throw new Error("No autenticado")
+    return fetchHierarchy(auth.user.id, sectionId)
 }
 
 async function fetchHierarchy(userId: string, sectionId: string) {

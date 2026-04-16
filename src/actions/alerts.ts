@@ -4,6 +4,7 @@ import { db } from "@/db"
 import { alerts } from "@/db/schema"
 import { desc, eq, isNull } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
+import { requireAdmin } from "@/lib/auth-guard"
 
 // --- ACCIÓN PARA CREAR LAS ALERTAS
 export async function createAlert(data: {
@@ -15,6 +16,7 @@ export async function createAlert(data: {
     targetUrl?: string,
     userId?: string
 }) {
+    await requireAdmin()
     await db.insert(alerts).values({
         ...data,
         severity: data.severity ?? "info"
@@ -24,6 +26,7 @@ export async function createAlert(data: {
 }
 
 export async function getAlerts() {
+    await requireAdmin()
     return db
         .select()
         .from(alerts)
@@ -32,6 +35,7 @@ export async function getAlerts() {
 }
 
 export async function markAlertAsRead(alertId: string) {
+    await requireAdmin()
     await db
         .update(alerts)
         .set({ isRead: new Date() })
@@ -42,6 +46,7 @@ export async function markAlertAsRead(alertId: string) {
 }
 
 export async function getUnreadAlertsCount() {
+    await requireAdmin()
     try {
         const data = await db
             .select()
