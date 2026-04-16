@@ -23,7 +23,8 @@ import {
     PlusCircle,
     PanelLeftClose,
     PanelRightOpen,
-    Menu
+    Menu,
+    ClipboardList
 } from "lucide-react"
 import { getSections } from "@/actions/sections"
 import { getUnreadAlertsCount } from "@/actions/alerts"
@@ -143,12 +144,13 @@ export function Sidebar() {
                     href: `/admin/sections/${s.slug}`,
                     icon: getIconForSection(s.name),
                     iconColor: getColorForSection(s.name)
-                }))
+                })),
             ]
         },
         {
             group: "Operativa",
             items: [
+                { name: 'Cuestionarios', href: '/admin/quizzes', icon: ClipboardList },
                 { name: 'Usuarios', href: '/admin/usuarios', icon: Users },
                 { name: 'Grupos', href: '/admin/grupos', icon: FolderTree },
                 { name: 'Monitoreo', href: '/admin/monitoring', icon: Eye },
@@ -293,6 +295,3 @@ export function Sidebar() {
         </aside>
     )
 }
-
-
-

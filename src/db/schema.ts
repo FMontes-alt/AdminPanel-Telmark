@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, jsonb, timestamp, unique, pgEnum, integer } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, jsonb, timestamp, unique, pgEnum, integer, boolean } from "drizzle-orm/pg-core";
 
 // Enum roles
 export const userRoleEnum = pgEnum("user_role", ["superadmin", "admin", "usuario"]);
@@ -121,4 +121,94 @@ export const permissions = pgTable("permissions", {
     targetType: permissionTargetEnum("target_type").notNull(),
     targetId: uuid("target_id").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ─── QUIZ SYSTEM ────────────────────────────────────────────────────────
+
+// Enums
+export const questionTypeEnum = pgEnum("question_type", [
+    "short_answer",
+    "single_choice",
+    "multiple_choice",
+    "true_false",
+]);
+
+export const mediaTypeEnum = pgEnum("media_type", ["image", "video", "none"]);
+
+export const attemptStatusEnum = pgEnum("attempt_status", ["in_progress", "pending_review", "completed"]);
+
+// 7. CUESTIONARIOS
+export const quizzes = pgTable("quizzes", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sectionId: uuid("section_id")
+        .references(() => sections.id, { onDelete: "cascade" })
+        .notNull(),
+    title: text("title").notNull(),
+    slug: text("slug").notNull(),
+    description: text("description"),
+    isPublished: boolean("is_published").default(false).notNull(),
+    timeLimitMinutes: integer("time_limit_minutes"), // null = sin límite
+    randomizeQuestions: boolean("randomize_questions").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+    unique().on(t.sectionId, t.slug),
+]);
+
+// 8. PREGUNTAS
+export const quizQuestions = pgTable("quiz_questions", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    quizId: uuid("quiz_id")
+        .references(() => quizzes.id, { onDelete: "cascade" })
+        .notNull(),
+    text: text("text").notNull(),
+    type: questionTypeEnum("type").notNull(),
+    mediaUrl: text("media_url"),
+    mediaType: mediaTypeEnum("media_type").default("none").notNull(),
+    maxSelections: integer("max_selections"), // solo para multiple_choice
+    sortOrder: integer("sort_order").default(0).notNull(),
+    points: integer("points").default(1).notNull(),
+    topic: text("topic"), // null = sin tema específico
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// 9. OPCIONES DE RESPUESTA
+export const quizOptions = pgTable("quiz_options", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    questionId: uuid("question_id")
+        .references(() => quizQuestions.id, { onDelete: "cascade" })
+        .notNull(),
+    text: text("text").notNull(),
+    isCorrect: boolean("is_correct").default(false).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+});
+
+// 10. INTENTOS DE CUESTIONARIO
+export const quizAttempts = pgTable("quiz_attempts", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    quizId: uuid("quiz_id")
+        .references(() => quizzes.id, { onDelete: "cascade" })
+        .notNull(),
+    userId: uuid("user_id")
+        .references(() => profiles.id, { onDelete: "cascade" })
+        .notNull(),
+    score: integer("score"),
+    maxScore: integer("max_score"),
+    status: attemptStatusEnum("status").default("completed").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+});
+
+// 11. RESPUESTAS INDIVIDUALES
+export const quizAnswers = pgTable("quiz_answers", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    attemptId: uuid("attempt_id")
+        .references(() => quizAttempts.id, { onDelete: "cascade" })
+        .notNull(),
+    questionId: uuid("question_id")
+        .references(() => quizQuestions.id, { onDelete: "cascade" })
+        .notNull(),
+    selectedOptions: jsonb("selected_options").default([]), // Array de UUIDs
+    textAnswer: text("text_answer"),
+    isCorrect: boolean("is_correct"),
 });
