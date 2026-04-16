@@ -179,6 +179,7 @@ export function GroupForm({ group, users, hierarchy, onClose, onSuccess }: Group
                         <PermissionSelector 
                             hierarchy={hierarchy}
                             selectedItems={formData.permissionItems}
+                            inheritedPermissions={[]}
                             onChange={(items) => setFormData({ ...formData, permissionItems: items })}
                         />
                     </div>
