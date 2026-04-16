@@ -18,7 +18,7 @@ import {
     Play,
 } from "lucide-react"
 import { getQuizzes, createQuiz, deleteQuiz, publishQuiz } from "@/actions/quizzes"
-import { getSections } from "@/actions/sections"
+import { getAllSectionsAction } from "@/actions/sections"
 import DeleteConfirmModal from "@/components/ui/DeleteConfirmModal"
 import { AdminPageHeader } from "@/components/ui/admin-page-header"
 
@@ -47,7 +47,7 @@ export default function AdminQuizzesPage() {
     const fetchData = async () => {
         setLoading(true)
         try {
-            const [q, s] = await Promise.all([getQuizzes(), getSections()])
+            const [q, s] = await Promise.all([getQuizzes(), getAllSectionsAction()])
             setQuizzes(q || [])
             setSections(s || [])
         } catch (error) {

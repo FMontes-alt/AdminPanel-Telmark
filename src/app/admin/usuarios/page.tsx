@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { getAgents, deleteAgent, getAgentById } from "@/actions/users"
 import { getGroups } from "@/actions/groups"
 import { getHierarchy } from "@/actions/permissions"
-import { getSections } from "@/actions/sections"
+import { getAllSectionsAction } from "@/actions/sections"
 import { AgentsList } from "./AgentsList"
 import { AgentForm } from "./AgentForm"
 import { AdminPageHeader } from "@/components/ui/admin-page-header"
@@ -29,7 +29,7 @@ export default function AgentsPage() {
         try {
             const [agentsData, sectionsData, groupsData, hierarchyData] = await Promise.all([
                 getAgents(),
-                getSections(),
+                getAllSectionsAction(),
                 getGroups(undefined, true),
                 getHierarchy()
             ])

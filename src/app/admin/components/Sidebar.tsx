@@ -26,7 +26,7 @@ import {
     Menu,
     ClipboardList
 } from "lucide-react"
-import { getSections } from "@/actions/sections"
+import { getAllSectionsAction } from "@/actions/sections"
 import { getUnreadAlertsCount } from "@/actions/alerts"
 import { createClient } from "@/lib/supabase/client"
 import { useSidebar } from "./SidebarProvider"
@@ -89,7 +89,7 @@ export function Sidebar() {
     useEffect(() => {
         const fetchSections = async () => {
             try {
-                const data = await getSections()
+                const data = await getAllSectionsAction()
                 setDbSections(data || [])
             } catch (error) {
                 console.error("Error fetching sections for sidebar:", error)
@@ -239,7 +239,7 @@ export function Sidebar() {
                                             key={item.name}
                                             href={item.href}
                                             title={isCollapsed ? item.name : undefined}
-                                            className={`flex items-center rounded-xl text-sm font-semibold transition-all group ${
+                                            className={`relative flex items-center rounded-xl text-sm font-semibold transition-all group ${
                                                 isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-4 py-2.5'
                                             } ${
                                                 isActive(item.href) 

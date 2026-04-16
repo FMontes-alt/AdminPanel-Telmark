@@ -4,9 +4,11 @@ import { useState, useEffect } from "react"
 import { SectionsHeader } from "./components/SectionsHeader"
 import { SectionsList } from "./components/SectionsList"
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal"
-import { getSections, createSection, deleteSection, updateSection } from "@/actions/sections"
+import { getAllSectionsAction, createSection, deleteSection, updateSection } from "@/actions/sections"
 import { SECTION_TEMPLATE_OPTIONS, SectionTemplateType } from "@/lib/constants/section-templates"
-import { Layout, FileText, Video, ShieldCheck } from "lucide-react"
+import { Layout, FileText, Video, ShieldCheck, AlertCircle } from "lucide-react"
+import { getSignedUrlAction } from "@/actions/storage"
+import { getExternalUrl } from "@/lib/utils"
 
 export default function SectionsPage() {
     const [sections, setSections] = useState<any[]>([])
@@ -14,24 +16,55 @@ export default function SectionsPage() {
     const [isAdding, setIsAdding] = useState(false)
     const [deletingSection, setDeletingSection] = useState<{ id: string, name: string } | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
+    // Error state
+    const [error, setError] = useState<string | null>(null)
     
     // Form state
     const [newName, setNewName] = useState("")
     const [newSlug, setNewSlug] = useState("")
     const [newCoverUrl, setNewCoverUrl] = useState("")
     const [selectedTemplate, setSelectedTemplate] = useState<SectionTemplateType>("GENERICO")
+    const [storagePreviewUrl, setStoragePreviewUrl] = useState("")
+
+    const externalPreviewUrl = getExternalUrl(newCoverUrl);
 
     useEffect(() => {
+        let isMounted = true;
+        
+        const resolve = async () => {
+            // Solo resolvemos si NO es una URL externa y hay un path de storage
+            if (!externalPreviewUrl && newCoverUrl && newCoverUrl.length > 3 && !newCoverUrl.includes('://')) {
+                try {
+                    const url = await getSignedUrlAction(newCoverUrl);
+                    if (isMounted) setStoragePreviewUrl(url || "");
+                } catch (err) {
+                    console.error("Error resolving preview:", err);
+                }
+            } else {
+                if (isMounted) setStoragePreviewUrl("");
+            }
+        };
+
+        resolve();
+        return () => { isMounted = false; };
+    }, [newCoverUrl, externalPreviewUrl]);
+
+    const resolvedPreviewUrl = externalPreviewUrl || storagePreviewUrl;
+
+    // ← ESTE ERA EL USEEFFECT QUE FALTABA: llama fetchSections al montar el componente
+    useEffect(() => {
         fetchSections()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const fetchSections = async () => {
         setLoading(true)
         try {
-            const data = await getSections()
+            const data = await getAllSectionsAction()
             setSections(data || [])
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching sections:", error)
+            setError(error?.message)
         } finally {
             setLoading(false)
         }
@@ -43,8 +76,8 @@ export default function SectionsPage() {
             await createSection({ 
                 name: newName, 
                 slug: newSlug,
+                imagePath: newCoverUrl,
                 config: { 
-                    coverUrl: newCoverUrl,
                     template: selectedTemplate
                 }
             })
@@ -58,11 +91,11 @@ export default function SectionsPage() {
         }
     }
 
-    const handleUpdateSection = async (id: string, config: any) => {
+    const handleUpdateSection = async (id: string, data: any) => {
         try {
-            await updateSection(id, { config })
+            await updateSection(id, data)
             // Update local state for immediate feedback
-            setSections(prev => prev.map(s => s.id === id ? { ...s, config } : s))
+            setSections(prev => prev.map(s => s.id === id ? { ...s, ...data } : s))
         } catch (error) {
             console.error("Error updating section:", error)
         }
@@ -88,6 +121,18 @@ export default function SectionsPage() {
                 isAdding={isAdding} 
                 onToggleAdd={() => setIsAdding(!isAdding)} 
             />
+
+
+            {error && (
+                <div className="bg-rose-50 border border-rose-100 p-6 rounded-[24px] flex items-center gap-4 text-rose-600 animate-in fade-in slide-in-from-top-4">
+                    <AlertCircle size={24} />
+                    <div>
+                        <p className="font-bold text-sm">No se pudieron cargar las secciones</p>
+                        <p className="text-xs opacity-80">{error}</p>
+                    </div>
+                    <button onClick={fetchSections} className="ml-auto bg-rose-600 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase">Reintentar</button>
+                </div>
+            )}
 
             {/* Add Section Form (Minimalist & Integrated) */}
             {isAdding && (
@@ -120,21 +165,21 @@ export default function SectionsPage() {
                                 />
                             </div>
                             <div className="space-y-2 lg:col-span-1">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">URL Portada</label>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Imagen (Storage Path o URL)</label>
                                 <div className="flex gap-3">
                                     <div className="flex-1">
                                         <input 
                                             value={newCoverUrl}
                                             onChange={(e) => setNewCoverUrl(e.target.value)}
                                             type="text"
-                                            placeholder="https://images.unsplash.com/..."
+                                            placeholder="ej: sections/mi-logo.webp o https://..."
                                             className="w-full bg-slate-100/50 border-transparent focus:bg-white focus:border-blue-100 rounded-2xl py-4 px-6 text-sm transition-all border outline-none font-bold text-slate-700 shadow-sm focus:ring-4 focus:ring-blue-500/5"
                                         />
                                     </div>
                                     {newCoverUrl && (
                                         <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-200 bg-white shrink-0 shadow-sm">
                                             <img 
-                                                src={newCoverUrl} 
+                                                src={resolvedPreviewUrl || newCoverUrl} 
                                                 alt="Preview" 
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => {

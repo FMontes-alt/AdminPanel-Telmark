@@ -22,6 +22,7 @@ export const sections = pgTable("sections", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
     slug: text("slug").unique().notNull(),
+    imagePath: text("image_path"),
     config: jsonb("config").default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });

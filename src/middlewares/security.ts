@@ -16,7 +16,7 @@ export async function withSecurity(request: NextRequest, response: NextResponse)
         script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com;
-        img-src 'self' blob: data: https://*.supabase.co;
+        img-src 'self' blob: data: https://*.supabase.co https:;
         connect-src 'self' blob: data: https://*.supabase.co;
         media-src 'self' blob: data: https://*.supabase.co;
         frame-src 'self' https: http: blob: data:;

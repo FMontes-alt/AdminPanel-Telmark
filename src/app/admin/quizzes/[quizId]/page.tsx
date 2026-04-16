@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { getQuizById, updateQuiz, publishQuiz } from "@/actions/quizzes"
 import { deleteQuestion } from "@/actions/quiz-questions"
-import { getSections } from "@/actions/sections"
+import { getAllSectionsAction } from "@/actions/sections"
 
 // Modular Components
 import QuizEditorHeader from "./components/QuizEditorHeader"
@@ -39,7 +39,7 @@ export default function QuizEditorPage() {
         setLoading(true)
         const [quizData, sectionsList] = await Promise.all([
             getQuizById(quizId as string),
-            getSections()
+            getAllSectionsAction()
         ])
         
         if (quizData) {

@@ -9,11 +9,12 @@ import { requireAdmin } from "@/lib/auth-guard"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
-export async function getSections() {
-    return db
+export async function getAllSectionsAction() {
+    const result = await db
         .select()
         .from(sections)
         .orderBy(sections.name)
+    return result
 }
 
 export async function getSectionBySlug(slug: string) {
@@ -42,6 +43,7 @@ export async function getSectionById(id: string) {
 type CreateSectionInput = {
     name: string
     slug: string
+    imagePath?: string
     config?: Record<string, unknown>
 }
 
@@ -52,6 +54,7 @@ export async function createSection(data: CreateSectionInput) {
         .values({
             name: data.name,
             slug: data.slug,
+            imagePath: data.imagePath,
             config: data.config ?? {},
         })
         .returning()
@@ -90,6 +93,7 @@ export async function createSection(data: CreateSectionInput) {
 type UpdateSectionInput = {
     name?: string
     slug?: string
+    imagePath?: string
     config?: Record<string, unknown>
 }
 

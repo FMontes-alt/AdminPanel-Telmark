@@ -44,6 +44,20 @@ export async function uploadFileAction(formData: FormData, sectionSlug: string, 
 }
 
 /**
+ * Obtiene la URL pública de un archivo (para buckets públicos).
+ */
+export async function getPublicUrlAction(path: string) {
+    const supabase = await createClient()
+    const cleanPath = path.replace(`${BUCKET_NAME}/`, '')
+    
+    const { data } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(cleanPath)
+
+    return data.publicUrl
+}
+
+/**
  * Genera una URL firmada (temporal) para ver un archivo privado.
  */
 export async function getSignedUrlAction(path: string) {
