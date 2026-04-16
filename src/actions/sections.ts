@@ -9,11 +9,12 @@ import { requireAdmin } from "@/lib/auth-guard"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
-export async function getSections() {
-    return db
+export async function getAllSectionsAction() {
+    const result = await db
         .select()
         .from(sections)
         .orderBy(sections.name)
+    return result
 }
 
 export async function getSectionBySlug(slug: string) {

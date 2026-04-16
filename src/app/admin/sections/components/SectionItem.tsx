@@ -1,7 +1,8 @@
 import { Trash2, ShieldCheck, Zap, ArrowUpRight, AlertCircle, Lock, Unlock, FileText, Video, Layout, Image as ImageIcon, Check, X } from "lucide-react"
 import { SECTION_TEMPLATES } from "@/lib/constants/section-templates"
 import { useState, useEffect } from "react"
-import { resolveImage } from "@/lib/image-resolver"
+import { getSignedUrlAction } from "@/actions/storage"
+import { getExternalUrl } from "@/lib/utils"
 
 interface SectionItemProps {
     section: any
@@ -11,24 +12,45 @@ interface SectionItemProps {
 }
 
 export function SectionItem({ section, onDelete, onUpdate, isDeleting }: SectionItemProps) {
+    if (!section) return null;
+    
     const config = section.config || {}
     const hasError = config.hasError || false
     const isLocked = config.isLocked || false
     
     // Prioridad: Columna imagePath -> config.coverUrl (legacy)
-    const initialReference = section.imagePath || config.coverUrl || ""
+    const initialReference = section?.imagePath || config?.coverUrl || ""
+    
+    // Si es una URL externa, la obtenemos síncronamente
+    const externalUrl = getExternalUrl(initialReference);
     
     const [isEditingImage, setIsEditingImage] = useState(false)
     const [tempReference, setTempReference] = useState(initialReference)
-    const [resolvedUrl, setResolvedUrl] = useState("")
+    const [storageUrl, setStorageUrl] = useState("")
 
     useEffect(() => {
+        let isMounted = true;
+        
         const resolve = async () => {
-            const url = await resolveImage(initialReference);
-            setResolvedUrl(url);
+            // Solo resolvemos si NO es una URL externa y hay una referencia válida
+            if (!externalUrl && initialReference && initialReference.length > 3 && !initialReference.includes('://')) {
+                try {
+                    // Llamamos directamente a la acción de servidor
+                    const url = await getSignedUrlAction(initialReference);
+                    if (isMounted) setStorageUrl(url || "");
+                } catch (err) {
+                    console.error("Error resolving image:", err);
+                }
+            } else {
+                if (isMounted) setStorageUrl("");
+            }
         };
+
         resolve();
-    }, [initialReference]);
+        return () => { isMounted = false; };
+    }, [initialReference, externalUrl]);
+
+    const resolvedUrl = externalUrl || storageUrl;
 
     const toggleError = () => {
         onUpdate(section.id, { config: { ...config, hasError: !hasError } })
@@ -39,10 +61,12 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
     }
 
     const handleSaveImage = () => {
-        // Guardamos en la columna dedicada
         onUpdate(section.id, { imagePath: tempReference })
         setIsEditingImage(false)
     }
+
+    // Seguridad total para el renderizado
+    if (!section?.id) return null;
 
     return (
         <div className={`group relative bg-white/70 backdrop-blur-md rounded-[32px] border border-white shadow-sm hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 flex items-stretch gap-0 overflow-hidden ${isLocked ? "opacity-75 grayscale-[0.5]" : ""}`}>
@@ -65,13 +89,13 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
             {/* Compact Image - Flush with edges */}
             <div className="w-28 bg-slate-100 relative shrink-0 overflow-hidden">
                 {resolvedUrl ? (
-                    <img src={resolvedUrl} alt={section.name} className="w-full h-full object-cover transition-transform duration-700" />
+                    <img key={resolvedUrl} src={resolvedUrl} alt={section?.name || 'Sección'} className="w-full h-full object-cover transition-transform duration-700" />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-300">
-                        {config.template === 'DOCUMENTOS' && <FileText size={32} strokeWidth={1} />}
-                        {config.template === 'VIDEOS' && <Video size={32} strokeWidth={1} />}
-                        {config.template === 'POLIZAS' && <ShieldCheck size={32} strokeWidth={1} />}
-                        {(config.template === 'GENERICO' || !config.template) && <Layout size={32} strokeWidth={1} />}
+                        {config?.template === 'DOCUMENTOS' && <FileText size={32} strokeWidth={1} />}
+                        {config?.template === 'VIDEOS' && <Video size={32} strokeWidth={1} />}
+                        {config?.template === 'POLIZAS' && <ShieldCheck size={32} strokeWidth={1} />}
+                        {(!config?.template || config?.template === 'GENERICO') && <Layout size={32} strokeWidth={1} />}
                     </div>
                 )}
                 {isLocked && (
@@ -91,63 +115,51 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
                 )}
             </div>
 
-            {/* Content Info - Compact Padding */}
-            <div className="flex-1 min-w-0 p-5 pl-7 flex flex-col justify-center relative">
+            {/* Content Info */}
+            <div className="flex-1 min-w-0 p-5 pl-7 flex flex-col justify-center relative bg-white">
                 {isEditingImage ? (
-                    <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-30 p-5 flex flex-col justify-center gap-3 animate-in fade-in slide-in-from-right-4 duration-300">
-                        <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">URL o Path de Storage</p>
+                    <div className="absolute inset-0 bg-white z-30 p-5 flex flex-col justify-center gap-3">
+                        <p className="text-[9px] font-black text-blue-600 uppercase">URL o Path de Storage</p>
                         <div className="flex gap-2">
                             <input 
                                 autoFocus
                                 value={tempReference}
                                 onChange={(e) => setTempReference(e.target.value)}
-                                placeholder="https://... o sections/img.webp"
-                                className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-xs outline-none focus:border-blue-400 focus:bg-white transition-all"
+                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none"
                             />
-                            <button onClick={handleSaveImage} className="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
-                                <Check size={16} />
-                            </button>
-                            <button onClick={() => { setIsEditingImage(false); setTempReference(initialReference); }} className="w-9 h-9 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center">
-                                <X size={16} />
-                            </button>
+                            <button onClick={handleSaveImage} className="px-3 bg-blue-600 text-white rounded-xl text-xs font-bold">OK</button>
+                            <button onClick={() => setIsEditingImage(false)} className="px-3 bg-slate-100 text-slate-400 rounded-xl text-xs font-bold">X</button>
                         </div>
                     </div>
                 ) : (
-                    <>
-                        <div className="space-y-0.5">
-                            <div className="flex items-center gap-2 mb-1">
-                                <p className="text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em]">
-                                    {config.template ? SECTION_TEMPLATES[config.template as keyof typeof SECTION_TEMPLATES]?.label : "Sección"}
-                                </p>
-                                {config.template && (
-                                    <div className="w-1 h-1 rounded-full bg-slate-300" />
-                                )}
-                                {config.template && (
-                                    <p className="text-[8px] font-medium text-slate-400 uppercase tracking-widest">Plantilla</p>
-                                )}
+                    <div className="relative">
+                        <div className="space-y-0.5 mb-4">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">
+                                    {config?.template || "SECCIÓN"}
+                                </span>
                             </div>
-                            <h4 className="text-lg font-bold text-slate-900 tracking-tighter truncate uppercase group-hover:text-blue-600 transition-colors">
-                                {section.name}
+                            <h4 className="text-lg font-bold text-slate-900 uppercase">
+                                {section?.name || "Sin nombre"}
                             </h4>
-                            <p className="text-[9px] text-slate-400 font-semibold font-mono tracking-tight lowercase">/{section.slug}</p>
+                            <p className="text-[10px] text-slate-400 font-mono">/{section?.slug || "sin-slug"}</p>
                         </div>
 
-                        {/* Direct Actions row */}
-                        <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-100/30">
+                        <div className="flex items-center gap-3">
                             <button 
                                 onClick={toggleError}
-                                className={`flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest transition-all ${hasError ? "text-rose-600 bg-rose-50" : "text-slate-400 hover:text-rose-600 hover:bg-rose-50"} px-3 py-1.5 rounded-lg border border-transparent hover:border-rose-100`}
+                                className={`text-[10px] font-bold uppercase p-2 rounded-lg border ${hasError ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-slate-50 text-slate-400 border-slate-100"}`}
                             >
-                                {hasError ? "Quitar Error" : "Avisar Error"}
+                                {hasError ? "Error Activo" : "Avisar Error"}
                             </button>
                             <button 
                                 onClick={toggleLock}
-                                className={`flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest transition-all ${isLocked ? "text-amber-600 bg-amber-50" : "text-slate-400 hover:text-amber-600 hover:bg-amber-50"} px-3 py-1.5 rounded-lg border border-transparent hover:border-amber-100`}
+                                className={`text-[10px] font-bold uppercase p-2 rounded-lg border ${isLocked ? "bg-amber-50 text-amber-600 border-amber-200" : "bg-slate-50 text-slate-400 border-slate-100"}`}
                             >
-                                {isLocked ? "Desbloquear" : "Bloqueo Total"}
+                                {isLocked ? "Bloqueada" : "Bloquear"}
                             </button>
                         </div>
-                    </>
+                    </div>
                 )}
             </div>
 
