@@ -1,6 +1,7 @@
 import { Trash2, ShieldCheck, Zap, ArrowUpRight, AlertCircle, Lock, Unlock, FileText, Video, Layout, Image as ImageIcon, Check, X } from "lucide-react"
 import { SECTION_TEMPLATES } from "@/lib/constants/section-templates"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { resolveImage } from "@/lib/image-resolver"
 
 interface SectionItemProps {
     section: any
@@ -13,21 +14,33 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
     const config = section.config || {}
     const hasError = config.hasError || false
     const isLocked = config.isLocked || false
-    const coverUrl = config.coverUrl || ""
+    
+    // Prioridad: Columna imagePath -> config.coverUrl (legacy)
+    const initialReference = section.imagePath || config.coverUrl || ""
     
     const [isEditingImage, setIsEditingImage] = useState(false)
-    const [tempUrl, setTempUrl] = useState(coverUrl)
+    const [tempReference, setTempReference] = useState(initialReference)
+    const [resolvedUrl, setResolvedUrl] = useState("")
+
+    useEffect(() => {
+        const resolve = async () => {
+            const url = await resolveImage(initialReference);
+            setResolvedUrl(url);
+        };
+        resolve();
+    }, [initialReference]);
 
     const toggleError = () => {
-        onUpdate(section.id, { ...config, hasError: !hasError })
+        onUpdate(section.id, { config: { ...config, hasError: !hasError } })
     }
 
     const toggleLock = () => {
-        onUpdate(section.id, { ...config, isLocked: !isLocked })
+        onUpdate(section.id, { config: { ...config, isLocked: !isLocked } })
     }
 
     const handleSaveImage = () => {
-        onUpdate(section.id, { ...config, coverUrl: tempUrl })
+        // Guardamos en la columna dedicada
+        onUpdate(section.id, { imagePath: tempReference })
         setIsEditingImage(false)
     }
 
@@ -51,8 +64,8 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
 
             {/* Compact Image - Flush with edges */}
             <div className="w-28 bg-slate-100 relative shrink-0 overflow-hidden">
-                {coverUrl ? (
-                    <img src={coverUrl} alt={section.name} className="w-full h-full object-cover transition-transform duration-700" />
+                {resolvedUrl ? (
+                    <img src={resolvedUrl} alt={section.name} className="w-full h-full object-cover transition-transform duration-700" />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-300">
                         {config.template === 'DOCUMENTOS' && <FileText size={32} strokeWidth={1} />}
@@ -82,19 +95,19 @@ export function SectionItem({ section, onDelete, onUpdate, isDeleting }: Section
             <div className="flex-1 min-w-0 p-5 pl-7 flex flex-col justify-center relative">
                 {isEditingImage ? (
                     <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-30 p-5 flex flex-col justify-center gap-3 animate-in fade-in slide-in-from-right-4 duration-300">
-                        <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">URL de la Imagen</p>
+                        <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">URL o Path de Storage</p>
                         <div className="flex gap-2">
                             <input 
                                 autoFocus
-                                value={tempUrl}
-                                onChange={(e) => setTempUrl(e.target.value)}
-                                placeholder="https://..."
+                                value={tempReference}
+                                onChange={(e) => setTempReference(e.target.value)}
+                                placeholder="https://... o sections/img.webp"
                                 className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-xs outline-none focus:border-blue-400 focus:bg-white transition-all"
                             />
                             <button onClick={handleSaveImage} className="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
                                 <Check size={16} />
                             </button>
-                            <button onClick={() => { setIsEditingImage(false); setTempUrl(coverUrl); }} className="w-9 h-9 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center">
+                            <button onClick={() => { setIsEditingImage(false); setTempReference(initialReference); }} className="w-9 h-9 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center">
                                 <X size={16} />
                             </button>
                         </div>

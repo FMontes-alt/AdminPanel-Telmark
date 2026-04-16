@@ -43,8 +43,8 @@ export default function SectionsPage() {
             await createSection({ 
                 name: newName, 
                 slug: newSlug,
+                imagePath: newCoverUrl,
                 config: { 
-                    coverUrl: newCoverUrl,
                     template: selectedTemplate
                 }
             })
@@ -58,11 +58,11 @@ export default function SectionsPage() {
         }
     }
 
-    const handleUpdateSection = async (id: string, config: any) => {
+    const handleUpdateSection = async (id: string, data: any) => {
         try {
-            await updateSection(id, { config })
+            await updateSection(id, data)
             // Update local state for immediate feedback
-            setSections(prev => prev.map(s => s.id === id ? { ...s, config } : s))
+            setSections(prev => prev.map(s => s.id === id ? { ...s, ...data } : s))
         } catch (error) {
             console.error("Error updating section:", error)
         }
@@ -120,14 +120,14 @@ export default function SectionsPage() {
                                 />
                             </div>
                             <div className="space-y-2 lg:col-span-1">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">URL Portada</label>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Imagen (Storage Path o URL)</label>
                                 <div className="flex gap-3">
                                     <div className="flex-1">
                                         <input 
                                             value={newCoverUrl}
                                             onChange={(e) => setNewCoverUrl(e.target.value)}
                                             type="text"
-                                            placeholder="https://images.unsplash.com/..."
+                                            placeholder="ej: sections/mi-logo.webp o https://..."
                                             className="w-full bg-slate-100/50 border-transparent focus:bg-white focus:border-blue-100 rounded-2xl py-4 px-6 text-sm transition-all border outline-none font-bold text-slate-700 shadow-sm focus:ring-4 focus:ring-blue-500/5"
                                         />
                                     </div>
