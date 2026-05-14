@@ -5,7 +5,7 @@ import { Download, Link as LinkIcon, FileText, Info, Trash2, Video, Lock, Maximi
 interface ContentItemProps {
     item: any
     onDelete: (id: string) => void
-    onSelect: (item: any) => void
+    onSelect: (item: any, openModal?: boolean) => void
     isSelected?: boolean
     layout?: 'list' | 'grid' | 'table'
     compact?: boolean
@@ -182,7 +182,7 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
             </div>
             <div className="flex items-center gap-2 flex-shrink-0 pl-2">
                 <button
-                    onClick={(e) => { e.stopPropagation(); onSelect(item); }}
+                    onClick={(e) => { e.stopPropagation(); onSelect(item, true); }}
                     className={`p-2 transition-all rounded-xl ${
                         isSelected 
                             ? 'bg-white/20 text-white' 

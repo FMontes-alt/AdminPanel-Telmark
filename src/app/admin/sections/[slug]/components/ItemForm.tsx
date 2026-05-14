@@ -116,80 +116,89 @@ export default function ItemForm({ sectionSlug, categorySlug, subcategorySlug, o
                 </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                 {/* Título */}
-                <input 
-                    autoFocus
-                    value={formData.title}
-                    onChange={e => setFormData({...formData, title: e.target.value})}
-                    placeholder="Título del ítem..."
-                    className="w-full bg-slate-50 border-slate-100 rounded-2xl py-3 px-5 text-sm outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all"
-                />
+                <div className="md:col-span-8 space-y-1.5">
+                    <label className="text-[9px] font-bold text-blue-600 uppercase tracking-wider ml-1">Título del Contenido</label>
+                    <input 
+                        autoFocus
+                        value={formData.title}
+                        onChange={e => setFormData({...formData, title: e.target.value})}
+                        placeholder="Ej: Póliza de Hogar..."
+                        className="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-4 text-xs outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all border"
+                    />
+                </div>
 
-                {/* Tipo de Contenido Selector - Solo si hay más de uno permitido */}
-                {template.allowedContentTypes.length > 1 && (
-                    <div className="grid grid-cols-5 gap-2 p-1 bg-slate-50 rounded-2xl">
+                {/* Tipo de Contenido Selector */}
+                <div className="md:col-span-4 space-y-1.5">
+                    <label className="text-[9px] font-bold text-blue-600 uppercase tracking-wider ml-1">Tipo</label>
+                    <div className="grid grid-cols-5 gap-1 p-1 bg-slate-50 rounded-xl border border-slate-100">
                         {template.allowedContentTypes.map(type => (
                             <button 
                                 key={type}
                                 type="button"
                                 onClick={() => setFormData({...formData, contentType: type as any})}
-                                className={`py-2 rounded-xl text-[10px] font-bold transition-all ${formData.contentType === type ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
+                                className={`py-1.5 rounded-lg text-[9px] font-bold transition-all ${formData.contentType === type ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
+                                title={type.toUpperCase()}
                             >
-                                {type.toUpperCase()}
+                                {type === 'info' && <Type size={12} className="mx-auto" />}
+                                {type === 'link' && <Link size={12} className="mx-auto" />}
+                                {type === 'video' && <Video size={12} className="mx-auto" />}
+                                {(type === 'file' || type === 'document') && <Upload size={12} className="mx-auto" />}
                             </button>
                         ))}
                     </div>
-                )}
+                </div>
+            </div>
 
-                {/* Custom Fields according to Template */}
-                {template.customFields && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50/30 rounded-2xl border border-blue-100/50">
-                        {template.customFields.map(field => (
-                            <div key={field.name} className="space-y-1.5">
-                                <label className="text-[9px] font-bold text-blue-600 uppercase tracking-wider ml-1">{field.label}</label>
-                                {field.type === 'select' ? (
-                                    <select 
+            {/* Custom Fields according to Template */}
+            {template.customFields && template.customFields.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-blue-50/30 rounded-2xl border border-blue-100/50">
+                    {template.customFields.map(field => (
+                        <div key={field.name} className="space-y-1">
+                            <label className="text-[8px] font-bold text-blue-600 uppercase tracking-wider ml-1">{field.label}</label>
+                            {field.type === 'select' ? (
+                                <select 
+                                    value={formData.customAttributes[field.name] || ""}
+                                    onChange={e => setFormData({
+                                        ...formData, 
+                                        customAttributes: { ...formData.customAttributes, [field.name]: e.target.value }
+                                    })}
+                                    className="w-full bg-white border border-blue-100 rounded-lg py-1.5 px-2 text-[10px] outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                >
+                                    <option value="">...</option>
+                                    {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                </select>
+                            ) : (
+                                <div className="relative">
+                                    <input 
+                                        type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
                                         value={formData.customAttributes[field.name] || ""}
                                         onChange={e => setFormData({
                                             ...formData, 
                                             customAttributes: { ...formData.customAttributes, [field.name]: e.target.value }
                                         })}
-                                        className="w-full bg-white border border-blue-100 rounded-xl py-2 px-3 text-xs outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
-                                    >
-                                        <option value="">Seleccionar...</option>
-                                        {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                    </select>
-                                ) : (
-                                    <div className="relative">
-                                        {field.type === 'date' ? <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" size={14} /> : <ClipboardList className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" size={14} />}
-                                        <input 
-                                            type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
-                                            value={formData.customAttributes[field.name] || ""}
-                                            onChange={e => setFormData({
-                                                ...formData, 
-                                                customAttributes: { ...formData.customAttributes, [field.name]: e.target.value }
-                                            })}
-                                            className="w-full bg-white border border-blue-100 rounded-xl py-2 pl-9 pr-3 text-xs outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                )}
+                                        className="w-full bg-white border border-blue-100 rounded-lg py-1.5 px-3 text-[10px] outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
 
-                {/* Campos Condicionales según Tipo */}
+            {/* Campos Condicionales según Tipo */}
+            <div className="space-y-3">
                 {formData.contentType === 'video' && (
-                    <div className="flex gap-2 p-1 bg-blue-50/50 rounded-xl">
+                    <div className="flex gap-2 p-1 bg-blue-50/50 rounded-lg max-w-xs">
                         {(['url', 'file', 'embed'] as const).map(source => (
                             <button 
                                 key={source}
                                 type="button"
                                 onClick={() => setFormData({...formData, videoSource: source})}
-                                className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold transition-all ${formData.videoSource === source ? 'bg-white text-blue-700 shadow-sm' : 'text-blue-400'}`}
+                                className={`flex-1 py-1 rounded-md text-[9px] font-bold transition-all ${formData.videoSource === source ? 'bg-white text-blue-700 shadow-sm' : 'text-blue-400'}`}
                             >
-                                {source === 'url' ? 'LINK' : source === 'file' ? 'ARCHIVO' : 'EMBED'}
+                                {source.toUpperCase()}
                             </button>
                         ))}
                     </div>
@@ -197,12 +206,12 @@ export default function ItemForm({ sectionSlug, categorySlug, subcategorySlug, o
 
                 {(formData.contentType === 'link' || (formData.contentType === 'video' && (formData.videoSource === 'url' || formData.videoSource === 'embed'))) && (
                     <div className="relative">
-                        <Link className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                        <Link className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
                         <input 
                             value={formData.externalLink}
                             onChange={e => setFormData({...formData, externalLink: e.target.value})}
-                            placeholder={formData.videoSource === 'embed' ? "Pega el código <iframe> o la ID del video..." : " https://..."}
-                            className="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 pl-10 pr-4 text-xs outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all"
+                            placeholder={formData.videoSource === 'embed' ? "Código <iframe> o ID del video..." : "https://..."}
+                            className="w-full bg-slate-50 border-slate-100 rounded-xl py-2 pl-9 pr-4 text-[11px] outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all border"
                         />
                     </div>
                 )}
@@ -210,38 +219,33 @@ export default function ItemForm({ sectionSlug, categorySlug, subcategorySlug, o
                 {(formData.contentType === 'file' || formData.contentType === 'document' || (formData.contentType === 'video' && formData.videoSource === 'file')) && (
                     <div 
                         onClick={() => fileInputRef.current?.click()}
-                        className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all ${selectedFile ? 'border-green-200 bg-green-50' : 'border-slate-100 bg-slate-50 hover:bg-slate-100'}`}
+                        className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${selectedFile ? 'border-green-200 bg-green-50' : 'border-slate-100 bg-slate-50 hover:bg-slate-100'}`}
                     >
                         <input type="file" ref={fileInputRef} hidden onChange={handleFileSelect} />
                         {selectedFile ? (
-                            <>
-                                <div className="p-3 bg-white rounded-full text-green-600 shadow-sm">
-                                    <Upload size={20} />
+                            <div className="flex items-center gap-3 w-full">
+                                <div className="p-2 bg-white rounded-lg text-green-600 shadow-sm">
+                                    <Upload size={14} />
                                 </div>
-                                <div className="text-center">
-                                    <p className="text-xs font-bold text-green-700">{selectedFile.name}</p>
-                                    <p className="text-[10px] text-green-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] font-bold text-green-700 truncate">{selectedFile.name}</p>
+                                    <p className="text-[8px] text-green-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                                 </div>
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
-                                    className="text-[10px] font-bold text-red-500 hover:text-red-700"
+                                    className="text-[10px] font-black text-red-500 hover:text-red-700"
                                 >
-                                    Quitar archivo
+                                    Eliminar
                                 </button>
-                            </>
+                            </div>
                         ) : (
-                            <>
-                                <div className="p-3 bg-white rounded-full text-slate-400 shadow-sm">
-                                    <Upload size={20} />
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-xs font-bold text-slate-600">Haz clic para subir un archivo</p>
-                                    <p className="text-[10px] text-slate-400">PDF, Imágenes o Video (Max. 50MB)</p>
-                                </div>
-                            </>
+                            <div className="flex items-center gap-3">
+                                <Upload size={16} className="text-slate-400" />
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Haz clic para subir un archivo (Máx. 50MB)</span>
+                            </div>
                         )}
                         {uploadProgress !== null && (
-                            <div className="w-full h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
+                            <div className="w-full h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">
                                 <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                             </div>
                         )}
@@ -251,8 +255,8 @@ export default function ItemForm({ sectionSlug, categorySlug, subcategorySlug, o
                 <textarea 
                     value={formData.body}
                     onChange={e => setFormData({...formData, body: e.target.value})}
-                    placeholder="Descripción o notas internas..."
-                    className="w-full bg-slate-50 border-slate-100 rounded-2xl py-3 px-5 text-sm outline-none min-h-[100px] focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all"
+                    placeholder="Descripción o notas internas opcionales..."
+                    className="w-full bg-slate-50 border-slate-100 rounded-xl py-2 px-4 text-[11px] outline-none min-h-[60px] focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all border resize-y"
                 />
             </div>
 
