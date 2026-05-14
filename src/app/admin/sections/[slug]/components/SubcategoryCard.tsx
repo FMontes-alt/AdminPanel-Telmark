@@ -272,10 +272,10 @@ export default function SubcategoryCard({
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.98 }}
                         transition={{ duration: 0.25 }}
-                        className="flex gap-4"
+                        className="flex flex-col gap-6"
                     >
-                        {/* Panel Izquierdo: Visor */}
-                        <div className="flex-[2] min-w-0 bg-white border border-slate-200 rounded-2xl shadow-lg overflow-hidden flex flex-col min-h-[400px]">
+                        {/* Panel Superior: Visor */}
+                        <div className="w-full bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-[600px] lg:min-h-[700px]">
                             <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50/50">
                                 <div className="flex items-center gap-2">
                                     <div className="p-1 rounded-lg bg-blue-600 text-white">
@@ -318,8 +318,8 @@ export default function SubcategoryCard({
                             </div>
                         </div>
 
-                        {/* Panel Derecho: Lista de ítems */}
-                        <div className="flex-[1] min-w-0 flex flex-col gap-2">
+                        {/* Panel Inferior: Lista de ítems (Grid horizontal para ahorrar espacio) */}
+                        <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                             {sub.items?.map((item: any) => (
                                 <ContentItem
                                     key={item.id}
