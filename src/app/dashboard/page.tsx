@@ -1,15 +1,24 @@
 "use client"
 
-import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { LayoutDashboard, LogOut, ChevronRight, User as UserIcon, Sparkles } from "lucide-react"
+import { LayoutDashboard, LogOut, ChevronRight, Users } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { LogoutButton } from "@/components/auth/LogoutButton"
-
-
 import { getDashboardData } from "@/actions/users"
+import Image from "next/image"
+
+const MOTIVATIONAL_QUOTES = [
+    { text: "El camino al éxito es la actitud", top: "15%", left: "5%", rotate: "-5deg" },
+    { text: "No levantes la voz, mejora tu argumento", top: "25%", left: "70%", rotate: "3deg" },
+    { text: "La disciplina es el puente entre metas y logros", top: "45%", left: "15%", rotate: "-2deg" },
+    { text: "Tu única competencia eres tú mismo", top: "60%", left: "75%", rotate: "5deg" },
+    { text: "Haz que ocurra", top: "80%", left: "10%", rotate: "-8deg" },
+    { text: "El éxito es la suma de pequeños esfuerzos", top: "10%", left: "80%", rotate: "2deg" },
+    { text: "Enfócate en la solución, no en el problema", top: "70%", left: "40%", rotate: "4deg" },
+    { text: "La constancia es la clave", top: "90%", left: "60%", rotate: "-3deg" }
+]
 
 export default function DashboardSelectionPage() {
     const [profile, setProfile] = useState<any>(null)
@@ -44,174 +53,149 @@ export default function DashboardSelectionPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-                <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex flex-col items-center gap-4"
-                >
-                    <div className="w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-                    <p className="text-blue-500/50 text-[10px] uppercase tracking-[0.3em] font-black">Iniciando Sistema</p>
-                </motion.div>
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-10 h-10 border-3 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cargando unidades...</p>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 selection:text-blue-200 overflow-hidden relative">
-            {/* Background Sophistication */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-600/10 blur-[140px] rounded-full animate-pulse" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-600/10 blur-[140px] rounded-full animate-pulse [animation-delay:2s]" />
-                <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-purple-600/5 blur-[120px] rounded-full animate-pulse [animation-delay:4s]" />
-                
-                {/* Thin Grid Overlay */}
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
-                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-600/10 selection:text-blue-600 overflow-hidden relative">
+            
+            {/* Background Decorative Quotes */}
+            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+                {MOTIVATIONAL_QUOTES.map((quote, i) => (
+                    <motion.div
+                        key={i}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 0.04 }}
+                        transition={{ duration: 1, delay: i * 0.2 }}
+                        className="absolute whitespace-nowrap text-[4vw] font-black uppercase tracking-tighter text-slate-900"
+                        style={{ 
+                            top: quote.top, 
+                            left: quote.left, 
+                            transform: `rotate(${quote.rotate})`,
+                        }}
+                    >
+                        {quote.text}
+                    </motion.div>
+                ))}
             </div>
 
-            {/* Content Container */}
-            <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 lg:py-20 min-h-screen flex flex-col">
-                
-                {/* Header */}
-                <motion.header 
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className="flex items-center justify-between mb-24"
-                >
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/40 relative group">
-                            <div className="absolute inset-0 bg-blue-400 blur-xl opacity-0 group-hover:opacity-40 transition-opacity" />
-                            <Sparkles className="text-white w-6 h-6 relative z-10" />
+            {/* Compact Minimalist Header */}
+            <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="relative w-8 h-8">
+                            <Image 
+                                src="/logo.png" 
+                                alt="Colectivo Prime Logo" 
+                                fill 
+                                className="object-contain"
+                            />
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs font-black uppercase tracking-[0.5em] text-slate-500 leading-none">Telmark</span>
-                            <span className="text-xl font-black uppercase tracking-tighter text-white">Hub<span className="text-blue-500">Central</span></span>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">Colectivo Prime</p>
+                            <h2 className="text-sm font-black uppercase tracking-tight text-slate-900">Gestión de <span className="text-blue-600">Campañas</span></h2>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-8">
-                        <div className="hidden md:flex flex-col items-end">
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Sesión Activa</p>
-                            <span className="text-sm font-bold text-white tracking-tight">{profile?.firstName} {profile?.lastName}</span>
+                    <div className="flex items-center gap-6">
+                        <div className="hidden sm:flex flex-col items-end">
+                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">Usuario Activo</span>
+                            <span className="text-xs font-black text-slate-900">{profile?.firstName} {profile?.lastName}</span>
                         </div>
-                        <div className="h-10 w-px bg-white/10 hidden md:block" />
-                        <LogoutButton variant="link" className="text-slate-500 hover:text-white transition-colors group flex items-center gap-2">
-                            <span className="text-[10px] font-black uppercase tracking-widest">Desconectar</span>
-                            <LogOut className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+                        <LogoutButton variant="ghost" className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all group">
+                            <LogOut className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                         </LogoutButton>
                     </div>
-                </motion.header>
+                </div>
+            </header>
 
-                {/* Main Selection */}
-                <main className="flex-1 flex flex-col justify-center">
-                    <div className="max-w-4xl mb-20">
-                        <motion.div
-                            initial={{ x: -30, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: 0.2, duration: 0.8 }}
-                        >
-                            <h1 className="text-7xl md:text-9xl font-black tracking-tighter uppercase leading-[0.8] mb-8">
-                                Gestión de <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-indigo-400 to-blue-600 animate-gradient inline-block">Procesos</span>
-                            </h1>
-                        </motion.div>
-                        <motion.div
-                            initial={{ x: -20, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                            className="flex items-center gap-4"
-                        >
-                            <div className="w-12 h-px bg-blue-500/50" />
-                            <p className="text-slate-400 text-xl font-medium tracking-tight">
-                                Tienes acceso a <span className="text-white font-bold">{sections.length} unidades</span> de negocio activas.
-                            </p>
-                        </motion.div>
-                    </div>
+            {/* Optimized Content Area */}
+            <main className="relative z-10 max-w-6xl mx-auto px-6 py-6 lg:py-8">
+                <div className="mb-8">
+                    <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-2"
+                    >
+                        <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[9px] font-black uppercase tracking-widest">
+                            <Users size={10} />
+                            Módulo de Operadores
+                        </div>
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">
+                            Selecciona tu <br />
+                            <span className="text-blue-600">Campaña Activa</span>
+                        </h1>
+                        <p className="text-slate-500 text-[13px] font-medium max-w-xl leading-relaxed">
+                            Bienvenido de nuevo, <span className="text-slate-900 font-bold">{profile?.firstName}</span>. Tienes acceso a <span className="text-slate-900 font-bold">{sections.length} campañas operativas</span>.
+                        </p>
+                    </motion.div>
+                </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <AnimatePresence>
-                            {sections.map((section, index) => (
-                                <motion.div
-                                    key={section.id}
-                                    initial={{ y: 50, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.5 + index * 0.1, duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
-                                    whileHover={{ y: -12, transition: { duration: 0.4 } }}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+                    <AnimatePresence>
+                        {sections.map((section, index) => (
+                            <motion.div
+                                key={section.id}
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                                whileHover={{ y: -4 }}
+                            >
+                                <Link 
+                                    href={`/dashboard/${section.slug}`}
+                                    className="group block relative bg-white border border-slate-200 rounded-[28px] p-5 transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/60 hover:border-blue-600/20 overflow-hidden shadow-sm"
                                 >
-                                    <Link 
-                                        href={`/dashboard/${section.slug}`}
-                                        className="group relative block h-full min-h-[320px] bg-[#0c0c0c] border border-white/5 rounded-[48px] p-12 overflow-hidden transition-all duration-500 hover:border-blue-500/30 hover:bg-[#111111] shadow-2xl"
-                                    >
-                                        {/* Dynamic Hover Background */}
-                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/0 via-blue-600/0 to-blue-600/0 group-hover:from-blue-600/5 group-hover:to-indigo-600/10 transition-all duration-700" />
-                                        <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-600/5 rounded-full blur-[80px] group-hover:bg-blue-600/20 transition-all duration-1000" />
-                                        
-                                        <div className="relative z-10 h-full flex flex-col justify-between">
-                                            <div className="space-y-6">
-                                                <div className="w-20 h-20 rounded-[28px] bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-blue-600 group-hover:border-blue-500 group-hover:scale-110 transition-all duration-500 shadow-2xl group-hover:shadow-blue-500/50">
-                                                    <LayoutDashboard className="w-10 h-10 text-white" />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500/70">Online</span>
-                                                    </div>
-                                                    <h3 className="text-4xl font-black uppercase tracking-tighter leading-none group-hover:text-blue-400 transition-colors">
-                                                        {section.name}
-                                                    </h3>
-                                                </div>
+                                    {/* Subtle Gradient Background on Hover */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-transparent group-hover:from-blue-50/30 group-hover:to-white transition-all duration-500" />
+                                    
+                                    <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px]">
+                                        <div className="space-y-4">
+                                            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-lg group-hover:shadow-blue-600/20 transition-all duration-300">
+                                                <LayoutDashboard size={20} />
                                             </div>
-
-                                            <div className="space-y-4">
-                                                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest line-clamp-2 leading-relaxed">
-                                                    Accede a las herramientas y documentación de {section.name}.
-                                                </p>
-                                                <div className="flex items-center gap-4 pt-4">
-                                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white whitespace-nowrap">Abrir Terminal</span>
-                                                    <div className="h-px flex-1 bg-white/10 group-hover:bg-blue-500/30 transition-all" />
-                                                    <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-blue-600 group-hover:border-blue-500 transition-all group-hover:translate-x-2">
-                                                        <ChevronRight className="w-5 h-5 text-white" />
-                                                    </div>
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="w-1.2 h-1.2 rounded-full bg-emerald-500" />
+                                                    <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600/70">Operativo</span>
                                                 </div>
+                                                <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter group-hover:text-blue-600 transition-colors leading-tight line-clamp-2">
+                                                    {section.name}
+                                                </h3>
                                             </div>
                                         </div>
-                                    </Link>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                    </div>
-                </main>
 
-                {/* Footer */}
-                <motion.footer 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.2 }}
-                    className="mt-24 pt-10 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-8"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">Neural Network Active — v4.2.0</p>
-                    </div>
-                    <div className="flex items-center gap-10">
-                        <Link href="/soporte" className="text-[10px] font-black text-slate-600 hover:text-white uppercase tracking-[0.2em] transition-colors">Soporte Critico</Link>
-                        <Link href="/manual" className="text-[10px] font-black text-slate-600 hover:text-white uppercase tracking-[0.2em] transition-colors">Centro de Aprendizaje</Link>
-                    </div>
-                </motion.footer>
-            </div>
+                                        <div className="pt-3 border-t border-slate-50 flex items-center justify-between group-hover:border-blue-100 transition-colors">
+                                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-blue-600 transition-colors">Entrar</span>
+                                            <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-blue-600 group-hover:text-white transition-all group-hover:translate-x-1">
+                                                <ChevronRight size={12} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
+            </main>
 
-            <style jsx global>{`
-                @keyframes gradient-move {
-                    0% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                    100% { background-position: 0% 50%; }
-                }
-                .animate-gradient {
-                    background-size: 200% auto;
-                    animation: gradient-move 8s linear infinite;
-                }
-            `}</style>
+            {/* Compact Footer */}
+            <footer className="relative z-10 max-w-6xl mx-auto px-6 py-6 border-t border-slate-200 mt-8 flex flex-col md:flex-row items-center justify-between gap-4 opacity-60">
+                <div className="flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Colectivo Prime Systems — Campañas v4.2.0</p>
+                </div>
+                <div className="flex items-center gap-6">
+                    <Link href="/soporte" className="text-[8px] font-black text-slate-600 hover:text-blue-600 uppercase tracking-widest transition-colors">Soporte</Link>
+                    <Link href="/manual" className="text-[8px] font-black text-slate-600 hover:text-blue-600 uppercase tracking-widest transition-colors">Guía</Link>
+                </div>
+            </footer>
         </div>
     )
 }
