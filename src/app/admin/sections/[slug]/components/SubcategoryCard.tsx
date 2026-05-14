@@ -186,10 +186,10 @@ export default function SubcategoryCard({
             return <img src={previewUrl} alt={item.title} className="w-full h-full object-contain rounded-xl" />
         }
         if (item.filePath && isPdf(item.filePath)) {
-            return <iframe src={previewUrl} className="w-full h-full rounded-xl border-0" title={item.title} />
+            return <iframe src={previewUrl} className="w-full h-full min-h-[600px] lg:min-h-[700px] rounded-xl border-0" title={item.title} />
         }
         if (item.contentType === 'video' || item.contentType === 'link') {
-            return <iframe src={previewUrl} className="w-full h-full rounded-xl border-0" title={item.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+            return <iframe src={previewUrl} className="w-full h-full min-h-[600px] lg:min-h-[700px] rounded-xl border-0" title={item.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
         }
         if (item.contentType === 'info') {
             return (
@@ -200,7 +200,7 @@ export default function SubcategoryCard({
             )
         }
         if (item.filePath) {
-            return <iframe src={previewUrl} className="w-full h-full rounded-xl border-0" title={item.title} />
+            return <iframe src={previewUrl} className="w-full h-full min-h-[600px] lg:min-h-[700px] rounded-xl border-0" title={item.title} />
         }
 
         return (
@@ -313,7 +313,7 @@ export default function SubcategoryCard({
                                     </button>
                                 </div>
                             </div>
-                            <div className="flex-1 p-1.5 bg-slate-50">
+                            <div className="flex-1 bg-slate-50 relative overflow-hidden flex flex-col">
                                 {renderPreview()}
                             </div>
                         </div>
