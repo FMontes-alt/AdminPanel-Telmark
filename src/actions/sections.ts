@@ -4,7 +4,8 @@ import { db } from "@/db"
 import { AlertService } from "@/services/alerts/alert-services"
 import { requireAdmin } from "@/lib/auth-guard"
 import { items, sections, categories, subcategories } from "@/db/schema"
-import { inArray } from "drizzle-orm"
+import { eq, inArray } from "drizzle-orm"
+import { revalidatePath } from "next/cache"
 import { deleteFileAction, deleteMultipleFilesAction } from "./storage"
 
 // ─── READ ───────────────────────────────────────────────────────────────
