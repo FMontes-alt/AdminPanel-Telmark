@@ -149,7 +149,7 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
                         updateItem(sub.id, item.id, { isUploading: true })
                         const uploadData = new FormData()
                         uploadData.append('file', item.file)
-                        const result = await uploadFileAction(uploadData, sectionSlug, toSlug(categoryName))
+                        const result = await uploadFileAction(uploadData, sectionSlug, toSlug(categoryName), toSlug(sub.name))
                         uploadedPath = result.fullPath
                         updateItem(sub.id, item.id, { isUploading: false })
                     }

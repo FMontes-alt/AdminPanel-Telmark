@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { FilePlus, Trash2, Download, X, FileText, Link as LinkIcon, Info, Video, Table as TableIcon, LayoutGrid, List, ExternalLink, Lock } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { toSlug } from "@/lib/utils"
 import ItemForm from "./ItemForm"
 import ContentItem from "./ContentItem"
 import { getSignedUrlAction, getDownloadUrlAction } from "@/actions/storage"
@@ -254,6 +255,7 @@ export default function SubcategoryCard({
                     onCancel={onCancelAddingItem}
                     sectionSlug={sectionSlug}
                     categorySlug={categorySlug}
+                    subcategorySlug={sub.slug || toSlug(sub.name)}
                     sectionTemplate={sectionTemplate}
                 />
             )}

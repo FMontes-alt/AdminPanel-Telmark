@@ -73,7 +73,7 @@ export default function QuestionForm({
                 setUploadProgress(10)
                 const formData = new FormData()
                 formData.append('file', selectedFile)
-                const result = await uploadFileAction(formData, "quizzes", quizId)
+                const result = await uploadFileAction(formData, "quizzes", quizId, "media")
                 finalMediaUrl = result.fullPath
                 setUploadProgress(100)
             }

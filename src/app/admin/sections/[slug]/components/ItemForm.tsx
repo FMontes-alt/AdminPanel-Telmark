@@ -8,6 +8,7 @@ import { SECTION_TEMPLATES, SectionTemplateType } from "@/lib/constants/section-
 interface ItemFormProps {
     sectionSlug: string
     categorySlug: string
+    subcategorySlug: string
     onSubmit: (data: { 
         title: string, 
         contentType: "info" | "document" | "file" | "link" | "video", 
@@ -20,7 +21,7 @@ interface ItemFormProps {
     sectionTemplate: string
 }
 
-export default function ItemForm({ sectionSlug, categorySlug, onSubmit, onCancel, sectionTemplate }: ItemFormProps) {
+export default function ItemForm({ sectionSlug, categorySlug, subcategorySlug, onSubmit, onCancel, sectionTemplate }: ItemFormProps) {
     const template = SECTION_TEMPLATES[sectionTemplate as SectionTemplateType] || SECTION_TEMPLATES.GENERICO
     const fileInputRef = useRef<HTMLInputElement>(null)
     
@@ -64,7 +65,7 @@ export default function ItemForm({ sectionSlug, categorySlug, onSubmit, onCancel
                 const uploadData = new FormData()
                 uploadData.append('file', selectedFile)
                 
-                const result = await uploadFileAction(uploadData, sectionSlug, categorySlug)
+                const result = await uploadFileAction(uploadData, sectionSlug, categorySlug, subcategorySlug)
                 finalFilePath = result.fullPath
                 setUploadProgress(100)
             }

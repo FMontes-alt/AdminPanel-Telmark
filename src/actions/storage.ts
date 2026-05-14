@@ -11,7 +11,7 @@ const BUCKET_NAME = 'telmark-media'
  * Sube un archivo a Supabase Storage.
  * Retorna la ruta interna si tiene éxito.
  */
-export async function uploadFileAction(formData: FormData, sectionSlug: string, categorySlug: string) {
+export async function uploadFileAction(formData: FormData, sectionSlug: string, categorySlug: string, subcategorySlug: string) {
     await requireAdmin()
     const supabase = await createClient()
     const file = formData.get('file') as File
@@ -22,7 +22,7 @@ export async function uploadFileAction(formData: FormData, sectionSlug: string, 
 
     // 1. Sanitizar nombre y generar ruta
     const sanitizedName = sanitizeFileName(file.name)
-    const filePath = getStoragePath(sectionSlug, categorySlug, sanitizedName)
+    const filePath = getStoragePath(sectionSlug, categorySlug, subcategorySlug, sanitizedName)
 
     // 2. Subir a Supabase
     const { data, error } = await supabase.storage

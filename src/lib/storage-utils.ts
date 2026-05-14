@@ -18,8 +18,8 @@ export function sanitizeFileName(fileName: string): string {
 
 /**
  * Genera la ruta jerárquica para el storage.
- * Estructura: sections/category/filename
+ * Estructura: sections/category/subcategory/filename
  */
-export function getStoragePath(sectionSlug: string, categorySlug: string, sanitizedName: string): string {
-    return `${sectionSlug}/${categorySlug}/${sanitizedName}`;
+export function getStoragePath(sectionSlug: string, categorySlug: string, subcategorySlug: string, sanitizedName: string): string {
+    return `${sectionSlug}/${categorySlug}/${subcategorySlug}/${sanitizedName}`;
 }
