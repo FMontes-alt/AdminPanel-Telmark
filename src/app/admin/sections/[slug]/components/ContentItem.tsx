@@ -1,6 +1,6 @@
 "use client"
 
-import { Download, Link as LinkIcon, FileText, Info, Trash2, Video, Lock } from "lucide-react"
+import { Download, Link as LinkIcon, FileText, Info, Trash2, Video, Lock, Maximize2 } from "lucide-react"
 
 interface ContentItemProps {
     item: any
@@ -180,7 +180,18 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                     )}
                 </div>
             </div>
-            <div className="flex items-center gap-4 flex-shrink-0 pl-2">
+            <div className="flex items-center gap-2 flex-shrink-0 pl-2">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onSelect(item); }}
+                    className={`p-2 transition-all rounded-xl ${
+                        isSelected 
+                            ? 'bg-white/20 text-white' 
+                            : 'text-blue-500 bg-blue-50 hover:bg-blue-100'
+                    }`}
+                    title="Ver en grande"
+                >
+                    <Maximize2 size={compact ? 12 : 14} />
+                </button>
                 {!compact && (
                     <span className={`text-[10px] font-extrabold uppercase tracking-widest ${isSelected ? 'text-blue-200' : 'text-slate-300'}`}>{item.contentType}</span>
                 )}

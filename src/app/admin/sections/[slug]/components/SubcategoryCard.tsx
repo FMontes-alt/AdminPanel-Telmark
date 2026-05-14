@@ -1,13 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { FilePlus, Trash2, Download, X, FileText, Link as LinkIcon, Info, Video, Table as TableIcon, LayoutGrid, List, ExternalLink, Lock } from "lucide-react"
+import { FilePlus, Trash2, Download, X, FileText, Link as LinkIcon, Info, Video, Table as TableIcon, LayoutGrid, List, ExternalLink, Lock, Maximize2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toSlug } from "@/lib/utils"
 import ItemForm from "./ItemForm"
 import ContentItem from "./ContentItem"
 import { getSignedUrlAction, getDownloadUrlAction } from "@/actions/storage"
 import { SECTION_TEMPLATES, SectionTemplateType } from "@/lib/constants/section-templates"
+import ItemPreviewModal from "./ItemPreviewModal"
 
 interface SubcategoryCardProps {
     sub: any
@@ -39,6 +40,7 @@ export default function SubcategoryCard({
     const [selectedItem, setSelectedItem] = useState<any>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [loadingPreview, setLoadingPreview] = useState(false)
+    const [showModal, setShowModal] = useState(false)
 
     const template = SECTION_TEMPLATES[sectionTemplate as SectionTemplateType] || SECTION_TEMPLATES.GENERICO
     const layout = template.layout
@@ -69,15 +71,16 @@ export default function SubcategoryCard({
         return url;
     }
 
-    const handleSelectItem = async (item: any) => {
+    const handleSelectItem = async (item: any, openModal: boolean = false) => {
         if (selectedItem?.id === item.id) {
-            handleClose()
+            if (openModal) setShowModal(true)
             return
         }
 
         setSelectedItem(item)
         setPreviewUrl(null)
         setLoadingPreview(true)
+        if (openModal) setShowModal(true)
 
         try {
             if (item.filePath) {
@@ -297,6 +300,14 @@ export default function SubcategoryCard({
                                             )}
                                         </button>
                                     )}
+                                    <button 
+                                        onClick={() => setShowModal(true)} 
+                                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" 
+                                        title="Ver en grande"
+                                    >
+                                        <Maximize2 size={16} />
+                                    </button>
+                                    <div className="w-px h-4 bg-slate-200 mx-1" />
                                     <button onClick={handleClose} className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all" title="Cerrar">
                                         <X size={16} />
                                     </button>
@@ -315,7 +326,7 @@ export default function SubcategoryCard({
                                     item={item}
                                     isLocked={isLocked}
                                     onDelete={onDeleteItem}
-                                    onSelect={handleSelectItem}
+                                    onSelect={(item) => handleSelectItem(item, false)}
                                     isSelected={selectedItem?.id === item.id}
                                     compact={true}
                                 />
@@ -354,7 +365,7 @@ export default function SubcategoryCard({
                                     item={item} 
                                     isLocked={isLocked}
                                     onDelete={onDeleteItem}
-                                    onSelect={handleSelectItem}
+                                    onSelect={(item) => handleSelectItem(item, true)}
                                     layout={layout}
                                 />
                             ))
@@ -366,6 +377,24 @@ export default function SubcategoryCard({
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <ItemPreviewModal 
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                item={selectedItem}
+                previewUrl={previewUrl}
+                onDownload={handleDownload}
+                hasNext={sub.items && sub.items.findIndex((i: any) => i.id === selectedItem?.id) < sub.items.length - 1}
+                hasPrev={sub.items && sub.items.findIndex((i: any) => i.id === selectedItem?.id) > 0}
+                onNext={() => {
+                    const idx = sub.items.findIndex((i: any) => i.id === selectedItem?.id)
+                    if (idx < sub.items.length - 1) handleSelectItem(sub.items[idx + 1])
+                }}
+                onPrev={() => {
+                    const idx = sub.items.findIndex((i: any) => i.id === selectedItem?.id)
+                    if (idx > 0) handleSelectItem(sub.items[idx - 1])
+                }}
+            />
         </div>
     )
 }
