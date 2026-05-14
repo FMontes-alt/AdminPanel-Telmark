@@ -5,6 +5,7 @@ import { items } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { requireAdmin } from "@/lib/auth-guard"
+import { deleteFileAction } from "./storage"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
@@ -86,6 +87,19 @@ type UpdateItemInput = {
 
 export async function updateItem(id: string, data: UpdateItemInput) {
     await requireAdmin()
+
+    // Si viene un nuevo filePath, borramos el antiguo para no dejar basura
+    if (data.filePath !== undefined) {
+        const oldItem = await getItemById(id)
+        if (oldItem?.filePath && oldItem.filePath !== data.filePath && !oldItem.filePath.startsWith('http')) {
+            try {
+                await deleteFileAction(oldItem.filePath)
+            } catch (error) {
+                console.error("Error eliminando archivo antiguo al actualizar item:", error)
+            }
+        }
+    }
+
     const [updated] = await db
         .update(items)
         .set(data)
@@ -101,6 +115,18 @@ export async function updateItem(id: string, data: UpdateItemInput) {
 
 export async function deleteItem(id: string) {
     await requireAdmin()
+    
+    // 1. Obtener el item para saber si tiene archivo
+    const item = await getItemById(id)
+    if (item?.filePath) {
+        try {
+            await deleteFileAction(item.filePath)
+        } catch (error) {
+            console.error("Error eliminando archivo del item:", error)
+            // Continuamos con el borrado del registro aunque falle el storage
+        }
+    }
+
     await db.delete(items).where(eq(items.id, id))
     revalidatePath("/admin")
     revalidatePath("/")

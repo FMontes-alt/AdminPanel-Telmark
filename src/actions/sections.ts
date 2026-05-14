@@ -1,11 +1,11 @@
 "use server"
 
 import { db } from "@/db"
-import { sections, categories, subcategories } from "@/db/schema"
-import { eq } from "drizzle-orm"
-import { revalidatePath } from "next/cache"
 import { AlertService } from "@/services/alerts/alert-services"
 import { requireAdmin } from "@/lib/auth-guard"
+import { items, sections, categories, subcategories } from "@/db/schema"
+import { inArray } from "drizzle-orm"
+import { deleteFileAction, deleteMultipleFilesAction } from "./storage"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
@@ -99,7 +99,17 @@ type UpdateSectionInput = {
 
 export async function updateSection(id: string, data: UpdateSectionInput) {
     await requireAdmin()
-    const section = await getSectionById(id) // Obtenemos el nombre para la alerta
+    const section = await getSectionById(id)
+    
+    // Si viene un nuevo imagePath, borramos el antiguo
+    if (data.imagePath !== undefined && section?.imagePath && section.imagePath !== data.imagePath && !section.imagePath.startsWith('http')) {
+        try {
+            await deleteFileAction(section.imagePath)
+        } catch (error) {
+            console.error("Error eliminando imagen antigua de sección:", error)
+        }
+    }
+
     const [updated] = await db.update(sections).set(data).where(eq(sections.id, id)).returning()
     // Lógica inteligente de alertas
     if (data.config) {
@@ -129,14 +139,47 @@ export async function updateSection(id: string, data: UpdateSectionInput) {
 
 export async function deleteSection(id: string) {
     await requireAdmin()
-    // 1. Obtenemos la sección antes de que desaparezca
+    
+    // 1. Obtenemos la sección y sus dependencias para limpiar storage
     const section = await getSectionById(id)
-    const sectionName = section?.name || "Desconocida"
+    if (!section) return { success: false, error: "Sección no encontrada" }
+    
+    const sectionName = section.name
+    
+    try {
+        // 2. Buscamos todos los items que cuelgan de esta sección
+        // Una sección -> N categorías -> N subcategorías -> N items
+        const allItems = await db
+            .select({ filePath: items.filePath })
+            .from(items)
+            .innerJoin(subcategories, eq(items.subcategoryId, subcategories.id))
+            .innerJoin(categories, eq(subcategories.categoryId, categories.id))
+            .where(eq(categories.sectionId, id))
 
+        const filePaths = allItems
+            .map(i => i.filePath)
+            .filter((path): path is string => !!path)
+
+        // 3. Borramos archivos de los items
+        if (filePaths.length > 0) {
+            await deleteMultipleFilesAction(filePaths)
+        }
+
+        // 4. Borramos la imagen de la propia sección si tiene
+        if (section.imagePath) {
+            await deleteFileAction(section.imagePath)
+        }
+    } catch (error) {
+        console.error("Error en limpieza de storage al borrar sección:", error)
+        // Continuamos con el borrado de la DB aunque falle el storage
+    }
+
+    // 5. Borramos de la DB (el cascade se encarga de cats, subcats e items)
     await db.delete(sections).where(eq(sections.id, id))
 
     await AlertService.sectionDeleted(sectionName, id)
 
     revalidatePath("/admin")
+    revalidatePath("/")
     return { success: true }
 }

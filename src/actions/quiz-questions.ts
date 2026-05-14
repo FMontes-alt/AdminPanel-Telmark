@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { formatError } from "@/lib/error-handler"
 import type { CreateQuestionInput, QuestionType, MediaType } from "@/lib/types/quiz"
+import { deleteFileAction } from "./storage"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
@@ -138,6 +139,18 @@ export async function updateQuestion(
         if (data.topic !== undefined) updateData.topic = data.topic
 
         if (Object.keys(updateData).length > 0) {
+            // Si hay un nuevo mediaUrl, borramos el antiguo
+            if (data.mediaUrl !== undefined) {
+                const oldQuestion = await getQuestionById(questionId)
+                if (oldQuestion?.mediaUrl && oldQuestion.mediaUrl !== data.mediaUrl && !oldQuestion.mediaUrl.startsWith('http')) {
+                    try {
+                        await deleteFileAction(oldQuestion.mediaUrl)
+                    } catch (e) {
+                        console.error("Error eliminando media antigua:", e)
+                    }
+                }
+            }
+
             await db
                 .update(quizQuestions)
                 .set(updateData)
@@ -188,6 +201,16 @@ export async function reorderQuestions(questionIds: string[]) {
 
 export async function deleteQuestion(questionId: string) {
     try {
+        // 1. Limpiar storage si tiene media
+        const question = await getQuestionById(questionId)
+        if (question?.mediaUrl && !question.mediaUrl.startsWith('http')) {
+            try {
+                await deleteFileAction(question.mediaUrl)
+            } catch (e) {
+                console.error("Error eliminando media de pregunta:", e)
+            }
+        }
+
         await db.delete(quizQuestions).where(eq(quizQuestions.id, questionId))
         revalidatePath("/admin/quizzes")
         return { success: true }

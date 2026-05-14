@@ -6,6 +6,7 @@ import { eq, desc, and, count } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { formatError } from "@/lib/error-handler"
 import type { CreateQuizInput } from "@/lib/types/quiz"
+import { deleteMultipleFilesAction } from "./storage"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
@@ -178,8 +179,27 @@ export async function publishQuiz(quizId: string, publish: boolean) {
 
 export async function deleteQuiz(quizId: string) {
     try {
+        // 1. Limpiar storage de todas las preguntas del quiz
+        const questions = await db
+            .select({ mediaUrl: quizQuestions.mediaUrl })
+            .from(quizQuestions)
+            .where(eq(quizQuestions.quizId, quizId))
+
+        const filePaths = questions
+            .map(q => q.mediaUrl)
+            .filter((url): url is string => !!url && !url.startsWith('http'))
+
+        if (filePaths.length > 0) {
+            try {
+                await deleteMultipleFilesAction(filePaths)
+            } catch (e) {
+                console.error("Error eliminando archivos de storage al borrar quiz:", e)
+            }
+        }
+
         await db.delete(quizzes).where(eq(quizzes.id, quizId))
         revalidatePath("/admin/quizzes")
+        revalidatePath("/")
         return { success: true }
     } catch (error) {
         const formatted = formatError(error)

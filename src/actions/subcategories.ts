@@ -5,6 +5,8 @@ import { subcategories } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { requireAdmin } from "@/lib/auth-guard"
+import { items } from "@/db/schema"
+import { deleteMultipleFilesAction } from "./storage"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
@@ -72,7 +74,27 @@ export async function updateSubcategory(id: string, data: UpdateSubcategoryInput
 
 export async function deleteSubcategory(id: string) {
     await requireAdmin()
+
+    try {
+        // Buscamos todos los items de esta subcategoría
+        const allItems = await db
+            .select({ filePath: items.filePath })
+            .from(items)
+            .where(eq(items.subcategoryId, id))
+
+        const filePaths = allItems
+            .map(i => i.filePath)
+            .filter((path): path is string => !!path)
+
+        if (filePaths.length > 0) {
+            await deleteMultipleFilesAction(filePaths)
+        }
+    } catch (error) {
+        console.error("Error limpiando storage al borrar subcategoría:", error)
+    }
+
     await db.delete(subcategories).where(eq(subcategories.id, id))
     revalidatePath("/admin")
+    revalidatePath("/")
     return { success: true }
 }
