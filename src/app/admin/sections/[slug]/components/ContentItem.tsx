@@ -25,7 +25,7 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
         return (
             <div
                 onClick={() => onSelect(item)}
-                className={`grid grid-cols-12 gap-4 px-6 py-2.5 items-center transition-all cursor-pointer border-b border-slate-50 last:border-0 hover:bg-blue-50/50 group/item ${isSelected ? 'bg-blue-50/80 border-blue-100' : 'bg-white'
+                className={`grid grid-cols-12 gap-2 px-4 py-2 items-center transition-all cursor-pointer border-b border-slate-50 last:border-0 hover:bg-blue-50/50 group/item ${isSelected ? 'bg-blue-50/80 border-blue-100' : 'bg-white'
                     }`}
             >
                 <div className="col-span-5 flex items-center gap-3 min-w-0">
@@ -113,8 +113,8 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                         </button>
                     </div>
                 </div>
-                <div className="p-4">
-                    <p className={`text-xs font-black uppercase tracking-tight truncate mb-1 ${isSelected ? 'text-white' : 'text-slate-900'}`}>{item.title}</p>
+                <div className="p-3">
+                    <p className={`text-[11px] font-black uppercase tracking-tight truncate mb-0.5 ${isSelected ? 'text-white' : 'text-slate-900'}`}>{item.title}</p>
                     <p className={`text-[9px] font-bold uppercase tracking-widest ${isSelected ? 'text-blue-200' : 'text-slate-400'}`}>{item.contentType}</p>
                 </div>
             </div>
@@ -131,8 +131,8 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                     : 'bg-white border-slate-100 hover:border-blue-200 hover:shadow-md hover:shadow-slate-100'
                 }`}
         >
-            <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                <div className={`${compact ? 'w-6 h-6 rounded-lg' : 'w-8 h-8 rounded-xl'} flex shrink-0 items-center justify-center transition-all overflow-hidden ${isSelected
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                <div className={`${compact ? 'w-6 h-6 rounded-lg' : 'w-7 h-7 rounded-lg'} flex shrink-0 items-center justify-center transition-all overflow-hidden ${isSelected
                         ? 'bg-white/20 text-white'
                         : 'bg-slate-50 text-slate-400 group-hover/item:text-blue-600 group-hover/item:bg-blue-50'
                     }`}>

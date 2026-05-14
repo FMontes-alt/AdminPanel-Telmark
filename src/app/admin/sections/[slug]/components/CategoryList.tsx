@@ -54,7 +54,7 @@ export default function CategoryList({
             axis="y" 
             values={categories} 
             onReorder={isLocked ? () => {} : onReorder}
-            className="space-y-4"
+            className="space-y-2"
         >
             {categories?.map((category) => (
                 <CategoryItem 

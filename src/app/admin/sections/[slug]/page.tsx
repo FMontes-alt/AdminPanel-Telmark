@@ -195,7 +195,7 @@ export default function SectionDetailPage() {
     const isLocked = (section.config as any)?.isLocked || false
 
     return (
-        <div className="p-8 lg:p-12 space-y-12 max-w-[1400px] mx-auto min-h-screen">
+        <div className="p-4 lg:p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen">
             {isLocked && (
                 <div className="bg-amber-50 border border-amber-200 rounded-[32px] p-6 flex items-center gap-6 animate-in slide-in-from-top-4 duration-500">
                     <div className="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 shrink-0">

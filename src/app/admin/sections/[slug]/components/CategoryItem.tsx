@@ -65,10 +65,10 @@ export default function CategoryItem({
                 boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
                 zIndex: 50
             }}
-            className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-4"
+            className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-2"
         >
             <div 
-                className="w-full flex items-center justify-between p-6 hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 transition-colors group cursor-pointer"
                 onClick={onToggleExpand}
             >
                 <div className="flex items-center gap-4">
@@ -143,7 +143,7 @@ export default function CategoryItem({
                         transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
                         className="overflow-hidden"
                     >
-                        <div className="px-6 pb-6 space-y-4">
+                        <div className="px-4 pb-4 space-y-3">
                             {isAddingSub && (
                                 <SubcategoryForm 
                                     onSubmit={onAddSub}
@@ -152,7 +152,7 @@ export default function CategoryItem({
                             )}
         
                             {category.subcategories?.length > 0 ? (
-                                <div className="grid grid-cols-1 gap-6">
+                                <div className="grid grid-cols-1 gap-3">
                                     {category.subcategories?.map((sub: any) => (
                                         <SubcategoryCard 
                                             key={sub.id}

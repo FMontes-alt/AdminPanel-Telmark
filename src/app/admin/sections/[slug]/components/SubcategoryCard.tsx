@@ -215,8 +215,8 @@ export default function SubcategoryCard({
     }
 
     return (
-        <div className="bg-slate-50/40 rounded-[28px] p-6 border border-slate-100/80 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 group/sub">
-            <div className="flex items-center justify-between mb-5">
+        <div className="bg-slate-50/40 rounded-[28px] p-4 border border-slate-100/80 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 group/sub">
+            <div className="flex items-center justify-between mb-3">
                 <h4 className="text-base font-extrabold text-slate-800 flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
                     {sub.name}
@@ -272,65 +272,70 @@ export default function SubcategoryCard({
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.98 }}
                         transition={{ duration: 0.25 }}
-                        className="flex flex-col gap-6"
+                        className="flex gap-0 bg-white border border-slate-200 rounded-[32px] shadow-2xl overflow-hidden h-[700px]"
                     >
-                        {/* Panel Superior: Visor */}
-                        <div className="w-full bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-[600px] lg:min-h-[700px]">
-                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50/50">
-                                <div className="flex items-center gap-2">
-                                    <div className="p-1 rounded-lg bg-blue-600 text-white">
+                        {/* Panel Izquierdo: Selector de Ítems (Estilo Explorador) */}
+                        <div className="w-80 border-r border-slate-100 flex flex-col bg-slate-50/50 shrink-0">
+                            <div className="p-3 border-b border-slate-100 bg-white">
+                                <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contenidos ({sub.items?.length})</h5>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-slate-50/30">
+                                {sub.items?.map((item: any) => (
+                                    <ContentItem
+                                        key={item.id}
+                                        item={item}
+                                        isLocked={isLocked}
+                                        onDelete={onDeleteItem}
+                                        onSelect={handleSelectItem}
+                                        isSelected={selectedItem?.id === item.id}
+                                        compact={true}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Panel Derecho: Visor */}
+                        <div className="flex-1 flex flex-col min-w-0 bg-white">
+                            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 bg-white z-10">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="p-2 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200">
                                         {getSmallIcon(selectedItem.contentType)}
                                     </div>
-                                    <div className="max-w-[150px] sm:max-w-xs md:max-w-sm truncate">
-                                        <h4 className="text-xs font-black text-slate-800 leading-tight truncate">{selectedItem.title}</h4>
-                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{selectedItem.contentType}</p>
+                                    <div className="min-w-0">
+                                        <h4 className="text-sm font-black text-slate-800 leading-tight truncate">{selectedItem.title}</h4>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{selectedItem.contentType}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-1 flex-shrink-0">
+                                <div className="flex items-center gap-2">
                                     {previewUrl && (
                                         <button 
                                             onClick={handleDownload} 
-                                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" 
-                                            title={selectedItem?.contentType === 'link' || (selectedItem?.contentType === 'video' && selectedItem?.externalLink) ? "Abrir enlace externo" : "Descargar"}
+                                            className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" 
+                                            title="Descargar/Abrir"
                                         >
                                             {selectedItem?.contentType === 'link' || (selectedItem?.contentType === 'video' && selectedItem?.externalLink) ? (
-                                                <ExternalLink size={16} />
+                                                <ExternalLink size={18} />
                                             ) : (
-                                                <Download size={16} />
+                                                <Download size={18} />
                                             )}
                                         </button>
                                     )}
                                     <button 
                                         onClick={() => setShowModal(true)} 
-                                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" 
-                                        title="Ver en grande"
+                                        className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" 
+                                        title="Pantalla Completa"
                                     >
-                                        <Maximize2 size={16} />
+                                        <Maximize2 size={18} />
                                     </button>
-                                    <div className="w-px h-4 bg-slate-200 mx-1" />
-                                    <button onClick={handleClose} className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all" title="Cerrar">
-                                        <X size={16} />
+                                    <div className="w-px h-6 bg-slate-100 mx-2" />
+                                    <button onClick={handleClose} className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all">
+                                        <X size={18} />
                                     </button>
                                 </div>
                             </div>
-                            <div className="flex-1 bg-slate-50 relative overflow-hidden flex flex-col">
+                            <div className="flex-1 bg-slate-100/30 relative overflow-hidden flex flex-col">
                                 {renderPreview()}
                             </div>
-                        </div>
-
-                        {/* Panel Inferior: Lista de ítems (Grid horizontal para ahorrar espacio) */}
-                        <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            {sub.items?.map((item: any) => (
-                                <ContentItem
-                                    key={item.id}
-                                    item={item}
-                                    isLocked={isLocked}
-                                    onDelete={onDeleteItem}
-                                    onSelect={handleSelectItem}
-                                    isSelected={selectedItem?.id === item.id}
-                                    compact={true}
-                                />
-                            ))}
                         </div>
                     </motion.div>
                 ) : (
