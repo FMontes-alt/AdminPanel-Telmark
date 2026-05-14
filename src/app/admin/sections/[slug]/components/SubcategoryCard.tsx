@@ -365,7 +365,7 @@ export default function SubcategoryCard({
                                     item={item} 
                                     isLocked={isLocked}
                                     onDelete={onDeleteItem}
-                                    onSelect={(item) => handleSelectItem(item, true)}
+                                    onSelect={(item) => handleSelectItem(item, false)}
                                     layout={layout}
                                 />
                             ))
