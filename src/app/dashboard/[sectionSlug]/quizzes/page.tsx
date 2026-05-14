@@ -1,28 +1,33 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import {
     ClipboardList,
     Clock,
-    CheckCircle2,
     ChevronRight,
     Trophy,
     Shuffle,
     Play,
+    LayoutGrid
 } from "lucide-react"
 import { getSectionBySlug } from "@/actions/sections"
 import { getPublishedQuizzes, getQuizQuestionCount } from "@/actions/quizzes"
 import { getUserAttempts } from "@/actions/quiz-attempts"
 import { createClient } from "@/lib/supabase/client"
 
+// Importar el nuevo Header
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
+
 export default function UserQuizzesPage() {
     const { sectionSlug } = useParams()
     const [section, setSection] = useState<any>(null)
     const [quizzes, setQuizzes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [searchTerm, setSearchTerm] = useState("")
     const [userId, setUserId] = useState<string | null>(null)
 
     useEffect(() => {
@@ -54,122 +59,138 @@ export default function UserQuizzesPage() {
         init()
     }, [sectionSlug])
 
+    const filteredQuizzes = useMemo(() => {
+        if (!searchTerm) return quizzes
+        return quizzes.filter(quiz => 
+            quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            quiz.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    }, [quizzes, searchTerm])
+
     if (loading) {
         return (
-            <div className="p-8 lg:p-12 space-y-6 animate-pulse">
-                <div className="h-8 bg-slate-200 rounded-2xl w-48" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {[1, 2].map(i => <div key={i} className="h-44 bg-slate-100 rounded-[28px]" />)}
-                </div>
-            </div>
-        )
-    }
-
-    if (quizzes.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center py-24 space-y-6">
-                <div className="w-20 h-20 bg-slate-100 rounded-[28px] flex items-center justify-center">
-                    <ClipboardList size={36} className="text-slate-300" />
-                </div>
-                <div className="text-center space-y-2">
-                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">
-                        Sin Cuestionarios
-                    </h3>
-                    <p className="text-sm text-slate-400 max-w-sm">
-                        No hay cuestionarios disponibles en esta sección.
-                    </p>
-                </div>
+            <div className="h-screen bg-slate-50 flex items-center justify-center">
+                <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
             </div>
         )
     }
 
     return (
-        <div className="p-8 lg:p-12 space-y-10 max-w-5xl">
-            <div>
-                <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
-                    Cuestionarios
-                </h2>
-                <p className="text-sm text-slate-400 font-medium mt-1">
-                    {section?.name} · {quizzes.length} cuestionario{quizzes.length !== 1 ? "s" : ""} disponible{quizzes.length !== 1 ? "s" : ""}
-                </p>
-            </div>
+        <div className="h-screen bg-[#fafafa] flex overflow-hidden font-sans selection:bg-blue-600/10 selection:text-blue-600">
+            {/* Sidebar Reutilizado (Opcional, pero recomendado para consistencia) */}
+            <DashboardSidebar 
+                section={section || {}}
+                categories={[]} // En esta página no mostramos categorías en el sidebar o podrías pasarlas si las tuvieras
+                selectedCategoryId={null}
+                onSelectCategory={() => {}}
+            />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {quizzes.map((quiz: any, i: number) => (
-                    <motion.div
-                        key={quiz.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                    >
-                        <Link
-                            href={`/dashboard/${sectionSlug}/quizzes/${quiz.id}`}
-                            className="group block bg-white border border-slate-100 rounded-[28px] shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all overflow-hidden"
-                        >
-                            <div className="p-7 space-y-4">
-                                <div className="flex items-start justify-between">
-                                    <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 transition-colors">
-                                        <ClipboardList size={22} className="text-blue-600 group-hover:text-white transition-colors" />
-                                    </div>
-                                    <ChevronRight size={16} className="text-slate-200 group-hover:text-blue-500 transition-colors mt-2" />
+            <main className="flex-1 flex flex-col h-full bg-white relative">
+                {/* Header Integrado */}
+                <DashboardHeader 
+                    sectionName={section?.name || "Campañas"}
+                    searchTerm={searchTerm}
+                    onSearchChange={setSearchTerm}
+                />
+
+                <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#fafafa]/50 p-8 lg:p-12">
+                    <div className="max-w-5xl mx-auto space-y-10">
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="h-px w-12 bg-blue-600" />
+                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em]">Evaluación y Formación</span>
+                            </div>
+                            <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tighter leading-none">
+                                Cuestionarios
+                            </h2>
+                            <p className="text-slate-500 text-lg font-medium">
+                                {section?.name} · {filteredQuizzes.length} disponible{filteredQuizzes.length !== 1 ? "s" : ""}
+                            </p>
+                        </div>
+
+                        {filteredQuizzes.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-24 space-y-6">
+                                <div className="w-20 h-20 bg-slate-100 rounded-[28px] flex items-center justify-center">
+                                    <ClipboardList size={36} className="text-slate-300" />
                                 </div>
-
-                                <div>
-                                    <h3 className="text-base font-black text-slate-900 leading-tight tracking-tight">
-                                        {quiz.title}
-                                    </h3>
-                                    {quiz.description && (
-                                        <p className="text-xs text-slate-400 mt-1 line-clamp-2">{quiz.description}</p>
-                                    )}
-                                </div>
-
-                                <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                    <span className="flex items-center gap-1">
-                                        <ClipboardList size={10} />
-                                        {quiz.questionCount} pregunta{quiz.questionCount !== 1 ? "s" : ""}
-                                    </span>
-                                    {quiz.timeLimitMinutes && (
-                                        <span className="flex items-center gap-1">
-                                            <Clock size={10} />
-                                            {quiz.timeLimitMinutes} min
-                                        </span>
-                                    )}
-                                    {quiz.randomizeQuestions && (
-                                        <span className="flex items-center gap-1">
-                                            <Shuffle size={10} />
-                                            Aleatorio
-                                        </span>
-                                    )}
+                                <div className="text-center space-y-2">
+                                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Sin Resultados</h3>
+                                    <p className="text-sm text-slate-400">No se han encontrado cuestionarios que coincidan con tu búsqueda.</p>
                                 </div>
                             </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+                                <AnimatePresence mode="popLayout">
+                                    {filteredQuizzes.map((quiz, i) => (
+                                        <motion.div
+                                            key={quiz.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            transition={{ delay: i * 0.05 }}
+                                        >
+                                            <Link
+                                                href={`/dashboard/${sectionSlug}/quizzes/${quiz.id}`}
+                                                className="group block bg-white border border-slate-100 rounded-[32px] shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all overflow-hidden"
+                                            >
+                                                <div className="p-8 space-y-5">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-blue-600/30">
+                                                            <ClipboardList size={24} />
+                                                        </div>
+                                                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-300 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all duration-300">
+                                                            <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
+                                                        </div>
+                                                    </div>
 
-                            {/* Footer status */}
-                            <div className="px-7 py-3 border-t border-slate-50 bg-slate-50/50 flex items-center justify-between">
-                                {quiz.bestAttempt ? (
-                                    <div className="flex items-center gap-2">
-                                        <Trophy size={12} className="text-amber-500" />
-                                        <span className="text-[10px] font-black text-emerald-600">
-                                            Mejor: {quiz.bestAttempt.score}/{quiz.bestAttempt.maxScore}
-                                            <span className="text-slate-400 ml-1">
-                                                ({Math.round((quiz.bestAttempt.score / quiz.bestAttempt.maxScore) * 100)}%)
-                                            </span>
-                                        </span>
-                                    </div>
-                                ) : (
-                                    <span className="flex items-center gap-1 text-[10px] font-bold text-blue-500">
-                                        <Play size={10} /> Sin intentar
-                                    </span>
-                                )}
-                                {quiz.attemptCount > 0 && (
-                                    <span className="text-[9px] font-bold text-slate-400">
-                                        {quiz.attemptCount} intento{quiz.attemptCount !== 1 ? "s" : ""}
-                                    </span>
-                                )}
+                                                    <div className="space-y-2">
+                                                        <h3 className="text-xl font-black text-slate-900 leading-tight tracking-tight uppercase group-hover:text-blue-600 transition-colors">
+                                                            {quiz.title}
+                                                        </h3>
+                                                        {quiz.description && (
+                                                            <p className="text-sm text-slate-500 line-clamp-2 font-medium">{quiz.description}</p>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center gap-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] border-t border-slate-50 pt-5">
+                                                        <span className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg">
+                                                            <ClipboardList size={12} className="text-blue-600" />
+                                                            {quiz.questionCount} preguntas
+                                                        </span>
+                                                        {quiz.timeLimitMinutes && (
+                                                            <span className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg">
+                                                                <Clock size={12} className="text-orange-500" />
+                                                                {quiz.timeLimitMinutes} min
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="px-8 py-4 bg-slate-50/50 flex items-center justify-between border-t border-slate-100">
+                                                    {quiz.bestAttempt ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <Trophy size={14} className="text-amber-500" />
+                                                            <span className="text-[11px] font-black text-emerald-600 uppercase tracking-tight">
+                                                                Récord: {quiz.bestAttempt.score}/{quiz.bestAttempt.maxScore}
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="flex items-center gap-2 text-[11px] font-black text-blue-600 uppercase tracking-tight">
+                                                            <Play size={12} fill="currentColor" /> Comenzar Ahora
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </Link>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
                             </div>
-                        </Link>
-                    </motion.div>
-                ))}
-            </div>
+                        )}
+                    </div>
+                </div>
+            </main>
+
+
         </div>
     )
 }

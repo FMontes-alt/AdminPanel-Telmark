@@ -42,7 +42,6 @@ export default function DashboardSelectionPage() {
                 }
             } catch (error) {
                 console.error("Error fetching dashboard data:", error)
-                router.push('/login')
             } finally {
                 setLoading(false)
             }
@@ -56,7 +55,7 @@ export default function DashboardSelectionPage() {
             <div className="min-h-screen bg-slate-50 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-10 h-10 border-3 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cargando unidades...</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cargando campañas...</p>
                 </div>
             </div>
         )
@@ -109,7 +108,7 @@ export default function DashboardSelectionPage() {
                             <span className="text-xs font-black text-slate-900">{profile?.firstName} {profile?.lastName}</span>
                         </div>
                         <div className="h-6 w-px bg-slate-200 hidden sm:block" />
-                        <LogoutButton variant="ghost" className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all group">
+                        <LogoutButton className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all group !w-auto !bg-transparent">
                             <LogOut className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                         </LogoutButton>
                     </div>
@@ -152,7 +151,6 @@ export default function DashboardSelectionPage() {
                                     href={`/dashboard/${section.slug}`}
                                     className="group block relative bg-white border border-slate-200 rounded-[28px] p-5 transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/60 hover:border-blue-600/20 overflow-hidden shadow-sm"
                                 >
-                                    {/* Subtle Gradient Background on Hover */}
                                     <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-transparent group-hover:from-blue-50/30 group-hover:to-white transition-all duration-500" />
                                     
                                     <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px]">
@@ -162,7 +160,7 @@ export default function DashboardSelectionPage() {
                                             </div>
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-1.5">
-                                                    <div className="w-1.2 h-1.2 rounded-full bg-emerald-500" />
+                                                    <div className="w-1 h-1 rounded-full bg-emerald-500" />
                                                     <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600/70">Operativo</span>
                                                 </div>
                                                 <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter group-hover:text-blue-600 transition-colors leading-tight line-clamp-2">
@@ -185,7 +183,6 @@ export default function DashboardSelectionPage() {
                 </div>
             </main>
 
-            {/* Compact Footer */}
             <footer className="relative z-10 max-w-6xl mx-auto px-6 py-6 border-t border-slate-200 mt-8 flex flex-col md:flex-row items-center justify-between gap-4 opacity-60">
                 <div className="flex items-center gap-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
