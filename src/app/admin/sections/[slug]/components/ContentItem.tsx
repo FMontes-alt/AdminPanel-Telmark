@@ -63,7 +63,7 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                         className={`p-1.5 transition-all ${
                             isLocked 
                                 ? "text-slate-200 cursor-not-allowed" 
-                                : "opacity-0 group-hover/item:opacity-100 text-slate-300 hover:text-red-600"
+                                : "opacity-0 group-hover/item:opacity-100 text-slate-400 hover:text-red-600"
                         }`}
                     >
                         {isLocked ? <Lock size={14} /> : <Trash2 size={14} />}
@@ -106,7 +106,7 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                                     ? "bg-slate-100/50 text-slate-300 cursor-not-allowed"
                                     : isSelected 
                                         ? 'bg-white/10 text-white/60 hover:text-white' 
-                                        : 'bg-black/5 text-slate-400 hover:text-red-600 hover:bg-red-50'
+                                        : 'bg-black/5 text-slate-500 hover:text-red-600 hover:bg-red-50'
                             }`}
                         >
                             {isLocked ? <Lock size={14} /> : <Trash2 size={14} />}
@@ -195,7 +195,7 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                             ? "text-slate-200 cursor-not-allowed"
                             : isSelected
                                 ? 'text-white/60 hover:text-white hover:bg-white/10'
-                                : `${compact ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'} text-slate-300 hover:text-red-600 hover:bg-red-50`
+                                : `${compact ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'} text-slate-400 hover:text-red-600 hover:bg-red-50`
                     }`}
                 >
                     {isLocked ? <Lock size={compact ? 12 : 14} /> : <Trash2 size={compact ? 14 : 16} />}

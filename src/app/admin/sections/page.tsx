@@ -8,7 +8,7 @@ import { getAllSectionsAction, createSection, deleteSection, updateSection } fro
 import { SECTION_TEMPLATE_OPTIONS, SectionTemplateType } from "@/lib/constants/section-templates"
 import { Layout, FileText, Video, ShieldCheck, AlertCircle } from "lucide-react"
 import { getSignedUrlAction } from "@/actions/storage"
-import { getExternalUrl } from "@/lib/utils"
+import { getExternalUrl, toSlug } from "@/lib/utils"
 
 export default function SectionsPage() {
     const [sections, setSections] = useState<any[]>([])
@@ -145,7 +145,7 @@ export default function SectionsPage() {
                                     value={newName}
                                     onChange={(e) => {
                                         setNewName(e.target.value)
-                                        setNewSlug(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''))
+                                        setNewSlug(toSlug(e.target.value))
                                     }}
                                     type="text"
                                     placeholder="Ej: ADESLAS SALUD"

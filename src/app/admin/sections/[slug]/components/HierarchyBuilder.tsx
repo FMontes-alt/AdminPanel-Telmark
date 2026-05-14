@@ -4,7 +4,7 @@ import { Plus, Trash2, FilePlus, ChevronRight, FileText, Link, Video, Type, Uplo
 import { useState, useRef } from "react"
 import { SECTION_TEMPLATES, SectionTemplateType } from "@/lib/constants/section-templates"
 import { uploadFileAction } from "@/actions/storage"
-import { cn } from "@/lib/utils"
+import { cn, toSlug } from "@/lib/utils"
 import AlertModal from "@/components/ui/AlertModal"
 
 interface HierarchyBuilderProps {
@@ -149,7 +149,7 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
                         updateItem(sub.id, item.id, { isUploading: true })
                         const uploadData = new FormData()
                         uploadData.append('file', item.file)
-                        const result = await uploadFileAction(uploadData, sectionSlug, categoryName.toLowerCase().replace(/\s+/g, '-'))
+                        const result = await uploadFileAction(uploadData, sectionSlug, toSlug(categoryName))
                         uploadedPath = result.fullPath
                         updateItem(sub.id, item.id, { isUploading: false })
                     }
@@ -334,7 +334,7 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
                                                                     <p className="text-[10px] font-black text-slate-700 truncate max-w-[120px]">{item.file.name}</p>
                                                                     <p className="text-[8px] font-bold text-slate-400 capitalize">{(item.file.size / 1024 / 1024).toFixed(2)} MB</p>
                                                                 </div>
-                                                                <button onClick={() => updateItem(sub.id, item.id, { file: null })} className="text-slate-300 hover:text-red-500">
+                                                                <button onClick={() => updateItem(sub.id, item.id, { file: null })} className="text-slate-400 hover:text-red-500 transition-colors">
                                                                     <X size={14} />
                                                                 </button>
                                                             </div>
@@ -392,8 +392,8 @@ export default function HierarchyBuilder({ sectionSlug, sectionTemplate, onSubmi
 
                                             {/* Actions */}
                                             <div className="lg:col-span-1 flex items-center justify-end">
-                                                <button onClick={() => removeItem(sub.id, item.id)} className="p-2 text-slate-200 hover:text-red-400 transition-colors">
-                                                    <X size={16} />
+                                                <button onClick={() => removeItem(sub.id, item.id)} className="p-2 text-slate-400 hover:text-red-600 transition-colors">
+                                                    <X size={18} />
                                                 </button>
                                             </div>
                                         </div>

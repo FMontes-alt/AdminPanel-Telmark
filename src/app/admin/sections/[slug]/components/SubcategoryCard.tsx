@@ -240,7 +240,7 @@ export default function SubcategoryCard({
                         className={`p-2 rounded-xl border shadow-sm transition-colors ${
                             isLocked
                                 ? "bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed"
-                                : "text-slate-400 border-slate-100 bg-white hover:text-red-600 hover:bg-red-50"
+                                : "text-slate-500 border-slate-200 bg-white hover:text-red-600 hover:bg-red-50"
                         }`}
                     >
                         {isLocked ? <Lock size={16} /> : <Trash2 size={16} />}
@@ -295,7 +295,7 @@ export default function SubcategoryCard({
                                             )}
                                         </button>
                                     )}
-                                    <button onClick={handleClose} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all" title="Cerrar">
+                                    <button onClick={handleClose} className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all" title="Cerrar">
                                         <X size={16} />
                                     </button>
                                 </div>

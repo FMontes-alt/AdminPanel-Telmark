@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { AdminPageHeader } from "@/components/ui/admin-page-header"
+import { toSlug } from "@/lib/utils"
 // Actions
 import { 
     createCategory,
@@ -71,7 +72,7 @@ export default function SectionDetailPage() {
     const handleAddSubcategory = async (categoryId: string, name: string) => {
         if (!name) return
         try {
-            const subSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+            const subSlug = toSlug(name)
             await createSubcategory({ 
                 categoryId, 
                 name, 
@@ -86,7 +87,7 @@ export default function SectionDetailPage() {
 
     const handleAddItem = async (subcategoryId: string, data: any) => {
         try {
-            const itemSlug = data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+            const itemSlug = toSlug(data.title)
             await createItem({ 
                 ...data, 
                 subcategoryId, 
