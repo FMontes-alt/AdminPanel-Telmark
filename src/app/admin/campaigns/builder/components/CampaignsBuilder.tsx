@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { CampaignWidget, WidgetType } from "@/lib/types/campaing-builder"
+import AlertModal from "@/components/ui/AlertModal"
 
 // Import modular components
 import { BuilderHeader } from "./Header/BuilderHeader"
@@ -12,6 +13,7 @@ export function CampaignsBuilder() {
     const [widgets, setWidgets] = useState<CampaignWidget[]>([])
     const [isSaving, setIsSaving] = useState(false)
     const [isPublishing, setIsPublishing] = useState(false)
+    const [showAlphaAlert, setShowAlphaAlert] = useState(true)
 
     // Cargar datos iniciales si existen
     useEffect(() => {
@@ -139,6 +141,13 @@ export function CampaignsBuilder() {
 
     return (
         <div className="flex flex-col min-h-screen bg-white overflow-hidden">
+            <AlertModal
+                isOpen={showAlphaAlert}
+                onClose={() => setShowAlphaAlert(false)}
+                title="Funcionalidad en Fase Alpha"
+                message="La sección de construcción de campañas se encuentra en una fase temprana de desarrollo (Alpha). Actualmente no es completamente funcional y los cambios que realices no tendrán efecto ni se guardarán en el sistema."
+                type="warning"
+            />
             <BuilderHeader
                 widgetsCount={widgets.length}
                 isSaving={isSaving}
