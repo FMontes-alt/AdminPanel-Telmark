@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { useParams } from "next/navigation"
 import { LayoutGrid, Info } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -21,10 +21,52 @@ export default function DashboardSectionPage() {
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
     const [isErrorModalOpen, setIsErrorModalOpen] = useState(false)
+    const hasSeenErrorRef = useRef(false)
 
     useEffect(() => {
         fetchData()
     }, [sectionSlug])
+
+    // Escucha activa de cambios (polling cada 5 segundos) para bloqueo en tiempo real
+    useEffect(() => {
+        if (!sectionSlug) return;
+        
+        const intervalId = setInterval(async () => {
+            try {
+                const currentSection = await getSectionBySlug(sectionSlug as string)
+                if (currentSection) {
+                    const newConfig = (currentSection.config as any) || {}
+                    const oldConfig = (section?.config as any) || {}
+                    
+                    // Comprobar si hay un cambio en el estado de bloqueo
+                    if (newConfig.isLocked !== oldConfig.isLocked) {
+                        if (newConfig.isLocked) {
+                            // Se acaba de bloquear -> actualizar estado para mostrar pantalla de Acceso Denegado al instante
+                            setSection(currentSection)
+                        } else {
+                            // Se acaba de desbloquear -> refrescar datos completos para mostrar la sección sin recargar
+                            fetchData()
+                        }
+                    } else {
+                        // Si se activó un error, mostramos el modal sin recargar (solo 1 vez)
+                        if (newConfig.hasError && !isErrorModalOpen && !hasSeenErrorRef.current) {
+                            setIsErrorModalOpen(true)
+                            hasSeenErrorRef.current = true
+                        }
+                        // Si se resolvió el error, quitamos el modal y reseteamos el rastreador por si vuelve a fallar
+                        else if (!newConfig.hasError) {
+                            if (isErrorModalOpen) setIsErrorModalOpen(false)
+                            hasSeenErrorRef.current = false
+                        }
+                    }
+                }
+            } catch (error) {
+                // Silencioso
+            }
+        }, 5000)
+
+        return () => clearInterval(intervalId)
+    }, [sectionSlug, section, isErrorModalOpen])
 
     const fetchData = async () => {
         setLoading(true)
@@ -42,8 +84,9 @@ export default function DashboardSectionPage() {
                 }
 
                 // Mostrar modal de error si está activo en la config
-                if (currentSection.config && (currentSection.config as any).hasError) {
+                if (currentSection.config && (currentSection.config as any).hasError && !hasSeenErrorRef.current) {
                     setIsErrorModalOpen(true)
+                    hasSeenErrorRef.current = true
                 }
             }
         } catch (error) {
@@ -98,6 +141,26 @@ export default function DashboardSectionPage() {
                     </div>
                     <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Error Crítico</h2>
                     <p className="text-slate-500 text-sm font-medium mb-8">No se ha podido localizar la unidad de negocio solicitada o no tienes permisos de acceso.</p>
+                    <button 
+                        onClick={() => window.location.href = '/dashboard'}
+                        className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-800 transition-colors"
+                    >
+                        Volver a Campañas
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    if (section.config && (section.config as any).isLocked) {
+        return (
+            <div className="h-screen bg-slate-50 flex items-center justify-center p-8">
+                <div className="bg-white p-12 rounded-[48px] shadow-2xl border border-slate-100 text-center max-w-sm">
+                    <div className="w-20 h-20 bg-red-50 text-red-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                        <Info size={40} />
+                    </div>
+                    <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Acceso Denegado</h2>
+                    <p className="text-slate-500 text-sm font-medium mb-8">Esta sección se encuentra bloqueada por completo. No tienes permiso para acceder en este momento.</p>
                     <button 
                         onClick={() => window.location.href = '/dashboard'}
                         className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-800 transition-colors"
@@ -203,8 +266,8 @@ export default function DashboardSectionPage() {
             <AlertModal 
                 isOpen={isErrorModalOpen}
                 onClose={() => setIsErrorModalOpen(false)}
-                title="Sección en Mantenimiento"
-                message="Lo sentimos, esta sección se encuentra temporalmente fuera de servicio por tareas de mantenimiento o actualización. Por favor, inténtelo de nuevo más tarde."
+                title="Aviso de Error"
+                message="Existen una serie de errores en la configuración o recursos de esta sección. Es posible que algunas funcionalidades no operen correctamente."
                 type="warning"
             />
             

@@ -48,6 +48,13 @@ export default function DashboardSelectionPage() {
         }
 
         fetchData()
+
+        // Polling silencioso cada 10 segundos para actualizar los estados de bloqueo/error en tiempo real
+        const intervalId = setInterval(() => {
+            fetchData()
+        }, 10000)
+
+        return () => clearInterval(intervalId)
     }, [router])
 
     if (loading) {
@@ -139,7 +146,29 @@ export default function DashboardSelectionPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
                     <AnimatePresence>
-                        {sections.map((section, index) => (
+                        {sections.map((section, index) => {
+                            const config = section.config || {}
+                            const isLocked = config.isLocked === true
+                            const hasError = config.hasError === true
+
+                            let statusText = "Operativo"
+                            let statusDot = "bg-emerald-500"
+                            let statusTextClass = "text-emerald-600/70"
+
+                            if (isLocked) {
+                                statusText = "Bloqueado"
+                                statusDot = "bg-red-500"
+                                statusTextClass = "text-red-600/70"
+                            } else if (hasError) {
+                                statusText = "Con Errores"
+                                statusDot = "bg-amber-500"
+                                statusTextClass = "text-amber-600/70"
+                            }
+
+                            const CardWrapper = (isLocked ? "div" : Link) as any
+                            const cardProps = isLocked ? {} : { href: `/dashboard/${section.slug}` }
+
+                            return (
                             <motion.div
                                 key={section.id}
                                 initial={{ opacity: 0, y: 15 }}
@@ -147,23 +176,15 @@ export default function DashboardSelectionPage() {
                                 transition={{ delay: index * 0.05 }}
                                 whileHover={{ y: -4 }}
                             >
-                                <Link 
-                                    href={`/dashboard/${section.slug}`}
-                                    className="group block relative bg-white border border-slate-200 rounded-[28px] p-5 transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/60 hover:border-blue-600/20 overflow-hidden shadow-sm"
+                                <CardWrapper 
+                                    {...cardProps}
+                                    className={`group block relative bg-white border border-slate-200 rounded-[28px] p-5 transition-all duration-300 overflow-hidden shadow-sm ${
+                                        isLocked 
+                                        ? 'opacity-75 cursor-not-allowed grayscale-[0.5]' 
+                                        : 'hover:shadow-lg hover:shadow-slate-200/60 hover:border-blue-600/20 cursor-pointer'
+                                    }`}
                                 >
-                                    {/* Cabecera de Imagen (Background Header) */}
-                                    {section.imageUrl && (
-                                        <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden rounded-[28px]">
-                                            <img 
-                                                src={section.imageUrl} 
-                                                alt={section.name} 
-                                                className="block absolute inset-0 w-full h-full object-cover object-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700 transform-gpu origin-center" 
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent z-10" />
-                                        </div>
-                                    )}
-
-                                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-transparent group-hover:from-blue-50/10 group-hover:to-white/50 transition-all duration-500 z-0 pointer-events-none" />
+                                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-transparent group-hover:from-blue-50/10 group-hover:to-white/50 transition-all duration-500 z-0" />
                                     
                                     <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px]">
                                         <div className="space-y-4">
@@ -171,14 +192,14 @@ export default function DashboardSelectionPage() {
                                             {section.imageUrl ? (
                                                 <div className="h-10 w-full" /> 
                                             ) : (
-                                                <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-lg group-hover:shadow-blue-600/20 transition-all duration-300">
+                                                <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
                                                     <LayoutDashboard size={20} />
                                                 </div>
                                             )}
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-1.5">
-                                                    <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                                                    <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600/70">Operativo</span>
+                                                    <div className={`w-1 h-1 rounded-full ${statusDot}`} />
+                                                    <span className={`text-[8px] font-black uppercase tracking-widest ${statusTextClass}`}>{statusText}</span>
                                                 </div>
                                                 <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter group-hover:text-blue-600 transition-colors leading-tight line-clamp-2">
                                                     {section.name}
@@ -187,15 +208,32 @@ export default function DashboardSelectionPage() {
                                         </div>
 
                                         <div className="pt-3 border-t border-slate-50 flex items-center justify-between group-hover:border-blue-100 transition-colors">
-                                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-blue-600 transition-colors">Entrar</span>
-                                            <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-blue-600 group-hover:text-white transition-all group-hover:translate-x-1">
-                                                <ChevronRight size={12} />
-                                            </div>
+                                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-blue-600 transition-colors">
+                                                {isLocked ? 'Acceso Denegado' : 'Entrar'}
+                                            </span>
+                                            {!isLocked && (
+                                                <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-blue-600 group-hover:text-white transition-all group-hover:translate-x-1">
+                                                    <ChevronRight size={12} />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                </Link>
+                                    {/* Background Header Image - Placed last so it's beneath everything via z-index but renders properly */}
+                                    {section.imageUrl && (
+                                        <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden rounded-[28px]">
+                                            <img 
+                                                src={section.imageUrl} 
+                                                alt={section.name} 
+                                                className={`block absolute inset-0 w-full h-full object-cover object-center transition-all duration-700 transform-gpu origin-center ${
+                                                    isLocked ? 'opacity-30' : 'opacity-50 group-hover:opacity-70 group-hover:scale-105'
+                                                }`} 
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent z-10" />
+                                        </div>
+                                    )}
+                                </CardWrapper>
                             </motion.div>
-                        ))}
+                        )})}
                     </AnimatePresence>
                 </div>
             </main>
