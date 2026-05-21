@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createSection, getSectionById, deleteSection } from './sections'
+import { createSection, getSectionById, deleteSection } from '@/actions/sections'
 import { db } from '@/db'
 import { requireAdmin } from '@/lib/auth-guard'
 import { AlertService } from '@/services/alerts/alert-services'

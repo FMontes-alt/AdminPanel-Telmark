@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getRole } from './auth'
+import { getRole } from '@/middlewares/auth'
 import { createClient } from '@supabase/supabase-js'
 
 // Mocks
