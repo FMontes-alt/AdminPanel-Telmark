@@ -1,6 +1,6 @@
 "use client"
 
-import { Download, Link as LinkIcon, FileText, Info, Trash2, Video, Lock, Maximize2 } from "lucide-react"
+import { Link as LinkIcon, FileText, Info, Trash2, Video, Lock, Maximize2 } from "lucide-react"
 
 interface ContentItemProps {
     item: any
@@ -30,7 +30,7 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
             >
                 <div className="col-span-5 flex items-center gap-3 min-w-0">
                     <div className={`p-1.5 rounded-lg shrink-0 ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                        {item.contentType === 'file' && <Download size={14} />}
+                        {item.contentType === 'file' && <FileText size={14} />}
                         {item.contentType === 'link' && <LinkIcon size={14} />}
                         {item.contentType === 'document' && <FileText size={14} />}
                         {item.contentType === 'video' && <Video size={14} />}
@@ -140,7 +140,7 @@ export default function ContentItem({ item, onDelete, onSelect, isSelected, layo
                         <img src={itemImage} alt="" className="w-full h-full object-cover" />
                     ) : (
                         <>
-                            {item.contentType === 'file' && <Download size={compact ? 12 : 16} />}
+                            {item.contentType === 'file' && <FileText size={compact ? 12 : 16} />}
                             {item.contentType === 'link' && <LinkIcon size={compact ? 12 : 16} />}
                             {item.contentType === 'document' && <FileText size={compact ? 12 : 16} />}
                             {item.contentType === 'video' && <Video size={compact ? 12 : 16} />}

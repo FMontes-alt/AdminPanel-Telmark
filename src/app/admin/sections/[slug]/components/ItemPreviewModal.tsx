@@ -1,6 +1,6 @@
 "use client"
 
-import { X, Download, ExternalLink, ChevronLeft, ChevronRight, Maximize2, Minimize2, FileText } from "lucide-react"
+import { X, ExternalLink, ChevronLeft, ChevronRight, Maximize2, Minimize2, FileText } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useEffect, useState } from "react"
 
@@ -61,7 +61,7 @@ export default function ItemPreviewModal({
             return <img src={previewUrl} alt={item.title} className="w-full h-full object-contain" />
         }
         if (item.filePath && isPdf(item.filePath)) {
-            return <iframe src={`${previewUrl}#toolbar=1`} className="w-full h-full border-0" title={item.title} />
+            return <iframe src={`${previewUrl}#toolbar=0`} className="w-full h-full border-0" title={item.title} />
         }
         if (item.contentType === 'video' || item.contentType === 'link') {
             return <iframe src={previewUrl} className="w-full h-full border-0" title={item.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
@@ -80,19 +80,12 @@ export default function ItemPreviewModal({
         return (
             <div className="flex flex-col items-center justify-center h-full text-center gap-6">
                 <div className="p-6 bg-slate-50 rounded-full text-slate-300">
-                    <Download size={48} />
+                    <FileText size={48} />
                 </div>
                 <div className="space-y-2">
                     <h3 className="text-xl font-bold text-slate-800">Vista previa no disponible</h3>
                     <p className="text-sm text-slate-500">Este tipo de archivo no puede visualizarse directamente en el navegador.</p>
                 </div>
-                <button 
-                    onClick={onDownload}
-                    className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 flex items-center gap-2"
-                >
-                    <Download size={18} />
-                    Descargar Archivo
-                </button>
             </div>
         )
     }
@@ -130,13 +123,13 @@ export default function ItemPreviewModal({
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-4">
-                        {onDownload && (
+                        {onDownload && (item?.contentType === 'link' || (item?.contentType === 'video' && item?.externalLink)) && (
                             <button 
                                 onClick={onDownload}
                                 className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                                title="Descargar"
+                                title="Abrir enlace externo"
                             >
-                                <Download size={20} />
+                                <ExternalLink size={20} />
                             </button>
                         )}
                         <button 
@@ -188,8 +181,8 @@ export default function ItemPreviewModal({
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate max-w-[70%]">
                         {item.filePath?.split('/').pop() || item.externalLink}
                     </p>
-                    {onDownload && (
-                        <button onClick={onDownload} className="text-[10px] font-black text-blue-600 uppercase">Descargar</button>
+                    {onDownload && (item?.contentType === 'link' || (item?.contentType === 'video' && item?.externalLink)) && (
+                        <button onClick={onDownload} className="text-[10px] font-black text-blue-600 uppercase">Abrir</button>
                     )}
                 </div>
             </motion.div>

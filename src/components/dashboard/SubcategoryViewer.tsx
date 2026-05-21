@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import {
-    Download,
     Link as LinkIcon,
     FileText,
     Video,
@@ -25,7 +24,7 @@ export function SubcategoryViewer({ sub }: SubcategoryViewerProps) {
 
     const getContentIcon = (contentType: string) => {
         switch (contentType) {
-            case 'file': return <Download size={20} />
+            case 'file': return <FileText size={20} />
             case 'link': return <LinkIcon size={20} />
             case 'document': return <FileText size={20} />
             case 'video': return <Video size={20} />
@@ -36,7 +35,7 @@ export function SubcategoryViewer({ sub }: SubcategoryViewerProps) {
 
     const getSmallIcon = (contentType: string) => {
         switch (contentType) {
-            case 'file': return <Download size={16} />
+            case 'file': return <FileText size={16} />
             case 'link': return <LinkIcon size={16} />
             case 'document': return <FileText size={16} />
             case 'video': return <Video size={16} />
@@ -177,7 +176,7 @@ export function SubcategoryViewer({ sub }: SubcategoryViewerProps) {
         }
 
         if (item.filePath && isPdf(item.filePath)) {
-            return <iframe src={previewUrl} className="w-full h-full rounded-2xl border-0 bg-white" title={item.title} />
+            return <iframe src={`${previewUrl}#toolbar=0`} className="w-full h-full rounded-2xl border-0 bg-white" title={item.title} />
         }
 
         if (item.contentType === 'video' || item.contentType === 'link') {
@@ -205,18 +204,12 @@ export function SubcategoryViewer({ sub }: SubcategoryViewerProps) {
             <div className="flex items-center justify-center h-full text-center p-12">
                 <div className="space-y-6">
                     <div className="w-20 h-20 bg-slate-100 rounded-[32px] flex items-center justify-center mx-auto text-slate-300">
-                        <Download size={40} />
+                        <FileText size={40} />
                     </div>
                     <div className="space-y-2">
                         <h4 className="text-lg font-black text-slate-900 uppercase tracking-tight">Vista previa no disponible</h4>
-                        <p className="text-xs text-slate-400 font-medium max-w-[200px] mx-auto leading-relaxed">Este tipo de archivo requiere ser descargado para su visualización.</p>
+                        <p className="text-xs text-slate-400 font-medium max-w-[200px] mx-auto leading-relaxed">Este tipo de archivo no puede visualizarse directamente en el panel.</p>
                     </div>
-                    <button 
-                        onClick={handleDownload} 
-                        className="px-6 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95"
-                    >
-                        Descargar archivo
-                    </button>
                 </div>
             </div>
         )
@@ -261,17 +254,13 @@ export function SubcategoryViewer({ sub }: SubcategoryViewerProps) {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 flex-shrink-0">
-                                    {previewUrl && (
+                                    {previewUrl && (selectedItem?.contentType === 'link' || (selectedItem?.contentType === 'video' && selectedItem?.externalLink)) && (
                                         <button
                                             onClick={handleDownload}
                                             className="w-10 h-10 rounded-2xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center group"
-                                            title={selectedItem?.contentType === 'link' || (selectedItem?.contentType === 'video' && selectedItem?.externalLink) ? "Abrir enlace externo" : "Descargar"}
+                                            title="Abrir enlace externo"
                                         >
-                                            {selectedItem?.contentType === 'link' || (selectedItem?.contentType === 'video' && selectedItem?.externalLink) ? (
-                                                <ExternalLink size={20} className="group-hover:scale-110 transition-transform" />
-                                            ) : (
-                                                <Download size={20} className="group-hover:scale-110 transition-transform" />
-                                            )}
+                                            <ExternalLink size={20} className="group-hover:scale-110 transition-transform" />
                                         </button>
                                     )}
                                     <div className="w-px h-6 bg-slate-100 mx-1" />

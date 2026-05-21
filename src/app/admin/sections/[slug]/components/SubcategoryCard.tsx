@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { FilePlus, Trash2, Download, X, FileText, Link as LinkIcon, Info, Video, Table as TableIcon, LayoutGrid, List, ExternalLink, Lock, Maximize2 } from "lucide-react"
+import { FilePlus, Trash2, X, FileText, Link as LinkIcon, Info, Video, Table as TableIcon, LayoutGrid, List, ExternalLink, Lock, Maximize2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toSlug } from "@/lib/utils"
 import ItemForm from "./ItemForm"
@@ -155,7 +155,7 @@ export default function SubcategoryCard({
 
     const getSmallIcon = (contentType: string) => {
         switch (contentType) {
-            case 'file': return <Download size={14} />
+            case 'file': return <FileText size={14} />
             case 'link': return <LinkIcon size={14} />
             case 'document': return <FileText size={14} />
             case 'video': return <Video size={14} />
@@ -186,7 +186,7 @@ export default function SubcategoryCard({
             return <img src={previewUrl} alt={item.title} className="w-full h-full object-contain rounded-xl" />
         }
         if (item.filePath && isPdf(item.filePath)) {
-            return <iframe src={previewUrl} className="w-full h-full min-h-[600px] lg:min-h-[700px] rounded-xl border-0" title={item.title} />
+            return <iframe src={`${previewUrl}#toolbar=0`} className="w-full h-full min-h-[600px] lg:min-h-[700px] rounded-xl border-0" title={item.title} />
         }
         if (item.contentType === 'video' || item.contentType === 'link') {
             return <iframe src={previewUrl} className="w-full h-full min-h-[600px] lg:min-h-[700px] rounded-xl border-0" title={item.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
@@ -206,9 +206,8 @@ export default function SubcategoryCard({
         return (
             <div className="flex items-center justify-center h-full text-center">
                 <div className="space-y-2">
-                    <Download size={24} className="mx-auto text-slate-300" />
+                    <FileText size={24} className="mx-auto text-slate-300" />
                     <p className="text-xs text-slate-500 font-bold">Vista previa no disponible</p>
-                    <button onClick={handleDownload} className="text-[10px] text-blue-600 font-bold uppercase underline">Descargar</button>
                 </div>
             </div>
         )
@@ -307,17 +306,13 @@ export default function SubcategoryCard({
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    {previewUrl && (
+                                    {previewUrl && (selectedItem?.contentType === 'link' || (selectedItem?.contentType === 'video' && selectedItem?.externalLink)) && (
                                         <button 
                                             onClick={handleDownload} 
                                             className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" 
-                                            title="Descargar/Abrir"
+                                            title="Abrir enlace externo"
                                         >
-                                            {selectedItem?.contentType === 'link' || (selectedItem?.contentType === 'video' && selectedItem?.externalLink) ? (
-                                                <ExternalLink size={18} />
-                                            ) : (
-                                                <Download size={18} />
-                                            )}
+                                            <ExternalLink size={18} />
                                         </button>
                                     )}
                                     <button 

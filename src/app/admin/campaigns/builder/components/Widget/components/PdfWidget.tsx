@@ -1,7 +1,7 @@
 "use client"
 
 import { CampaignWidget } from "@/lib/types/campaing-builder";
-import { FileText, Download, Eye } from "lucide-react";
+import { FileText, Eye } from "lucide-react";
 
 interface PdfWidgetProps {
     widget: CampaignWidget;
@@ -31,8 +31,6 @@ export function PdfWidget({ widget, onUpdate, isLocked }: PdfWidgetProps) {
 
             <div className="flex items-center justify-center gap-2 mt-1">
                 <button className="text-[8px] font-black text-blue-600 uppercase tracking-widest">VER</button>
-                <div className="w-[1px] h-2 bg-slate-200" />
-                <button className="text-[8px] font-black text-slate-400 uppercase tracking-widest">BAJAR</button>
             </div>
         </div>
     );
