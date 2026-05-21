@@ -69,11 +69,11 @@ describe('Sections Actions', () => {
 
         it('debe borrar la sección y notificar', async () => {
             // @ts-ignore
-            db.limit.mockResolvedValueOnce([{ id: 'sec-2', name: 'To Delete' }]) // getSectionById
+            db.where.mockReturnValueOnce(db) // 1st query chains
             // @ts-ignore
-            db.innerJoin.mockReturnThis() // from(items).innerJoin...
+            db.limit.mockResolvedValueOnce([{ id: 'sec-2', name: 'To Delete' }]) // 1st query resolves
             // @ts-ignore
-            db.where.mockResolvedValueOnce([]) // allItems = []
+            db.where.mockResolvedValueOnce([]) // 2nd query resolves to []
             
             const result = await deleteSection('sec-2')
             
