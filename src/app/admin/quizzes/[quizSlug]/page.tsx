@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
-import { getQuizById, updateQuiz, publishQuiz } from "@/actions/quizzes"
+import { getQuizWithDetailsBySlug, getQuizzes, updateQuiz, publishQuiz } from "@/actions/quizzes"
 import { deleteQuestion } from "@/actions/quiz-questions"
 import { getAllSectionsAction } from "@/actions/sections"
 
@@ -14,10 +14,11 @@ import DeleteConfirmModal from "@/components/ui/DeleteConfirmModal"
 import { AdminPageHeader } from "@/components/ui/admin-page-header"
 
 export default function QuizEditorPage() {
-    const { quizId } = useParams()
+    const { quizSlug } = useParams()
     const router = useRouter()
     const [quiz, setQuiz] = useState<any>(null)
     const [sections, setSections] = useState<any[]>([])
+    const [quizzes, setQuizzes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
 
@@ -27,6 +28,8 @@ export default function QuizEditorPage() {
     const [editDescription, setEditDescription] = useState("")
     const [editTimeLimit, setEditTimeLimit] = useState("")
     const [editRandomize, setEditRandomize] = useState(false)
+    const [editPassingScore, setEditPassingScore] = useState(80)
+    const [editRequiredQuizId, setEditRequiredQuizId] = useState("")
 
     // Editor state
     const [showNewQuestion, setShowNewQuestion] = useState(false)
@@ -37,9 +40,10 @@ export default function QuizEditorPage() {
 
     const fetchQuiz = useCallback(async () => {
         setLoading(true)
-        const [quizData, sectionsList] = await Promise.all([
-            getQuizById(quizId as string),
-            getAllSectionsAction()
+        const [quizData, sectionsList, quizzesList] = await Promise.all([
+            getQuizWithDetailsBySlug(quizSlug as string),
+            getAllSectionsAction(),
+            getQuizzes()
         ])
         
         if (quizData) {
@@ -49,31 +53,45 @@ export default function QuizEditorPage() {
             setEditDescription(quizData.description || "")
             setEditTimeLimit(quizData.timeLimitMinutes?.toString() || "")
             setEditRandomize(quizData.randomizeQuestions)
+            setEditPassingScore(quizData.passingScore)
+            setEditRequiredQuizId(quizData.requiredQuizId || "")
         }
         if (sectionsList) setSections(sectionsList)
+        if (quizzesList) setQuizzes(quizzesList)
         setLoading(false)
-    }, [quizId])
+    }, [quizSlug])
 
     useEffect(() => {
         fetchQuiz()
     }, [fetchQuiz])
 
     const handleSaveSettings = async () => {
+        if (!quiz) return
         setSaving(true)
-        await updateQuiz(quizId as string, {
+        const res = await updateQuiz(quiz.id, {
             title: editTitle,
             sectionId: editSectionId,
             description: editDescription || undefined,
             timeLimitMinutes: editTimeLimit ? parseInt(editTimeLimit) : null,
             randomizeQuestions: editRandomize,
+            passingScore: editPassingScore,
+            requiredQuizId: editRequiredQuizId || null,
         })
-        await fetchQuiz()
+        if (res?.success && res.data) {
+            if (res.data.slug !== quizSlug) {
+                router.push(`/admin/quizzes/${res.data.slug}`)
+            } else {
+                await fetchQuiz()
+            }
+        } else {
+            await fetchQuiz()
+        }
         setSaving(false)
     }
 
     const handleTogglePublish = async () => {
         if (!quiz) return
-        await publishQuiz(quizId as string, !quiz.isPublished)
+        await publishQuiz(quiz.id, !quiz.isPublished)
         await fetchQuiz()
     }
 
@@ -118,13 +136,15 @@ export default function QuizEditorPage() {
                 editDescription={editDescription} setEditDescription={setEditDescription}
                 editTimeLimit={editTimeLimit} setEditTimeLimit={setEditTimeLimit}
                 editRandomize={editRandomize} setEditRandomize={setEditRandomize}
-                sections={sections} quiz={quiz} saving={saving}
+                editPassingScore={editPassingScore} setEditPassingScore={setEditPassingScore}
+                editRequiredQuizId={editRequiredQuizId} setEditRequiredQuizId={setEditRequiredQuizId}
+                sections={sections} quizzes={quizzes} quiz={quiz} saving={saving}
                 onSaveSettings={handleSaveSettings} onTogglePublish={handleTogglePublish}
-                onPreview={() => router.push(`/admin/quizzes/${quizId}/preview`)}
+                onPreview={() => router.push(`/admin/quizzes/${quiz.slug}/preview`)}
             />
 
             <QuestionList 
-                quiz={quiz} quizId={quizId as string}
+                quiz={quiz} quizId={quiz.id}
                 showNewQuestion={showNewQuestion} setShowNewQuestion={setShowNewQuestion}
                 editingQuestionId={editingQuestionId} setEditingQuestionId={setEditingQuestionId}
                 fetchQuiz={fetchQuiz}

@@ -11,13 +11,11 @@ import {
     CheckCircle2
 } from "lucide-react"
 import { getQuizzes } from "@/actions/quizzes"
-import { getPendingReviewsCount } from "@/actions/quiz-attempts"
 import { AdminPageHeader } from "@/components/ui/admin-page-header"
 
 export default function MonitoringPage() {
     const router = useRouter()
     const [quizzes, setQuizzes] = useState<any[]>([])
-    const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({})
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -29,13 +27,6 @@ export default function MonitoringPage() {
         try {
             const q = await getQuizzes()
             setQuizzes(q || [])
-
-            // Fetch pending reviews count for each quiz
-            const counts: Record<string, number> = {}
-            for (const quiz of q) {
-                counts[quiz.id] = await getPendingReviewsCount(quiz.id)
-            }
-            setPendingCounts(counts)
         } catch (error) {
             console.error("Error:", error)
         } finally {
@@ -86,7 +77,6 @@ export default function MonitoringPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {quizzes.map((quiz: any) => {
-                            const pendingStr = pendingCounts[quiz.id] || 0;
                             return (
                                 <motion.div
                                     key={quiz.id}
@@ -103,13 +93,6 @@ export default function MonitoringPage() {
                                             }`}>
                                                 {quiz.isPublished ? "Activo" : "Borrador"}
                                             </span>
-                                            
-                                            {pendingStr > 0 && (
-                                                <span className="flex items-center gap-1 text-[9px] font-bold bg-red-100 text-red-600 px-3 py-1 rounded-full animate-pulse">
-                                                    <CheckCircle2 size={10} />
-                                                    {pendingStr} Pendientes
-                                                </span>
-                                            )}
                                         </div>
                                         <h3 className="text-lg font-black text-slate-900 leading-tight tracking-tight">
                                             {quiz.title}
@@ -136,7 +119,7 @@ export default function MonitoringPage() {
                                     {/* Card Footer / Action */}
                                     <div className="px-4 py-4 border-t border-slate-50 bg-slate-50/50">
                                         <button
-                                            onClick={() => router.push(`/admin/quizzes/${quiz.id}/results`)}
+                                            onClick={() => router.push(`/admin/quizzes/${quiz.slug}/results`)}
                                             className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-500/20"
                                         >
                                             <BarChart3 size={14} />

@@ -6,6 +6,7 @@ import { LayoutGrid, Info } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { getSectionBySlug } from "@/actions/sections"
 import { getFilteredHierarchy } from "@/actions/hierarchy"
+import { getPublishedQuizzes } from "@/actions/quizzes"
 import AlertModal from "@/components/ui/AlertModal"
 
 // Nuevos Componentes Refactorizados
@@ -17,6 +18,7 @@ export default function DashboardSectionPage() {
     const { sectionSlug } = useParams()
     const [section, setSection] = useState<any>(null)
     const [categories, setCategories] = useState<any[]>([])
+    const [quizCount, setQuizCount] = useState(0)
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
@@ -82,6 +84,10 @@ export default function DashboardSectionPage() {
                 if (catsWithSubs.length > 0) {
                     setSelectedCategoryId(catsWithSubs[0].id)
                 }
+
+                // Cargar el conteo de cuestionarios publicados
+                const published = await getPublishedQuizzes(currentSection.id)
+                setQuizCount(published.length)
 
                 // Mostrar modal de error si está activo en la config
                 if (currentSection.config && (currentSection.config as any).hasError && !hasSeenErrorRef.current) {
@@ -180,6 +186,8 @@ export default function DashboardSectionPage() {
                 categories={filteredCategories}
                 selectedCategoryId={selectedCategoryId}
                 onSelectCategory={setSelectedCategoryId}
+                quizCount={quizCount}
+                sectionSlug={sectionSlug as string}
             />
 
             {/* Área de Contenido Principal */}

@@ -150,6 +150,9 @@ export const quizzes = pgTable("quizzes", {
     isPublished: boolean("is_published").default(false).notNull(),
     timeLimitMinutes: integer("time_limit_minutes"), // null = sin límite
     randomizeQuestions: boolean("randomize_questions").default(false).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    passingScore: integer("passing_score").default(80).notNull(),
+    requiredQuizId: uuid("required_quiz_id").references((): any => quizzes.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [

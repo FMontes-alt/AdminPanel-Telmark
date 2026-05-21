@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { getQuizById } from "@/actions/quizzes"
+import { getQuizWithDetailsBySlug } from "@/actions/quizzes"
 import { startAttempt, submitAnswer, completeAttempt, getAttemptResults } from "@/actions/quiz-attempts"
 import { createClient } from "@/lib/supabase/client"
 
@@ -23,7 +23,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export default function QuizTakePage() {
-    const { sectionSlug, quizId } = useParams()
+    const { sectionSlug, quizSlug } = useParams()
     const router = useRouter()
 
     const [phase, setPhase] = useState<Phase>("intro")
@@ -34,7 +34,7 @@ export default function QuizTakePage() {
 
     const [attemptId, setAttemptId] = useState<string | null>(null)
     const [currentIndex, setCurrentIndex] = useState(0)
-    const [answers, setAnswers] = useState<Record<string, { selectedOptions: string[]; textAnswer: string }>>({})
+    const [answers, setAnswers] = useState<Record<string, { selectedOptions: string[] }>>({})
 
     const [timeLeft, setTimeLeft] = useState<number | null>(null)
     const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -48,14 +48,14 @@ export default function QuizTakePage() {
             const { data: { user } } = await supabase.auth.getUser()
             if (user) setUserId(user.id)
 
-            const data = await getQuizById(quizId as string)
+            const data = await getQuizWithDetailsBySlug(quizSlug as string)
             if (data) {
                 setQuiz(data)
                 let qs = data.questions || []
                 if (data.randomizeQuestions) {
                     qs = shuffleArray(qs).map((q: any) => ({
                         ...q,
-                        options: q.type !== "short_answer" ? shuffleArray(q.options || []) : q.options,
+                        options: shuffleArray(q.options || []),
                     }))
                 }
                 setQuestions(qs)
@@ -63,7 +63,7 @@ export default function QuizTakePage() {
             setLoading(false)
         }
         init()
-    }, [quizId])
+    }, [quizSlug])
 
     useEffect(() => {
         if (phase !== "quiz" || timeLeft === null) return
@@ -76,8 +76,8 @@ export default function QuizTakePage() {
     }, [phase, timeLeft])
 
     const handleStart = async () => {
-        if (!userId) return
-        const result = await startAttempt(quizId as string, userId)
+        if (!userId || !quiz) return
+        const result = await startAttempt(quiz.id, userId)
         if (result?.success && result.data) {
             setAttemptId(result.data.id)
             setPhase("quiz")
@@ -89,26 +89,20 @@ export default function QuizTakePage() {
 
     const handleSelectOption = (optionId: string) => {
         if (!currentQuestion) return
-        const existing = answers[currentQuestion.id] || { selectedOptions: [], textAnswer: "" }
+        const existing = answers[currentQuestion.id] || { selectedOptions: [] }
         if (currentQuestion.type === "single_choice" || currentQuestion.type === "true_false") {
-            setAnswers({ ...answers, [currentQuestion.id]: { ...existing, selectedOptions: [optionId] } })
+            setAnswers({ ...answers, [currentQuestion.id]: { selectedOptions: [optionId] } })
         } else if (currentQuestion.type === "multiple_choice") {
             const selected = existing.selectedOptions || []
             if (selected.includes(optionId)) {
-                setAnswers({ ...answers, [currentQuestion.id]: { ...existing, selectedOptions: selected.filter(id => id !== optionId) } })
+                setAnswers({ ...answers, [currentQuestion.id]: { selectedOptions: selected.filter(id => id !== optionId) } })
             } else {
                 const maxSel = currentQuestion.maxSelections || 999
                 if (selected.length < maxSel) {
-                    setAnswers({ ...answers, [currentQuestion.id]: { ...existing, selectedOptions: [...selected, optionId] } })
+                    setAnswers({ ...answers, [currentQuestion.id]: { selectedOptions: [...selected, optionId] } })
                 }
             }
         }
-    }
-
-    const handleTextAnswer = (text: string) => {
-        if (!currentQuestion) return
-        const existing = answers[currentQuestion.id] || { selectedOptions: [], textAnswer: "" }
-        setAnswers({ ...answers, [currentQuestion.id]: { ...existing, textAnswer: text } })
     }
 
     const isOptionDisabled = (optionId: string) => {
@@ -124,7 +118,7 @@ export default function QuizTakePage() {
             if (answer) {
                 await submitAnswer({
                     attemptId, questionId: currentQuestion.id,
-                    selectedOptions: answer.selectedOptions, textAnswer: answer.textAnswer || undefined,
+                    selectedOptions: answer.selectedOptions,
                 })
             }
         }
@@ -141,7 +135,7 @@ export default function QuizTakePage() {
             if (answer) {
                 await submitAnswer({
                     attemptId, questionId: currentQuestion.id,
-                    selectedOptions: answer.selectedOptions, textAnswer: answer.textAnswer || undefined,
+                    selectedOptions: answer.selectedOptions,
                 })
             }
         }
@@ -151,6 +145,12 @@ export default function QuizTakePage() {
         setPhase("results")
         setSubmitting(false)
         if (timerRef.current) clearTimeout(timerRef.current)
+    }
+
+    const handleCancel = () => {
+        if (window.confirm("¿Estás seguro de que deseas cancelar el intento? Tu progreso no se guardará.")) {
+            router.push(`/dashboard/${sectionSlug}/quizzes`)
+        }
     }
 
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
@@ -190,12 +190,11 @@ export default function QuizTakePage() {
             onNext={handleNext}
             onFinish={handleFinish}
             onSelectOption={handleSelectOption}
-            onTextAnswer={handleTextAnswer}
             isOptionDisabled={isOptionDisabled}
             selectedOptions={answers[currentQuestion?.id]?.selectedOptions || []}
-            textAnswer={answers[currentQuestion?.id]?.textAnswer || ""}
             submitting={submitting}
             isLastQuestion={currentIndex === questions.length - 1}
+            onCancel={handleCancel}
         />
     )
 }

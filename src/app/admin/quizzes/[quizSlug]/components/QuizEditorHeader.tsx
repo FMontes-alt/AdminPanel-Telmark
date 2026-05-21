@@ -13,7 +13,12 @@ interface QuizEditorHeaderProps {
     setEditTimeLimit: (v: string) => void
     editRandomize: boolean
     setEditRandomize: (v: boolean) => void
+    editPassingScore: number
+    setEditPassingScore: (v: number) => void
+    editRequiredQuizId: string
+    setEditRequiredQuizId: (v: string) => void
     sections: any[]
+    quizzes: any[]
     quiz: any
     saving: boolean
     onSaveSettings: () => void
@@ -27,7 +32,9 @@ export default function QuizEditorHeader({
     editDescription, setEditDescription,
     editTimeLimit, setEditTimeLimit,
     editRandomize, setEditRandomize,
-    sections, quiz, saving,
+    editPassingScore, setEditPassingScore,
+    editRequiredQuizId, setEditRequiredQuizId,
+    sections, quizzes, quiz, saving,
     onSaveSettings, onTogglePublish, onPreview
 }: QuizEditorHeaderProps) {
     return (
@@ -91,6 +98,35 @@ export default function QuizEditorHeader({
                         placeholder="Opcional..."
                         className="w-full bg-slate-50 rounded-2xl py-3 px-5 text-sm font-medium text-slate-700 outline-none border border-transparent focus:border-blue-200 focus:bg-white transition-all"
                     />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Puntuación de Aprobación (%)</label>
+                        <input
+                            value={editPassingScore}
+                            onChange={(e) => setEditPassingScore(parseInt(e.target.value) || 0)}
+                            type="number"
+                            min="0"
+                            max="100"
+                            className="w-full bg-slate-50 rounded-2xl py-3 px-5 text-sm font-bold text-slate-700 outline-none border border-transparent focus:border-blue-200 focus:bg-white transition-all"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Cuestionario Previo Requerido</label>
+                        <select
+                            value={editRequiredQuizId}
+                            onChange={(e) => setEditRequiredQuizId(e.target.value)}
+                            className="w-full bg-slate-50 rounded-2xl py-3 px-5 text-sm font-bold text-slate-700 outline-none border border-transparent focus:border-blue-200 focus:bg-white transition-all shadow-sm"
+                        >
+                            <option value="">Ninguno (Disponible de inmediato)</option>
+                            {quizzes
+                                .filter((q) => q.sectionId === editSectionId && q.id !== quiz.id)
+                                .map((q) => (
+                                    <option key={q.id} value={q.id}>{q.title}</option>
+                                ))}
+                        </select>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

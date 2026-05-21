@@ -1,52 +1,46 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import { useParams } from "next/navigation"
+import { AnimatePresence } from "framer-motion"
 import {
     ArrowLeft,
     Trophy,
-    Users,
     BarChart3,
-    CheckCircle2,
-    XCircle,
-    TrendingUp,
     Target,
     Layers,
+    UserSearch,
 } from "lucide-react"
-import { getQuizById } from "@/actions/quizzes"
+import { getQuizWithDetailsBySlug } from "@/actions/quizzes"
 import { getQuizAnalytics } from "@/actions/quiz-stats"
-import { getPendingReviewsCount } from "@/actions/quiz-attempts"
 import { AdminPageHeader } from "@/components/ui/admin-page-header"
 
 // Modular Components
-import StatCard from "./components/StatCard"
 import OverviewTab from "./components/OverviewTab"
 import RankingTab from "./components/RankingTab"
 import TopicsTab from "./components/TopicsTab"
 import QuestionsTab from "./components/QuestionsTab"
-import ReviewTab from "./components/ReviewTab"
+import IndividualAnalysisTab from "./components/IndividualAnalysisTab"
 
 export default function QuizResultsPage() {
-    const { quizId } = useParams()
+    const { quizSlug } = useParams()
     const [activeTab, setActiveTab] = useState("overview")
     const [stats, setStats] = useState<any>(null)
     const [quiz, setQuiz] = useState<any>(null)
-    const [pendingCount, setPendingCount] = useState(0)
     const [loading, setLoading] = useState(true)
 
     const fetchData = useCallback(async () => {
         setLoading(true)
-        const [quizData, analyticsData, pCount] = await Promise.all([
-            getQuizById(quizId as string),
-            getQuizAnalytics(quizId as string),
-            getPendingReviewsCount(quizId as string),
-        ])
+        const quizData = await getQuizWithDetailsBySlug(quizSlug as string)
+        if (!quizData) {
+            setLoading(false)
+            return
+        }
+        const analyticsData = await getQuizAnalytics(quizData.id)
         setQuiz(quizData)
         setStats(analyticsData)
-        setPendingCount(pCount)
         setLoading(false)
-    }, [quizId])
+    }, [quizSlug])
 
     useEffect(() => {
         fetchData()
@@ -71,9 +65,9 @@ export default function QuizResultsPage() {
     const TABS = [
         { id: "overview", label: "Resumen", icon: BarChart3 },
         { id: "ranking", label: "Clasificación", icon: Trophy },
-        { id: "review", label: "Revisiones", icon: CheckCircle2, badge: pendingCount },
         { id: "topics", label: "Temas", icon: Layers },
         { id: "questions", label: "Mapa de Preguntas", icon: Target },
+        { id: "individual", label: "Análisis Individual", icon: UserSearch },
     ]
 
     return (
@@ -92,7 +86,7 @@ export default function QuizResultsPage() {
                 description="Análisis profundo de asimilación de conceptos"
             />
 
-            <div className="flex bg-slate-100/50 p-1.5 rounded-[24px] gap-1 w-fit">
+            <div className="flex flex-wrap bg-slate-100/50 p-1.5 rounded-[24px] gap-1 w-fit">
                 {TABS.map((tab) => (
                     <button
                         key={tab.id}
@@ -105,16 +99,9 @@ export default function QuizResultsPage() {
                     >
                         <tab.icon size={14} />
                         {tab.label}
-                        {tab.badge !== undefined && tab.badge > 0 && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white animate-pulse">
-                                {tab.badge}
-                            </span>
-                        )}
                     </button>
                 ))}
             </div>
-
-
 
             <AnimatePresence mode="wait">
                 {activeTab === "overview" && (
@@ -133,8 +120,8 @@ export default function QuizResultsPage() {
                     <TopicsTab stats={stats} />
                 )}
 
-                {activeTab === "review" && (
-                    <ReviewTab quizId={quizId as string} onGrated={fetchData} />
+                {activeTab === "individual" && (
+                    <IndividualAnalysisTab quizId={quiz.id} users={stats.userRanking || []} />
                 )}
             </AnimatePresence>
         </div>

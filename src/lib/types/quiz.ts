@@ -1,6 +1,6 @@
 // ─── Quiz System Types ──────────────────────────────────────────────
 
-export type QuestionType = "short_answer" | "single_choice" | "multiple_choice" | "true_false";
+export type QuestionType = "single_choice" | "multiple_choice" | "true_false";
 export type MediaType = "image" | "video" | "none";
 
 export interface Quiz {
@@ -12,6 +12,9 @@ export interface Quiz {
     isPublished: boolean;
     timeLimitMinutes: number | null;
     randomizeQuestions: boolean;
+    sortOrder: number;
+    passingScore: number;
+    requiredQuizId: string | null;
     createdAt: Date;
     updatedAt: Date;
     // Relaciones opcionales
@@ -75,6 +78,8 @@ export interface CreateQuizInput {
     description?: string;
     timeLimitMinutes?: number | null;
     randomizeQuestions?: boolean;
+    passingScore?: number;
+    requiredQuizId?: string | null;
 }
 
 export interface CreateQuestionInput {
