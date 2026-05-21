@@ -64,7 +64,7 @@ export async function getSectionHierarchy(slugOrId: string): Promise<SectionHier
         fullHierarchy.push({ ...cat, subcategories: subsWithItems })
     }
 
-    return { ...section, categories: fullHierarchy }
+    return JSON.parse(JSON.stringify({ ...section, categories: fullHierarchy }))
 }
 
 async function fetchHierarchy(userId: string, sectionId: string) {
@@ -76,11 +76,12 @@ async function fetchHierarchy(userId: string, sectionId: string) {
 
     // 1. Obtener todos los permisos del usuario
     const allPerms = await db.select().from(permissions).where(
-        sql`${permissions.userId} = ${userId} OR ${permissions.groupId} IN (
-            SELECT group_id FROM user_groups WHERE user_id = ${userId}
+        sql`${permissions.userId} = ${userId}::uuid OR ${permissions.groupId} IN (
+            SELECT group_id FROM user_groups WHERE user_id = ${userId}::uuid
         )`
     )
 
+    // Revertimos admin bypass para que puedan probar los permisos reales como pidieron
     const isSuperAdmin = profile.role === 'superadmin'
 
     // 2. Obtener categorías
@@ -123,5 +124,5 @@ async function fetchHierarchy(userId: string, sectionId: string) {
         }
     }
 
-    return filteredHierarchy
+    return JSON.parse(JSON.stringify(filteredHierarchy))
 }

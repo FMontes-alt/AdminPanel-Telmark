@@ -151,13 +151,30 @@ export default function DashboardSelectionPage() {
                                     href={`/dashboard/${section.slug}`}
                                     className="group block relative bg-white border border-slate-200 rounded-[28px] p-5 transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/60 hover:border-blue-600/20 overflow-hidden shadow-sm"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-transparent group-hover:from-blue-50/30 group-hover:to-white transition-all duration-500" />
+                                    {/* Cabecera de Imagen (Background Header) */}
+                                    {section.imageUrl && (
+                                        <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden rounded-[28px]">
+                                            <img 
+                                                src={section.imageUrl} 
+                                                alt={section.name} 
+                                                className="block absolute inset-0 w-full h-full object-cover object-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700 transform-gpu origin-center" 
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent z-10" />
+                                        </div>
+                                    )}
+
+                                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-transparent group-hover:from-blue-50/10 group-hover:to-white/50 transition-all duration-500 z-0 pointer-events-none" />
                                     
                                     <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px]">
                                         <div className="space-y-4">
-                                            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-lg group-hover:shadow-blue-600/20 transition-all duration-300">
-                                                <LayoutDashboard size={20} />
-                                            </div>
+                                            {/* Spacer to maintain card dimensions when image is used as background header */}
+                                            {section.imageUrl ? (
+                                                <div className="h-10 w-full" /> 
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-lg group-hover:shadow-blue-600/20 transition-all duration-300">
+                                                    <LayoutDashboard size={20} />
+                                                </div>
+                                            )}
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-1.5">
                                                     <div className="w-1 h-1 rounded-full bg-emerald-500" />

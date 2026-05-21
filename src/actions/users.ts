@@ -87,6 +87,18 @@ export async function getDashboardData() {
     // Si es superadmin, ve todo
     if (profile.role === 'superadmin') {
         const allSections = await db.select().from(sections).orderBy(sections.name)
+        const { getSignedUrlAction } = await import("@/actions/storage")
+        for (const s of allSections) {
+            const sectionWithImage = s as any;
+            if (s.imagePath && !s.imagePath.startsWith('http')) {
+                try {
+                    const url = await getSignedUrlAction(s.imagePath)
+                    if (url) sectionWithImage.imageUrl = url
+                } catch (e) {}
+            } else if (s.imagePath) {
+                sectionWithImage.imageUrl = s.imagePath
+            }
+        }
         return { profile, sections: allSections }
     }
 
@@ -157,6 +169,22 @@ export async function getDashboardData() {
         assignedSections = await db.select().from(sections)
             .where(inArray(sections.id, Array.from(sectionIds)))
             .orderBy(sections.name)
+    }
+
+    const { getSignedUrlAction } = await import("@/actions/storage")
+    
+    for (const s of assignedSections) {
+        const sectionWithImage = s as any;
+        if (s.imagePath && !s.imagePath.startsWith('http')) {
+            try {
+                const url = await getSignedUrlAction(s.imagePath)
+                if (url) sectionWithImage.imageUrl = url
+            } catch (e) {
+                console.error("Error getting signed url for section", e)
+            }
+        } else if (s.imagePath) {
+            sectionWithImage.imageUrl = s.imagePath
+        }
     }
 
     return { profile, sections: assignedSections }
