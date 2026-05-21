@@ -2,7 +2,7 @@
 
 import { db } from "@/db"
 import { alerts } from "@/db/schema"
-import { desc, eq, isNull } from "drizzle-orm"
+import { desc, eq, isNull, isNotNull } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { requireAdmin } from "@/lib/auth-guard"
 
@@ -62,7 +62,12 @@ export async function getUnreadAlertsCount() {
 
 export async function deleteAllAlerts() {
     await requireAdmin()
-    await db.delete(alerts)
-    revalidatePath("/admin/alerts")
-    return { success: true }
+    try {
+        await db.delete(alerts).where(isNotNull(alerts.id))
+        revalidatePath("/admin/alerts")
+        return { success: true }
+    } catch (error: any) {
+        console.error("Error al borrar todas las alertas:", error.message)
+        return { success: false, error: error.message }
+    }
 }
