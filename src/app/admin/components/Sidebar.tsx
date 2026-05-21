@@ -156,20 +156,6 @@ export function Sidebar() {
                 { name: 'Monitoreo', href: '/admin/monitoring', icon: Eye },
                 { name: 'Analíticas', href: '/admin/analytics', icon: BarChart3 },
             ]
-        },
-        {
-            group: "Llamadas",
-            items: [
-                { name: 'En Tiempo Real', href: '/admin/calls/live', icon: Activity },
-                { name: 'Historial', href: '/admin/calls/history', icon: History },
-            ]
-        },
-        {
-            group: "Soporte",
-            items: [
-                { name: 'Configuración IVR', href: '/admin/settings/ivr', icon: Network },
-                { name: 'Ajustes', href: '/admin/settings', icon: Settings },
-            ]
         }
     ]
 
