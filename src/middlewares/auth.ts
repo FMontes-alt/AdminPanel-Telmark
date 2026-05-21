@@ -14,15 +14,24 @@ export async function withAuth(request: NextRequest, response: NextResponse, sup
         return response
     }
 
-    // 1. REDIRECCIÓN DESDE LOGIN: Si ya está logueado, solo mandamos a /admin si es realmente admin
-    if (isLoginRoute && user) {
+    let profileRole: string | null = null
+
+    async function getRole() {
+        if (profileRole) return profileRole
+        if (!user) return null
         const { data: profile } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', user.id)
             .single()
+        profileRole = profile?.role || null
+        return profileRole
+    }
 
-        const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
+    // 1. REDIRECCIÓN DESDE LOGIN: Si ya está logueado, solo mandamos a /admin si es realmente admin
+    if (isLoginRoute && user) {
+        const role = await getRole()
+        const isAdmin = role === 'admin' || role === 'superadmin'
         
         if (isAdmin) {
             return NextResponse.redirect(new URL('/admin', request.url))
@@ -32,19 +41,21 @@ export async function withAuth(request: NextRequest, response: NextResponse, sup
         return response
     }
 
-    // 2. PROTECCIÓN ADMIN: Si va a /admin
+    // 2. PROTECCIÓN DASHBOARD: Si va a /dashboard
+    if (isDashboardRoute) {
+        if (!user) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+    }
+
+    // 3. PROTECCIÓN ADMIN: Si va a /admin
     if (isAdminRoute) {
         if (!user) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
 
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single()
-
-        const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
+        const role = await getRole()
+        const isAdmin = role === 'admin' || role === 'superadmin'
 
         if (!isAdmin) {
             // REDIRIGIR A HOME (Evita bucle si ya está en /admin y corregimos / para que no mande a login si hay user)

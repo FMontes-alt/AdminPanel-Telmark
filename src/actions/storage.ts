@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { sanitizeFileName, getStoragePath } from "@/lib/storage-utils"
 import { revalidatePath } from "next/cache"
-import { requireAdmin } from "@/lib/auth-guard"
+import { requireAdmin, getCurrentUser } from "@/lib/auth-guard"
 
 const BUCKET_NAME = 'telmark-media'
 
@@ -61,6 +61,9 @@ export async function getPublicUrlAction(path: string) {
  * Genera una URL firmada (temporal) para ver un archivo privado.
  */
 export async function getSignedUrlAction(path: string) {
+    const user = await getCurrentUser()
+    if (!user) return null
+
     const supabase = await createClient()
     
     // El path no debe incluir el nombre del bucket
@@ -82,6 +85,9 @@ export async function getSignedUrlAction(path: string) {
  * Genera una URL firmada específicamente para forzar la descarga del archivo.
  */
 export async function getDownloadUrlAction(path: string) {
+    const user = await getCurrentUser()
+    if (!user) return null
+
     const supabase = await createClient()
     
     const cleanPath = path.replace(`${BUCKET_NAME}/`, '')

@@ -10,6 +10,7 @@ import { requireAdmin } from "@/lib/auth-guard";
  * 1. OBTENER GRUPOS (con metadatos para visualización)
  */
 export async function getGroups(search?: string, includePermissions = false) {
+    await requireAdmin();
     try {
         let query = db.select().from(groups);
         
@@ -63,6 +64,7 @@ export async function getGroups(search?: string, includePermissions = false) {
  * 2. OBTENER GRUPO POR ID (con miembros y permisos)
  */
 export async function getGroupById(id: string) {
+    await requireAdmin();
     try {
         const group = await db.query.groups.findFirst({
             where: eq(groups.id, id),

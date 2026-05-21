@@ -13,6 +13,7 @@ import { requireAdmin, getCurrentUser } from "@/lib/auth-guard";
  * 1.OBTENER EMPLEADOS (con grupos para visualización)
  */
 export async function getAgents() {
+    await requireAdmin();
     try {
         const agents = await db.select().from(profiles).orderBy(profiles.createdAt);
         
@@ -50,6 +51,7 @@ import { getUserPermissions } from "./permissions";
  * 1.2 OBTENER EMPLEADO POR ID (con grupos y permisos)
  */
 export async function getAgentById(id: string) {
+    await requireAdmin();
     try {
         const profile = await db.query.profiles.findFirst({
             where: (profiles, { eq }) => eq(profiles.id, id)
