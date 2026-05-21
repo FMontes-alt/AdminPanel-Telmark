@@ -59,3 +59,10 @@ export async function getUnreadAlertsCount() {
         return 0
     }
 }
+
+export async function deleteAllAlerts() {
+    await requireAdmin()
+    await db.delete(alerts)
+    revalidatePath("/admin/alerts")
+    return { success: true }
+}

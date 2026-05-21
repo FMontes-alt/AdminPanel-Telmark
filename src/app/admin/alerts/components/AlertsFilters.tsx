@@ -24,17 +24,23 @@ export function AlertsFilters({ filter, setFilter, searchTerm, setSearchTerm }: 
             </div>
             
             <div className="flex items-center gap-2 p-1.5 bg-slate-100/50 backdrop-blur-md rounded-[30px] border border-white shadow-inner">
-                {["all", "error", "lock", "delete", "system"].map((t) => (
+                {[
+                    { value: "all", label: "Todos" },
+                    { value: "error", label: "Errores" },
+                    { value: "lock", label: "Bloqueos" },
+                    { value: "delete", label: "Eliminados" },
+                    { value: "system", label: "Sistema" }
+                ].map(({ value, label }) => (
                     <button
-                        key={t}
-                        onClick={() => setFilter(t)}
+                        key={value}
+                        onClick={() => setFilter(value)}
                         className={`px-6 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
-                            filter === t 
+                            filter === value 
                             ? "bg-white text-blue-600 shadow-xl shadow-blue-500/10" 
                             : "text-slate-400 hover:text-slate-600"
                         }`}
                     >
-                        {t === "all" ? "Todos" : t}
+                        {label}
                     </button>
                 ))}
             </div>

@@ -2,6 +2,8 @@
 
 import { motion, AnimatePresence } from "framer-motion"
 import { AlertCircle, Trash2, X } from "lucide-react"
+import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 
 interface DeleteConfirmModalProps {
     isOpen: boolean
@@ -20,7 +22,15 @@ export default function DeleteConfirmModal({
     description,
     isDeleting = false
 }: DeleteConfirmModalProps) {
-    return (
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted) return null
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <>
@@ -93,6 +103,7 @@ export default function DeleteConfirmModal({
                     </div>
                 </>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     )
 }

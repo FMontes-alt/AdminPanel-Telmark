@@ -1,4 +1,4 @@
-import { getSections } from "@/actions/sections"
+import { getAllSectionsAction } from "@/actions/sections"
 import { getSectionHierarchy } from "@/actions/hierarchy"
 
 /**
@@ -7,8 +7,8 @@ import { getSectionHierarchy } from "@/actions/hierarchy"
  * ELIMINAR cuando se confirme que todo funciona.
  */
 export default async function TestActionsPage() {
-    // 1. Probar getSections()
-    const allSections = await getSections()
+    // 1. Probar getAllSectionsAction()
+    const allSections = await getAllSectionsAction()
 
     // 2. Probar getSectionHierarchy() con la primera sección que encontremos
     const firstSlug = allSections[0]?.slug

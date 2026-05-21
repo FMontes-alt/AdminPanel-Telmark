@@ -1,16 +1,21 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getAlerts, markAlertAsRead } from "@/actions/alerts"
+import { getAlerts, markAlertAsRead, deleteAllAlerts } from "@/actions/alerts"
 import { AlertsHeader } from "./components/AlertsHeader"
 import { AlertsFilters } from "./components/AlertsFilters"
 import { AlertsList } from "./components/AlertsList"
+import DeleteConfirmModal from "@/components/ui/DeleteConfirmModal"
 
 export default function AlertsPage() {
     const [alerts, setAlerts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState("all")
     const [searchTerm, setSearchTerm] = useState("")
+    
+    // Estados para el Modal de Confirmación
+    const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false)
+    const [isDeletingAll, setIsDeletingAll] = useState(false)
 
     useEffect(() => {
         fetchAlerts()
@@ -37,6 +42,23 @@ export default function AlertsPage() {
         }
     }
 
+    const handleClearAllClick = () => {
+        setIsClearAllModalOpen(true)
+    }
+
+    const handleClearAllConfirm = async () => {
+        try {
+            setIsDeletingAll(true)
+            await deleteAllAlerts()
+            setAlerts([])
+            setIsClearAllModalOpen(false)
+        } catch (error) {
+            console.error("Error deleting all alerts:", error)
+        } finally {
+            setIsDeletingAll(false)
+        }
+    }
+
     const filteredAlerts = alerts.filter(a => {
         const matchesFilter = filter === "all" || a.type === filter
         const matchesSearch = a.message.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -55,6 +77,7 @@ export default function AlertsPage() {
             <AlertsHeader 
                 alertCount={todayCount}
                 unreadCount={unreadCount}
+                onClearAll={handleClearAllClick}
             />
 
             <AlertsFilters 
@@ -68,6 +91,15 @@ export default function AlertsPage() {
                 alerts={filteredAlerts}
                 loading={loading}
                 onMarkAsRead={handleMarkAsRead}
+            />
+            
+            <DeleteConfirmModal
+                isOpen={isClearAllModalOpen}
+                onClose={() => setIsClearAllModalOpen(false)}
+                onConfirm={handleClearAllConfirm}
+                title="Limpiar Alertas"
+                description="¿Estás seguro de que quieres eliminar todo el historial de alertas de forma permanente? Esta acción no se puede deshacer."
+                isDeleting={isDeletingAll}
             />
         </div>
     )
