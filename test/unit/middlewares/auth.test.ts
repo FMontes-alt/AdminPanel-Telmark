@@ -1,60 +1,60 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getRole } from '@/middlewares/auth'
-import { createClient } from '@supabase/supabase-js'
-
-// Mocks
-vi.mock('@supabase/supabase-js', () => ({
-    createClient: vi.fn(() => ({
-        from: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn()
-    }))
-}))
+import { withAuth } from '@/middlewares/auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 describe('Auth Middleware', () => {
     let mockSupabase: any
+    let mockResponse: NextResponse
+    let mockRequest: any
 
     beforeEach(() => {
         vi.clearAllMocks()
-        mockSupabase = createClient('url', 'key')
+
+        mockSupabase = {
+            from: vi.fn().mockReturnThis(),
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn()
+        }
+
+        mockResponse = NextResponse.next()
+        vi.spyOn(NextResponse, 'redirect').mockImplementation((url) => {
+            return { redirected: true, url: url.toString() } as any
+        })
     })
 
-    describe('getRole', () => {
-        it('debe retornar admin si el perfil tiene rol superadmin', async () => {
-            mockSupabase.single.mockResolvedValueOnce({ data: { role: 'superadmin' } })
+    describe('withAuth', () => {
+        it('debe permitir acceso a rutas no protegidas sin tocar base de datos', async () => {
+            mockRequest = { nextUrl: { pathname: '/publica' } }
+            const result = await withAuth(mockRequest as any, mockResponse, mockSupabase, null)
+            expect(result).toBe(mockResponse)
+            expect(mockSupabase.from).not.toHaveBeenCalled()
+        })
+
+        it('debe redirigir al login si accede a /admin sin usuario', async () => {
+            mockRequest = { nextUrl: { pathname: '/admin', clone: vi.fn() }, url: 'http://localhost/admin' }
+            const result = await withAuth(mockRequest as any, mockResponse, mockSupabase, null)
             
-            const role = await getRole(mockSupabase, 'user-123')
-            expect(role).toBe('admin')
+            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/login', 'http://localhost/admin'))
+        })
+
+        it('debe redirigir a / si el usuario no es admin', async () => {
+            mockRequest = { nextUrl: { pathname: '/admin', clone: vi.fn() }, url: 'http://localhost/admin' }
+            mockSupabase.single.mockResolvedValueOnce({ data: { role: 'user' } })
+            
+            const result = await withAuth(mockRequest as any, mockResponse, mockSupabase, { id: '123' })
+            
+            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/', 'http://localhost/admin'))
             expect(mockSupabase.from).toHaveBeenCalledWith('profiles')
         })
 
-        it('debe retornar admin si el perfil tiene rol admin', async () => {
+        it('debe permitir acceso a /admin si el usuario es admin', async () => {
+            mockRequest = { nextUrl: { pathname: '/admin' } }
             mockSupabase.single.mockResolvedValueOnce({ data: { role: 'admin' } })
             
-            const role = await getRole(mockSupabase, 'user-123')
-            expect(role).toBe('admin')
-        })
-
-        it('debe retornar user si el perfil tiene rol usuario', async () => {
-            mockSupabase.single.mockResolvedValueOnce({ data: { role: 'usuario' } })
-            
-            const role = await getRole(mockSupabase, 'user-123')
-            expect(role).toBe('user')
-        })
-
-        it('debe usar cache en llamadas subsecuentes', async () => {
-            // Primera llamada a BD
-            mockSupabase.single.mockResolvedValueOnce({ data: { role: 'admin' } })
-            
-            const role1 = await getRole(mockSupabase, 'user-cache')
-            expect(role1).toBe('admin')
-            expect(mockSupabase.from).toHaveBeenCalledTimes(1)
-
-            // Segunda llamada no debe tocar BD
-            const role2 = await getRole(mockSupabase, 'user-cache')
-            expect(role2).toBe('admin')
-            expect(mockSupabase.from).toHaveBeenCalledTimes(1) // sigue siendo 1
+            const result = await withAuth(mockRequest as any, mockResponse, mockSupabase, { id: '123' })
+            expect(result).toBe(mockResponse)
+            expect(mockSupabase.from).toHaveBeenCalledWith('profiles')
         })
     })
 })
