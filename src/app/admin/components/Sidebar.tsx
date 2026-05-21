@@ -24,7 +24,8 @@ import {
     PanelLeftClose,
     PanelRightOpen,
     Menu,
-    ClipboardList
+    ClipboardList,
+    Target
 } from "lucide-react"
 import { getAllSectionsAction } from "@/actions/sections"
 import { getUnreadAlertsCount } from "@/actions/alerts"
@@ -45,18 +46,10 @@ interface NavSection {
 }
 
 const getIconForSection = (name: string) => {
-    const lowerName = name.toLowerCase();
-    if (lowerName.includes('adeslas') || lowerName.includes('salud')) return ShieldCheck;
-    if (lowerName.includes('energia') || lowerName.includes('luz')) return Flame;
-    if (lowerName.includes('alarma')) return BellRing;
-    return FolderTree;
+    return Target;
 }
 
 const getColorForSection = (name: string) => {
-    const lowerName = name.toLowerCase();
-    if (lowerName.includes('adeslas') || lowerName.includes('salud')) return 'text-blue-400';
-    if (lowerName.includes('energia') || lowerName.includes('luz')) return 'text-orange-400';
-    if (lowerName.includes('alarma')) return 'text-purple-400';
     return 'text-slate-400';
 }
 
