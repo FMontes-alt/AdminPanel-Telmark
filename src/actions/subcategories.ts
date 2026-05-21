@@ -7,6 +7,9 @@ import { revalidatePath } from "next/cache"
 import { requireAdmin } from "@/lib/auth-guard"
 import { items } from "@/db/schema"
 import { deleteMultipleFilesAction } from "./storage"
+import { ActionResult } from "@/lib/types/actions"
+import { formatError } from "@/lib/error-handler"
+import { log } from "@/lib/logger"
 
 // ─── READ ───────────────────────────────────────────────────────────────
 
@@ -36,19 +39,24 @@ type CreateSubcategoryInput = {
     slug: string
 }
 
-export async function createSubcategory(data: CreateSubcategoryInput) {
-    await requireAdmin()
-    const [newSubcategory] = await db
-        .insert(subcategories)
-        .values({
-            categoryId: data.categoryId,
-            name: data.name,
-            slug: data.slug,
-        })
-        .returning()
+export async function createSubcategory(data: CreateSubcategoryInput): Promise<ActionResult<typeof subcategories.$inferSelect>> {
+    try {
+        await requireAdmin()
+        const [newSubcategory] = await db
+            .insert(subcategories)
+            .values({
+                categoryId: data.categoryId,
+                name: data.name,
+                slug: data.slug,
+            })
+            .returning()
 
-    revalidatePath("/admin")
-    return newSubcategory
+        revalidatePath("/admin")
+        return { success: true, data: newSubcategory }
+    } catch (error) {
+        log.error("Error creating subcategory:", error)
+        return { success: false, error: formatError(error).message }
+    }
 }
 
 // ─── UPDATE ─────────────────────────────────────────────────────────────
@@ -58,43 +66,53 @@ type UpdateSubcategoryInput = {
     slug?: string
 }
 
-export async function updateSubcategory(id: string, data: UpdateSubcategoryInput) {
-    await requireAdmin()
-    const [updated] = await db
-        .update(subcategories)
-        .set(data)
-        .where(eq(subcategories.id, id))
-        .returning()
+export async function updateSubcategory(id: string, data: UpdateSubcategoryInput): Promise<ActionResult<typeof subcategories.$inferSelect>> {
+    try {
+        await requireAdmin()
+        const [updated] = await db
+            .update(subcategories)
+            .set(data)
+            .where(eq(subcategories.id, id))
+            .returning()
 
-    revalidatePath("/admin")
-    return updated
+        revalidatePath("/admin")
+        return { success: true, data: updated }
+    } catch (error) {
+        log.error("Error updating subcategory:", error)
+        return { success: false, error: formatError(error).message }
+    }
 }
 
 // ─── DELETE ─────────────────────────────────────────────────────────────
 
-export async function deleteSubcategory(id: string) {
-    await requireAdmin()
-
+export async function deleteSubcategory(id: string): Promise<ActionResult> {
     try {
-        // Buscamos todos los items de esta subcategoría
-        const allItems = await db
-            .select({ filePath: items.filePath })
-            .from(items)
-            .where(eq(items.subcategoryId, id))
+        await requireAdmin()
 
-        const filePaths = allItems
-            .map(i => i.filePath)
-            .filter((path): path is string => !!path)
+        try {
+            // Buscamos todos los items de esta subcategoría
+            const allItems = await db
+                .select({ filePath: items.filePath })
+                .from(items)
+                .where(eq(items.subcategoryId, id))
 
-        if (filePaths.length > 0) {
-            await deleteMultipleFilesAction(filePaths)
+            const filePaths = allItems
+                .map(i => i.filePath)
+                .filter((path): path is string => !!path)
+
+            if (filePaths.length > 0) {
+                await deleteMultipleFilesAction(filePaths)
+            }
+        } catch (error) {
+            log.error("Error limpiando storage al borrar subcategoría:", error)
         }
-    } catch (error) {
-        console.error("Error limpiando storage al borrar subcategoría:", error)
-    }
 
-    await db.delete(subcategories).where(eq(subcategories.id, id))
-    revalidatePath("/admin")
-    revalidatePath("/")
-    return { success: true }
+        await db.delete(subcategories).where(eq(subcategories.id, id))
+        revalidatePath("/admin")
+        revalidatePath("/")
+        return { success: true, data: undefined }
+    } catch (error) {
+        log.error("Error deleting subcategory:", error)
+        return { success: false, error: formatError(error).message }
+    }
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { CampaignWidget } from "@/lib/types/campaing-builder";
+import { CampaignWidget } from "@/lib/types/campaign-builder";
 import { TextWidget } from "./components/TextWidget";
 import { VideoWidget } from "./components/VideoWidget";
 import { LinkWidget } from "./components/LinkWidget";

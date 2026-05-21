@@ -10,7 +10,7 @@ import {
     Plus,
     MousePointer2
 } from "lucide-react";
-import { WidgetType } from "@/lib/types/campaing-builder";
+import { WidgetType } from "@/lib/types/campaign-builder";
 
 interface ElementSelectorProps {
     onAddElement: (type: WidgetType) => void;

@@ -1,6 +1,6 @@
 "use client"
 
-import { CampaignWidget } from "@/lib/types/campaing-builder";
+import { CampaignWidget } from "@/lib/types/campaign-builder";
 import { Video, Youtube } from "lucide-react";
 
 interface VideoWidgetProps {

@@ -1,6 +1,6 @@
 "use client"
 
-import { CampaignWidget } from "@/lib/types/campaing-builder";
+import { CampaignWidget } from "@/lib/types/campaign-builder";
 import { Type, Heading1, Heading2, AlignLeft } from "lucide-react";
 
 interface TextWidgetProps {

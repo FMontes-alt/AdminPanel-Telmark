@@ -1,6 +1,6 @@
 "use client"
 
-import { CampaignWidget } from "@/lib/types/campaing-builder";
+import { CampaignWidget } from "@/lib/types/campaign-builder";
 import { FileText, Eye } from "lucide-react";
 
 interface PdfWidgetProps {

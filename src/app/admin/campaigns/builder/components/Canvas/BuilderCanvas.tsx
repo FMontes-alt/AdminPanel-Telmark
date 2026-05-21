@@ -3,7 +3,7 @@
 import React from "react"
 import { Responsive, WidthProvider } from "react-grid-layout/legacy"
 import { Trash2, GripVertical, MousePointer2 } from "lucide-react"
-import { CampaignWidget, WidgetType } from "@/lib/types/campaing-builder"
+import { CampaignWidget, WidgetType } from "@/lib/types/campaign-builder"
 import { WidgetFactory } from "../Widget/WidgetFactory"
 import { CanvasItem } from "./CanvasItem"
 

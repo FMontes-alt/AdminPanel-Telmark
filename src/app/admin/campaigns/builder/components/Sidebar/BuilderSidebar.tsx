@@ -2,7 +2,7 @@
 
 import React from "react"
 import { ElementSelector } from "./ElementSelector"
-import { WidgetType } from "@/lib/types/campaing-builder"
+import { WidgetType } from "@/lib/types/campaign-builder"
 
 interface BuilderSidebarProps {
     onAddWidget: (type: WidgetType) => void;

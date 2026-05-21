@@ -4,6 +4,9 @@ import { db } from "@/db"
 import { categories, subcategories, items } from "@/db/schema"
 import { revalidatePath } from "next/cache"
 import { requireAdmin } from "@/lib/auth-guard"
+import { ActionResult } from "@/lib/types/actions"
+import { formatError } from "@/lib/error-handler"
+import { log } from "@/lib/logger"
 
 function generateSlug(text: string) {
     return text
@@ -18,7 +21,7 @@ type BulkItemInput = {
     body?: string
     externalLink?: string
     filePath?: string
-    attributes?: any
+    attributes?: Record<string, unknown>
 }
 
 type BulkSubcategoryInput = {
@@ -32,9 +35,9 @@ type BulkHierarchyInput = {
     subcategories: BulkSubcategoryInput[]
 }
 
-export async function bulkCreateHierarchy(data: BulkHierarchyInput) {
-    await requireAdmin()
+export async function bulkCreateHierarchy(data: BulkHierarchyInput): Promise<ActionResult<any>> {
     try {
+        await requireAdmin()
         const result = await db.transaction(async (tx) => {
             // 1. Create Category
             const catSlug = generateSlug(data.categoryName)
@@ -99,7 +102,7 @@ export async function bulkCreateHierarchy(data: BulkHierarchyInput) {
         revalidatePath("/admin")
         return { success: true, data: result }
     } catch (error) {
-        console.error("Error in bulkCreateHierarchy:", error)
-        throw new Error("No se pudo realizar la creación masiva. " + (error as any).message)
+        log.error("Error in bulkCreateHierarchy:", error)
+        return { success: false, error: "No se pudo realizar la creación masiva. " + formatError(error).message }
     }
 }

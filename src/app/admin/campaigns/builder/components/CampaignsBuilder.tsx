@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { CampaignWidget, WidgetType } from "@/lib/types/campaing-builder"
+import { CampaignWidget, WidgetType } from "@/lib/types/campaign-builder"
 import AlertModal from "@/components/ui/AlertModal"
 
 // Import modular components

@@ -5,6 +5,9 @@ import { alerts } from "@/db/schema"
 import { desc, eq, isNull, isNotNull } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { requireAdmin } from "@/lib/auth-guard"
+import { ActionResult } from "@/lib/types/actions"
+import { formatError } from "@/lib/error-handler"
+import { log } from "@/lib/logger"
 
 // --- ACCIÓN PARA CREAR LAS ALERTAS
 export async function createAlert(data: {
@@ -15,14 +18,20 @@ export async function createAlert(data: {
     targetName?: string,
     targetUrl?: string,
     userId?: string
-}) {
-    await requireAdmin()
-    await db.insert(alerts).values({
-        ...data,
-        severity: data.severity ?? "info"
-    })
+}): Promise<ActionResult> {
+    try {
+        await requireAdmin()
+        await db.insert(alerts).values({
+            ...data,
+            severity: data.severity ?? "info"
+        })
 
-    revalidatePath("/admin/alerts")
+        revalidatePath("/admin/alerts")
+        return { success: true, data: undefined }
+    } catch (error) {
+        log.error("Error creating alert:", error)
+        return { success: false, error: formatError(error).message }
+    }
 }
 
 export async function getAlerts() {
@@ -34,20 +43,25 @@ export async function getAlerts() {
         .limit(50)
 }
 
-export async function markAlertAsRead(alertId: string) {
-    await requireAdmin()
-    await db
-        .update(alerts)
-        .set({ isRead: new Date() })
-        .where(eq(alerts.id, alertId))
-    
-    revalidatePath("/admin/alerts")
-    return { success: true }
+export async function markAlertAsRead(alertId: string): Promise<ActionResult> {
+    try {
+        await requireAdmin()
+        await db
+            .update(alerts)
+            .set({ isRead: new Date() })
+            .where(eq(alerts.id, alertId))
+        
+        revalidatePath("/admin/alerts")
+        return { success: true, data: undefined }
+    } catch (error) {
+        log.error("Error marking alert as read:", error)
+        return { success: false, error: formatError(error).message }
+    }
 }
 
 export async function getUnreadAlertsCount() {
-    await requireAdmin()
     try {
+        await requireAdmin()
         const data = await db
             .select()
             .from(alerts)
@@ -55,19 +69,19 @@ export async function getUnreadAlertsCount() {
         
         return data.length
     } catch (error) {
-        console.error("Error fetching unread count:", error)
+        log.error("Error fetching unread count:", error)
         return 0
     }
 }
 
-export async function deleteAllAlerts() {
-    await requireAdmin()
+export async function deleteAllAlerts(): Promise<ActionResult> {
     try {
+        await requireAdmin()
         await db.delete(alerts).where(isNotNull(alerts.id))
         revalidatePath("/admin/alerts")
-        return { success: true }
-    } catch (error: any) {
-        console.error("Error al borrar todas las alertas:", error.message)
-        return { success: false, error: error.message }
+        return { success: true, data: undefined }
+    } catch (error) {
+        log.error("Error deleting all alerts:", error)
+        return { success: false, error: formatError(error).message }
     }
 }

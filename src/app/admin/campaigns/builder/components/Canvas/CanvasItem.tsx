@@ -3,7 +3,7 @@
 import React from "react"
 import { Trash2, GripVertical, Check, Lock, Unlock } from "lucide-react"
 import { WidgetFactory } from "../Widget/WidgetFactory"
-import { CampaignWidget } from "@/lib/types/campaing-builder"
+import { CampaignWidget } from "@/lib/types/campaign-builder"
 
 interface CanvasItemProps {
     widget: CampaignWidget;
