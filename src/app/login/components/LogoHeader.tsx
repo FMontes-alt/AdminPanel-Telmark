@@ -41,7 +41,7 @@ export const LogoHeader = ({ variants }: LogoHeaderProps) => {
             </motion.div>
 
             {/* Texto con Gradiente Basado en el Logo */}
-            <h1 className="text-3xl sm:text-4xl font-light text-slate-800 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-light text-slate-800 tracking-tight">
                 Telmark<span className="font-bold bg-gradient-to-tr from-blue-600 via-purple-600 to-orange-500 bg-clip-text text-transparent">CMS</span>
             </h1>
             <p className="text-slate-500 mt-2 sm:mt-3 text-[11px] sm:text-sm font-semibold tracking-widest uppercase">
