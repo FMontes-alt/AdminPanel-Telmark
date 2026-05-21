@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/db"
-import { sections, categories, subcategories, items, permissions } from "@/db/schema"
+import { sections, categories, subcategories, items, permissions, userGroups } from "@/db/schema"
 import { eq, sql, inArray, or } from "drizzle-orm"
 import { requireAdmin, getCurrentUser } from "@/lib/auth-guard"
 import { InferSelectModel } from "drizzle-orm"
