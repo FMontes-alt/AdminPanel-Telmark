@@ -34,11 +34,6 @@ export default function DashboardSelectionPage() {
                 if (data.profile) {
                     setProfile(data.profile)
                     setSections(data.sections)
-                    
-                    // Solo una sección: redirección automática
-                    if (data.sections.length === 1) {
-                        router.push(`/dashboard/${data.sections[0].slug}`)
-                    }
                 }
             } catch (error) {
                 console.error("Error fetching dashboard data:", error)

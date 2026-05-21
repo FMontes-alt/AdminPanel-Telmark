@@ -2,7 +2,7 @@
 
 import { db } from "@/db"
 import { sections, categories, subcategories, items, permissions } from "@/db/schema"
-import { eq, sql } from "drizzle-orm"
+import { eq, sql, inArray, or } from "drizzle-orm"
 import { requireAdmin, getCurrentUser } from "@/lib/auth-guard"
 import { InferSelectModel } from "drizzle-orm"
 
@@ -74,11 +74,18 @@ async function fetchHierarchy(userId: string, sectionId: string) {
 
     if (!profile) return []
 
+    const userGroupsQuery = await db.select({ groupId: userGroups.groupId })
+        .from(userGroups)
+        .where(eq(userGroups.userId, userId))
+
+    const userGroupIds = userGroupsQuery.map(g => g.groupId)
+
     // 1. Obtener todos los permisos del usuario
     const allPerms = await db.select().from(permissions).where(
-        sql`${permissions.userId} = ${userId}::uuid OR ${permissions.groupId} IN (
-            SELECT group_id FROM user_groups WHERE user_id = ${userId}::uuid
-        )`
+        or(
+            eq(permissions.userId, userId),
+            userGroupIds.length > 0 ? inArray(permissions.groupId, userGroupIds) : sql`FALSE`
+        )
     )
 
     // Revertimos admin bypass para que puedan probar los permisos reales como pidieron
