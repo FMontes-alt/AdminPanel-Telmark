@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -11,11 +11,14 @@ import {
     Trophy,
     Shuffle,
     Play,
-    LayoutGrid
+    LayoutGrid,
+    Lock
 } from "lucide-react"
 import { getSectionBySlug } from "@/actions/sections"
 import { getPublishedQuizzes, getQuizQuestionCount } from "@/actions/quizzes"
 import { getUserAttempts } from "@/actions/quiz-attempts"
+import { checkUserSectionAccess, checkQuizUnlocked } from "@/actions/quiz-access"
+import { getFilteredHierarchy } from "@/actions/hierarchy"
 import { createClient } from "@/lib/supabase/client"
 
 // Importar el nuevo Header
@@ -24,7 +27,9 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
 
 export default function UserQuizzesPage() {
     const { sectionSlug } = useParams()
+    const router = useRouter()
     const [section, setSection] = useState<any>(null)
+    const [categories, setCategories] = useState<any[]>([])
     const [quizzes, setQuizzes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
@@ -39,20 +44,43 @@ export default function UserQuizzesPage() {
             const sec = await getSectionBySlug(sectionSlug as string)
             if (sec) {
                 setSection(sec)
-                const published = await getPublishedQuizzes(sec.id)
+                
+                if (user) {
+                    const hasAccess = await checkUserSectionAccess(user.id, sec.id)
+                    if (!hasAccess) {
+                        setQuizzes([])
+                        setLoading(false)
+                        return
+                    }
+                    
+                    const catsWithSubs = await getFilteredHierarchy(sec.id)
+                    setCategories(catsWithSubs)
 
-                // Enrich with question count and user attempts
-                const enriched = await Promise.all(
-                    (published || []).map(async (quiz: any) => {
-                        const questionCount = await getQuizQuestionCount(quiz.id)
-                        const attempts = user ? await getUserAttempts(quiz.id, user.id) : []
-                        const bestAttempt = attempts
-                            .filter((a: any) => a.completedAt)
-                            .sort((a: any, b: any) => (b.score || 0) - (a.score || 0))[0]
-                        return { ...quiz, questionCount, attemptCount: attempts.length, bestAttempt }
-                    })
-                )
-                setQuizzes(enriched)
+                    const published = await getPublishedQuizzes(sec.id)
+
+                    // Enrich with question count, user attempts, and unlock status
+                    const enriched = await Promise.all(
+                        (published || []).map(async (quiz: any) => {
+                            const questionCount = await getQuizQuestionCount(quiz.id)
+                            const attempts = await getUserAttempts(quiz.id, user.id)
+                            const bestAttempt = attempts
+                                .filter((a: any) => a.completedAt)
+                                .sort((a: any, b: any) => (b.score || 0) - (a.score || 0))[0]
+                                
+                            const unlockStatus = await checkQuizUnlocked(user.id, quiz.id)
+                            
+                            return { 
+                                ...quiz, 
+                                questionCount, 
+                                attemptCount: attempts.length, 
+                                bestAttempt,
+                                unlocked: unlockStatus.unlocked,
+                                requiredQuizTitle: unlockStatus.requiredQuizTitle
+                            }
+                        })
+                    )
+                    setQuizzes(enriched)
+                }
             }
             setLoading(false)
         }
@@ -69,20 +97,49 @@ export default function UserQuizzesPage() {
 
     if (loading) {
         return (
-            <div className="h-screen bg-slate-50 flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
+            <div className="h-screen bg-[#fafafa] flex overflow-hidden font-sans selection:bg-blue-600/10 selection:text-blue-600">
+                <DashboardSidebar 
+                    section={section || { name: "Cargando..." }}
+                    categories={categories} 
+                    selectedCategoryId={null}
+                    onSelectCategory={() => router.push(`/dashboard/${sectionSlug}`)}
+                    quizCount={0}
+                    sectionSlug={sectionSlug as string}
+                />
+                <main className="flex-1 flex flex-col h-full bg-white relative">
+                    <DashboardHeader 
+                        sectionName={section?.name || "Cargando..."}
+                        searchTerm={searchTerm}
+                        onSearchChange={setSearchTerm}
+                    />
+                    <div className="flex-1 flex items-center justify-center bg-[#fafafa]/50">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex flex-col items-center gap-6"
+                        >
+                            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin shadow-lg" />
+                            <div className="text-center space-y-1">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Cargando</p>
+                                <p className="text-sm font-bold text-slate-900 tracking-tight">Evaluación y Formación</p>
+                            </div>
+                        </motion.div>
+                    </div>
+                </main>
             </div>
         )
     }
 
     return (
         <div className="h-screen bg-[#fafafa] flex overflow-hidden font-sans selection:bg-blue-600/10 selection:text-blue-600">
-            {/* Sidebar Reutilizado (Opcional, pero recomendado para consistencia) */}
+            {/* Sidebar Reutilizado con props correctas */}
             <DashboardSidebar 
                 section={section || {}}
-                categories={[]} // En esta página no mostramos categorías en el sidebar o podrías pasarlas si las tuvieras
+                categories={categories} 
                 selectedCategoryId={null}
-                onSelectCategory={() => {}}
+                onSelectCategory={() => router.push(`/dashboard/${sectionSlug}`)}
+                quizCount={quizzes.length}
+                sectionSlug={sectionSlug as string}
             />
 
             <main className="flex-1 flex flex-col h-full bg-white relative">
@@ -130,17 +187,25 @@ export default function UserQuizzesPage() {
                                             transition={{ delay: i * 0.05 }}
                                         >
                                             <Link
-                                                href={`/dashboard/${sectionSlug}/quizzes/${quiz.id}`}
-                                                className="group block bg-white border border-slate-100 rounded-[32px] shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all overflow-hidden"
+                                                href={quiz.unlocked ? `/dashboard/${sectionSlug}/quizzes/${quiz.slug}` : "#"}
+                                                onClick={(e) => {
+                                                    if (!quiz.unlocked) {
+                                                        e.preventDefault();
+                                                        alert(`Este cuestionario está bloqueado. Primero debes aprobar "${quiz.requiredQuizTitle}"`);
+                                                    }
+                                                }}
+                                                className={`group block bg-white border border-slate-100 rounded-[32px] shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all overflow-hidden ${!quiz.unlocked ? 'opacity-60 cursor-not-allowed shadow-none' : ''}`}
                                             >
                                                 <div className="p-8 space-y-5">
                                                     <div className="flex items-start justify-between">
-                                                        <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-blue-600/30">
-                                                            <ClipboardList size={24} />
+                                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm ${!quiz.unlocked ? 'bg-slate-100 text-slate-400' : 'bg-slate-50 text-slate-600 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-lg group-hover:shadow-blue-600/30'}`}>
+                                                            {!quiz.unlocked ? <Lock size={24} /> : <ClipboardList size={24} />}
                                                         </div>
-                                                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-300 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all duration-300">
-                                                            <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
-                                                        </div>
+                                                        {quiz.unlocked && (
+                                                            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-300 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all duration-300">
+                                                                <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     <div className="space-y-2">
@@ -163,15 +228,27 @@ export default function UserQuizzesPage() {
                                                                 {quiz.timeLimitMinutes} min
                                                             </span>
                                                         )}
+                                                        <span className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg">
+                                                            <Trophy size={12} className="text-amber-500" />
+                                                            Mín. {quiz.passingScore}%
+                                                        </span>
                                                     </div>
                                                 </div>
 
                                                 <div className="px-8 py-4 bg-slate-50/50 flex items-center justify-between border-t border-slate-100">
-                                                    {quiz.bestAttempt ? (
+                                                    {!quiz.unlocked ? (
+                                                        <span className="flex items-center gap-2 text-[11px] font-black text-rose-500 uppercase tracking-tight">
+                                                            <Lock size={12} /> Bloqueado - Prerrequisito: {quiz.requiredQuizTitle}
+                                                        </span>
+                                                    ) : quiz.bestAttempt ? (
                                                         <div className="flex items-center gap-2">
                                                             <Trophy size={14} className="text-amber-500" />
-                                                            <span className="text-[11px] font-black text-emerald-600 uppercase tracking-tight">
-                                                                Récord: {quiz.bestAttempt.score}/{quiz.bestAttempt.maxScore}
+                                                            <span className={`text-[11px] font-black uppercase tracking-tight ${
+                                                                (quiz.bestAttempt.score !== null && quiz.bestAttempt.maxScore !== null && quiz.bestAttempt.maxScore > 0 && (quiz.bestAttempt.score / quiz.bestAttempt.maxScore) * 100 >= quiz.passingScore)
+                                                                    ? 'text-emerald-600'
+                                                                    : 'text-rose-500'
+                                                            }`}>
+                                                                Récord: {quiz.bestAttempt.score}/{quiz.bestAttempt.maxScore} ({quiz.bestAttempt.maxScore > 0 ? Math.round((quiz.bestAttempt.score / quiz.bestAttempt.maxScore) * 100) : 0}%)
                                                             </span>
                                                         </div>
                                                     ) : (

@@ -1,12 +1,11 @@
 "use client"
 
-import { ListChecks, Check, ToggleLeft, AlignLeft } from "lucide-react"
+import { ListChecks, Check, ToggleLeft } from "lucide-react"
 
 export const QUESTION_TYPES = [
     { value: "single_choice", label: "Opción Única", icon: ListChecks, description: "Una sola respuesta correcta" },
     { value: "multiple_choice", label: "Multi-Respuesta", icon: Check, description: "Varias respuestas correctas" },
     { value: "true_false", label: "Verdadero / Falso", icon: ToggleLeft, description: "Dos opciones" },
-    { value: "short_answer", label: "Respuesta Corta", icon: AlignLeft, description: "Texto libre" },
 ]
 
 interface QuestionTypeSelectorProps {

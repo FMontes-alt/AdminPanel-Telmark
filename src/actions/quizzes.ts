@@ -22,13 +22,16 @@ export async function getQuizzes(sectionId?: string) {
                 isPublished: quizzes.isPublished,
                 timeLimitMinutes: quizzes.timeLimitMinutes,
                 randomizeQuestions: quizzes.randomizeQuestions,
+                sortOrder: quizzes.sortOrder,
+                passingScore: quizzes.passingScore,
+                requiredQuizId: quizzes.requiredQuizId,
                 createdAt: quizzes.createdAt,
                 updatedAt: quizzes.updatedAt,
                 sectionName: sections.name,
             })
             .from(quizzes)
             .leftJoin(sections, eq(quizzes.sectionId, sections.id))
-            .orderBy(desc(quizzes.createdAt))
+            .orderBy(quizzes.sortOrder)
 
         if (sectionId) {
             return baseQuery.where(eq(quizzes.sectionId, sectionId))
@@ -88,13 +91,47 @@ export async function getQuizBySlug(sectionId: string, slug: string) {
     }
 }
 
+export async function getQuizWithDetailsBySlug(slug: string) {
+    try {
+        const [quiz] = await db
+            .select()
+            .from(quizzes)
+            .where(eq(quizzes.slug, slug))
+            .limit(1)
+
+        if (!quiz) return null
+
+        const questions = await db
+            .select()
+            .from(quizQuestions)
+            .where(eq(quizQuestions.quizId, quiz.id))
+            .orderBy(quizQuestions.sortOrder)
+
+        const questionsWithOptions = await Promise.all(
+            questions.map(async (q) => {
+                const options = await db
+                    .select()
+                    .from(quizOptions)
+                    .where(eq(quizOptions.questionId, q.id))
+                    .orderBy(quizOptions.sortOrder)
+                return { ...q, options }
+            })
+        )
+
+        return { ...quiz, questions: questionsWithOptions }
+    } catch (error) {
+        console.error("Error fetching quiz with details by slug:", error)
+        return null
+    }
+}
+
 export async function getPublishedQuizzes(sectionId: string) {
     try {
         return db
             .select()
             .from(quizzes)
             .where(and(eq(quizzes.sectionId, sectionId), eq(quizzes.isPublished, true)))
-            .orderBy(desc(quizzes.createdAt))
+            .orderBy(quizzes.sortOrder)
     } catch (error) {
         console.error("Error fetching published quizzes:", error)
         return []
@@ -122,6 +159,13 @@ export async function createQuiz(data: CreateQuizInput) {
             .replace(/\s+/g, "-")
             .replace(/[^a-z0-9-]/g, "")
 
+        // Auto-calcular sortOrder: total de quizzes en la sección + 1
+        const existingQuizzes = await db
+            .select({ count: count() })
+            .from(quizzes)
+            .where(eq(quizzes.sectionId, data.sectionId))
+        const sortOrder = (existingQuizzes[0]?.count ?? 0) + 1
+
         const [newQuiz] = await db
             .insert(quizzes)
             .values({
@@ -131,6 +175,9 @@ export async function createQuiz(data: CreateQuizInput) {
                 description: data.description || null,
                 timeLimitMinutes: data.timeLimitMinutes || null,
                 randomizeQuestions: data.randomizeQuestions || false,
+                sortOrder,
+                passingScore: data.passingScore !== undefined ? data.passingScore : 80,
+                requiredQuizId: data.requiredQuizId || null,
             })
             .returning()
 
@@ -156,6 +203,8 @@ export async function updateQuiz(quizId: string, data: Partial<CreateQuizInput> 
         if (data.timeLimitMinutes !== undefined) updateData.timeLimitMinutes = data.timeLimitMinutes
         if (data.randomizeQuestions !== undefined) updateData.randomizeQuestions = data.randomizeQuestions
         if (data.isPublished !== undefined) updateData.isPublished = data.isPublished
+        if (data.passingScore !== undefined) updateData.passingScore = data.passingScore
+        if (data.requiredQuizId !== undefined) updateData.requiredQuizId = data.requiredQuizId
 
         const [updated] = await db
             .update(quizzes)

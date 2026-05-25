@@ -7,12 +7,13 @@ interface PersonalResultsProps {
     results: any
     onRepeat: () => void
     onBackToQuizzes: () => void
+    onBackToEdition?: () => void
 }
 
-export default function PersonalResults({ results, onRepeat, onBackToQuizzes }: PersonalResultsProps) {
+export default function PersonalResults({ results, onRepeat, onBackToQuizzes, onBackToEdition }: PersonalResultsProps) {
     const attempt = results.attempt
     const percentage = attempt?.maxScore ? Math.round((attempt.score / attempt.maxScore) * 100) : 0
-    const details = results.details?.questions || []
+    const details = results.details?.questions || results.questions || []
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 py-12">
@@ -32,30 +33,22 @@ export default function PersonalResults({ results, onRepeat, onBackToQuizzes }: 
                     className="bg-white rounded-[36px] shadow-xl border border-slate-100 overflow-hidden text-center"
                 >
                     <div className={`p-8 ${
-                        attempt?.status === "pending_review" ? 'bg-gradient-to-r from-amber-400 to-amber-500' :
                         percentage >= 70 ? 'bg-gradient-to-r from-emerald-500 to-emerald-600' : 
                         percentage >= 40 ? 'bg-gradient-to-r from-amber-500 to-amber-600' : 
                         'bg-gradient-to-r from-red-500 to-red-600'
                     } text-white`}>
                         <Trophy size={40} className="mx-auto mb-3 opacity-80" />
-                        <p className="text-5xl font-black">{attempt?.status === "pending_review" ? "??%" : `${percentage}%`}</p>
+                        <p className="text-5xl font-black">{percentage}%</p>
                         <p className="text-sm opacity-80 mt-1">
-                            {attempt?.status === "pending_review" ? "Nota calculada tras revisión" : `${attempt?.score} de ${attempt?.maxScore} puntos`}
+                            {attempt?.score} de {attempt?.maxScore} puntos
                         </p>
                     </div>
                     <div className="p-6">
                         <p className="text-lg font-black text-slate-900">
-                            {attempt?.status === "pending_review" ? "Cuestionario en revisión" :
-                             percentage >= 70 ? "¡Excelente trabajo!" : 
+                            {percentage >= 70 ? "¡Excelente trabajo!" : 
                              percentage >= 40 ? "Buen intento" : 
                              "Sigue practicando"}
                         </p>
-                        {attempt?.status === "pending_review" && (
-                            <p className="text-xs text-slate-400 mt-2 font-medium">
-                                El administrador está revisando tus respuestas abiertas. <br/>
-                                Vuelve más tarde para ver tu nota final.
-                            </p>
-                        )}
                     </div>
                 </motion.div>
 
@@ -77,11 +70,6 @@ export default function PersonalResults({ results, onRepeat, onBackToQuizzes }: 
                                 <p className="text-sm font-bold text-slate-800 flex-1">{q.text}</p>
                                 {q.userAnswer?.isCorrect === true && <CheckCircle2 size={20} className="text-emerald-500 flex-shrink-0" />}
                                 {q.userAnswer?.isCorrect === false && <XCircle size={20} className="text-red-500 flex-shrink-0" />}
-                                {q.userAnswer?.isCorrect === null && (
-                                    <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest bg-amber-50 px-2.5 py-1.5 rounded-lg border border-amber-100">
-                                        Pendiente
-                                    </span>
-                                )}
                             </div>
                             {q.options && q.options.length > 0 && (
                                 <div className="ml-10 space-y-1.5">
@@ -115,12 +103,14 @@ export default function PersonalResults({ results, onRepeat, onBackToQuizzes }: 
                     >
                         <RotateCcw size={16} /> Repetir
                     </button>
-                    <button
-                        onClick={onBackToQuizzes}
-                        className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
-                    >
-                        <ChevronLeft size={16} /> Volver a Cuestionarios
-                    </button>
+                    {onBackToEdition && (
+                        <button
+                            onClick={onBackToEdition}
+                            className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
+                        >
+                            <ChevronLeft size={16} /> Volver a Edición
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

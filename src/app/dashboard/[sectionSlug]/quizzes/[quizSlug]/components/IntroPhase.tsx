@@ -8,16 +8,18 @@ interface IntroPhaseProps {
     questionsCount: number
     onStart: () => void
     onBack: () => void
+    embedded?: boolean
 }
 
 export default function IntroPhase({ 
     quiz, 
     questionsCount, 
     onStart, 
-    onBack
+    onBack,
+    embedded = false
 }: IntroPhaseProps) {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50/30 p-4">
+        <div className={`${embedded ? "h-full" : "min-h-screen"} flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50/30 p-4`}>
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}

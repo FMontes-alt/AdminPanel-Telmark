@@ -1,15 +1,31 @@
 "use server"
 
 import { db } from "@/db"
-import { quizAttempts, quizAnswers, quizQuestions, quizOptions, profiles } from "@/db/schema"
+import { quizAttempts, quizAnswers, quizQuestions, quizOptions, profiles, quizzes } from "@/db/schema"
 import { eq, and, desc } from "drizzle-orm"
 import { formatError } from "@/lib/error-handler"
 import type { SubmitAnswerInput } from "@/lib/types/quiz"
+import { checkUserSectionAccess, checkQuizUnlocked } from "./quiz-access"
 
 // ─── ATTEMPTS ───────────────────────────────────────────────────────────
 
 export async function startAttempt(quizId: string, userId: string) {
     try {
+        const [quiz] = await db
+            .select()
+            .from(quizzes)
+            .where(eq(quizzes.id, quizId))
+            .limit(1)
+        if (!quiz) return { error: "Cuestionario no encontrado" }
+
+        const hasAccess = await checkUserSectionAccess(userId, quiz.sectionId)
+        if (!hasAccess) return { error: "No tienes acceso a esta sección" }
+
+        const unlockStatus = await checkQuizUnlocked(userId, quizId)
+        if (!unlockStatus.unlocked) {
+            return { error: `Este cuestionario está bloqueado. Primero debes aprobar: ${unlockStatus.requiredQuizTitle}` }
+        }
+
         const [attempt] = await db
             .insert(quizAttempts)
             .values({
@@ -52,10 +68,6 @@ export async function completeAttempt(attemptId: string) {
         let score = 0
         const maxScore = questions.reduce((sum, q) => sum + q.points, 0)
         
-        // Determinar si hay preguntas para revisión manual
-        const hasShortAnswer = questions.some(q => q.type === "short_answer")
-        const finalStatus = hasShortAnswer ? "pending_review" : "completed"
-
         for (const answer of answers) {
             if (answer.isCorrect) {
                 const question = questions.find(q => q.id === answer.questionId)
@@ -69,7 +81,7 @@ export async function completeAttempt(attemptId: string) {
             .set({
                 score,
                 maxScore,
-                status: finalStatus as any,
+                status: "completed",
                 completedAt: new Date(),
             })
             .where(eq(quizAttempts.id, attemptId))
@@ -95,29 +107,24 @@ export async function submitAnswer(data: SubmitAnswerInput) {
 
         if (!question) return { error: "Pregunta no encontrada" }
 
-        let isCorrect: boolean | null = null
+        let isCorrect: boolean | null = false
 
-        if (question.type === "short_answer") {
-            // Para respuesta corta, el admin revisará manualmente → null
-            isCorrect = null
-        } else {
-            // Para choice/true_false: comparar con opciones correctas
-            const correctOptions = await db
-                .select()
-                .from(quizOptions)
-                .where(and(
-                    eq(quizOptions.questionId, data.questionId),
-                    eq(quizOptions.isCorrect, true)
-                ))
+        // Para choice/true_false: comparar con opciones correctas
+        const correctOptions = await db
+            .select()
+            .from(quizOptions)
+            .where(and(
+                eq(quizOptions.questionId, data.questionId),
+                eq(quizOptions.isCorrect, true)
+            ))
 
-            const correctIds = correctOptions.map(o => o.id).sort()
-            const selectedIds = (data.selectedOptions || []).sort()
+        const correctIds = correctOptions.map(o => o.id).sort()
+        const selectedIds = (data.selectedOptions || []).sort()
 
-            // Correcto si las selecciones coinciden exactamente con las correctas
-            isCorrect =
-                correctIds.length === selectedIds.length &&
-                correctIds.every((id, i) => id === selectedIds[i])
-        }
+        // Correcto si las selecciones coinciden exactamente con las correctas
+        isCorrect =
+            correctIds.length === selectedIds.length &&
+            correctIds.every((id, i) => id === selectedIds[i])
 
         // 2. Verificar si ya existe una respuesta para esta pregunta en este intento
         const existing = await db
@@ -251,109 +258,4 @@ export async function getQuizAttempts(quizId: string) {
     }
 }
 
-export async function getPendingReviews(quizId: string) {
-    try {
-        const attempts = await db
-            .select({
-                id: quizAttempts.id,
-                quizId: quizAttempts.quizId,
-                userId: quizAttempts.userId,
-                score: quizAttempts.score,
-                maxScore: quizAttempts.maxScore,
-                status: quizAttempts.status,
-                startedAt: quizAttempts.startedAt,
-                completedAt: quizAttempts.completedAt,
-                firstName: profiles.firstName,
-                lastName: profiles.lastName,
-                email: profiles.email,
-            })
-            .from(quizAttempts)
-            .leftJoin(profiles, eq(quizAttempts.userId, profiles.id))
-            .where(and(
-                eq(quizAttempts.quizId, quizId),
-                eq(quizAttempts.status, "pending_review")
-            ))
-            .orderBy(desc(quizAttempts.completedAt))
 
-        return attempts
-    } catch (error) {
-        console.error("Error fetching pending reviews:", error)
-        return []
-    }
-}
-
-export async function getPendingReviewsCount(quizId: string) {
-    try {
-        const result = await db
-            .select()
-            .from(quizAttempts)
-            .where(and(
-                eq(quizAttempts.quizId, quizId),
-                eq(quizAttempts.status, "pending_review")
-            ))
-        return result.length
-    } catch (error) {
-        return 0
-    }
-}
-
-export async function gradeShortAnswerAction(answerId: string, isCorrect: boolean) {
-    try {
-        // 1. Actualizar la respuesta
-        const [updatedAnswer] = await db
-            .update(quizAnswers)
-            .set({ isCorrect })
-            .where(eq(quizAnswers.id, answerId))
-            .returning()
-
-        if (!updatedAnswer) return { error: "Respuesta no encontrada" }
-
-        // 2. Recalcular la nota total del intento
-        const allAnswers = await db
-            .select()
-            .from(quizAnswers)
-            .where(eq(quizAnswers.attemptId, updatedAnswer.attemptId))
-
-        const [attempt] = await db
-            .select()
-            .from(quizAttempts)
-            .where(eq(quizAttempts.id, updatedAnswer.attemptId))
-            .limit(1)
-
-        if (!attempt) return { error: "Intento no encontrado" }
-
-        const questions = await db
-            .select()
-            .from(quizQuestions)
-            .where(eq(quizQuestions.quizId, attempt.quizId))
-
-        let newScore = 0
-        for (const ans of allAnswers) {
-            if (ans.isCorrect) {
-                const q = questions.find(q => q.id === ans.questionId)
-                if (q) newScore += q.points
-            }
-        }
-
-        // 3. Verificar si quedan preguntas de texto por calificar en este intento
-        // (Preguntas de tipo short_answer que tengan isCorrect === null)
-        const pendingGrading = allAnswers.some(ans => {
-            const q = questions.find(q => q.id === ans.questionId)
-            return q?.type === "short_answer" && ans.isCorrect === null
-        })
-
-        // 4. Actualizar el intento
-        const [updatedAttempt] = await db
-            .update(quizAttempts)
-            .set({
-                score: newScore,
-                status: pendingGrading ? "pending_review" : "completed"
-            })
-            .where(eq(quizAttempts.id, updatedAnswer.attemptId))
-            .returning()
-
-        return { success: true, data: updatedAttempt }
-    } catch (error) {
-        return { error: formatError(error).message }
-    }
-}

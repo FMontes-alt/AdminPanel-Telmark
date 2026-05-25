@@ -39,6 +39,8 @@ export default function AdminQuizzesPage() {
     const [newSectionId, setNewSectionId] = useState("")
     const [newTimeLimit, setNewTimeLimit] = useState<string>("")
     const [newRandomize, setNewRandomize] = useState(false)
+    const [newPassingScore, setNewPassingScore] = useState<number>(80)
+    const [newRequiredQuizId, setNewRequiredQuizId] = useState<string>("")
 
     useEffect(() => {
         fetchData()
@@ -67,9 +69,11 @@ export default function AdminQuizzesPage() {
                 description: newDescription || undefined,
                 timeLimitMinutes: newTimeLimit ? parseInt(newTimeLimit) : null,
                 randomizeQuestions: newRandomize,
+                passingScore: newPassingScore,
+                requiredQuizId: newRequiredQuizId || null,
             })
             if (result?.success && result.data) {
-                router.push(`/admin/quizzes/${result.data.id}`)
+                router.push(`/admin/quizzes/${result.data.slug}`)
             }
         } catch (error) {
             console.error("Error creating quiz:", error)
@@ -217,6 +221,43 @@ export default function AdminQuizzesPage() {
                                 </div>
                             </div>
 
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">
+                                        Puntuación Mínima de Aprobación (%)
+                                    </label>
+                                    <input
+                                        value={newPassingScore}
+                                        onChange={(e) => setNewPassingScore(parseInt(e.target.value) || 0)}
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        placeholder="Ej: 80"
+                                        className="w-full bg-slate-100/50 border-transparent focus:bg-white focus:border-blue-100 rounded-2xl py-4 px-6 text-sm transition-all border outline-none font-bold text-slate-700 shadow-sm focus:ring-4 focus:ring-blue-500/5"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">
+                                        Cuestionario Previo Requerido
+                                    </label>
+                                    <select
+                                        value={newRequiredQuizId}
+                                        onChange={(e) => setNewRequiredQuizId(e.target.value)}
+                                        className="w-full bg-slate-100/50 border-transparent focus:bg-white focus:border-blue-100 rounded-2xl py-4 px-6 text-sm transition-all border outline-none font-bold text-slate-700 shadow-sm focus:ring-4 focus:ring-blue-500/5"
+                                    >
+                                        <option value="">Ninguno (Disponible de inmediato)</option>
+                                        {quizzes
+                                            .filter((q: any) => q.sectionId === newSectionId)
+                                            .map((q: any) => (
+                                                <option key={q.id} value={q.id}>
+                                                    {q.title}
+                                                </option>
+                                            ))}
+                                    </select>
+                                </div>
+                            </div>
+
                             <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
                                 <button
                                     type="submit"
@@ -320,7 +361,7 @@ export default function AdminQuizzesPage() {
                                     </button>
 
                                     <button
-                                        onClick={() => router.push(`/admin/quizzes/${quiz.id}/preview`)}
+                                        onClick={() => router.push(`/admin/quizzes/${quiz.slug}/preview`)}
                                         className="p-2 rounded-xl hover:bg-white transition-all text-slate-400 hover:text-blue-600"
                                         title="Probar cuestionario"
                                     >
@@ -336,7 +377,7 @@ export default function AdminQuizzesPage() {
                                     </button>
                                 </div>
                                 <button
-                                    onClick={() => router.push(`/admin/quizzes/${quiz.id}`)}
+                                    onClick={() => router.push(`/admin/quizzes/${quiz.slug}`)}
                                     className="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all"
                                 >
                                     Editar

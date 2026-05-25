@@ -1,11 +1,104 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { getAdminClient } from "@/lib/supabase/admin"
 import { sanitizeFileName, getStoragePath } from "@/lib/storage-utils"
 import { revalidatePath } from "next/cache"
 import { requireAdmin, getCurrentUser } from "@/lib/auth-guard"
+import { db } from "@/db"
+import { categories, items, permissions, quizQuestions, quizzes, sections, subcategories, userGroups } from "@/db/schema"
+import { eq, inArray, or, sql } from "drizzle-orm"
 
 const BUCKET_NAME = 'telmark-media'
+
+function normalizeStoragePath(path: string) {
+    return path.replace(`${BUCKET_NAME}/`, '')
+}
+
+async function getUserPermissionTargets(userId: string) {
+    const userGroupsQuery = await db.select({ groupId: userGroups.groupId })
+        .from(userGroups)
+        .where(eq(userGroups.userId, userId))
+
+    const userGroupIds = userGroupsQuery.map(g => g.groupId)
+
+    return db.select().from(permissions).where(
+        or(
+            eq(permissions.userId, userId),
+            userGroupIds.length > 0 ? inArray(permissions.groupId, userGroupIds) : sql`FALSE`
+        )
+    )
+}
+
+function hasHierarchyPermission(
+    perms: Awaited<ReturnType<typeof getUserPermissionTargets>>,
+    target: {
+        sectionId?: string | null
+        categoryId?: string | null
+        subcategoryId?: string | null
+        itemId?: string | null
+    },
+    assignedSectionIds?: string[] | null
+) {
+    return (
+        (target.sectionId && assignedSectionIds?.includes(target.sectionId)) ||
+        perms.some(p => p.targetType === "section" && p.targetId === target.sectionId) ||
+        perms.some(p => p.targetType === "category" && p.targetId === target.categoryId) ||
+        perms.some(p => p.targetType === "subcategory" && p.targetId === target.subcategoryId) ||
+        perms.some(p => p.targetType === "item" && p.targetId === target.itemId)
+    )
+}
+
+async function canAccessStoragePath(path: string) {
+    const auth = await getCurrentUser()
+    if (!auth) return false
+
+    if (auth.profile.role === "admin" || auth.profile.role === "superadmin") {
+        return true
+    }
+
+    const cleanPath = normalizeStoragePath(path)
+    const pathCandidates = [path, cleanPath, `${BUCKET_NAME}/${cleanPath}`]
+    const perms = await getUserPermissionTargets(auth.user.id)
+    const assignedSectionIds = auth.profile.assignedSectionIds
+
+    const [sectionImage] = await db.select({ sectionId: sections.id })
+        .from(sections)
+        .where(inArray(sections.imagePath, pathCandidates))
+        .limit(1)
+
+    if (sectionImage && hasHierarchyPermission(perms, sectionImage, assignedSectionIds)) {
+        return true
+    }
+
+    const [contentItem] = await db.select({
+        itemId: items.id,
+        subcategoryId: subcategories.id,
+        categoryId: categories.id,
+        sectionId: categories.sectionId,
+    })
+        .from(items)
+        .innerJoin(subcategories, eq(items.subcategoryId, subcategories.id))
+        .innerJoin(categories, eq(subcategories.categoryId, categories.id))
+        .where(inArray(items.filePath, pathCandidates))
+        .limit(1)
+
+    if (contentItem && hasHierarchyPermission(perms, contentItem, assignedSectionIds)) {
+        return true
+    }
+
+    const [quizMedia] = await db.select({ sectionId: quizzes.sectionId })
+        .from(quizQuestions)
+        .innerJoin(quizzes, eq(quizQuestions.quizId, quizzes.id))
+        .where(inArray(quizQuestions.mediaUrl, pathCandidates))
+        .limit(1)
+
+    if (quizMedia && hasHierarchyPermission(perms, quizMedia, assignedSectionIds)) {
+        return true
+    }
+
+    return false
+}
 
 /**
  * Sube un archivo a Supabase Storage.
@@ -61,13 +154,13 @@ export async function getPublicUrlAction(path: string) {
  * Genera una URL firmada (temporal) para ver un archivo privado.
  */
 export async function getSignedUrlAction(path: string) {
-    const user = await getCurrentUser()
-    if (!user) return null
+    const canAccess = await canAccessStoragePath(path)
+    if (!canAccess) return null
 
-    const supabase = await createClient()
+    const supabase = getAdminClient()
     
     // El path no debe incluir el nombre del bucket
-    const cleanPath = path.replace(`${BUCKET_NAME}/`, '')
+    const cleanPath = normalizeStoragePath(path)
 
     const { data, error } = await supabase.storage
         .from(BUCKET_NAME)
@@ -85,12 +178,12 @@ export async function getSignedUrlAction(path: string) {
  * Genera una URL firmada específicamente para forzar la descarga del archivo.
  */
 export async function getDownloadUrlAction(path: string) {
-    const user = await getCurrentUser()
-    if (!user) return null
+    const canAccess = await canAccessStoragePath(path)
+    if (!canAccess) return null
 
-    const supabase = await createClient()
+    const supabase = getAdminClient()
     
-    const cleanPath = path.replace(`${BUCKET_NAME}/`, '')
+    const cleanPath = normalizeStoragePath(path)
 
     const { data, error } = await supabase.storage
         .from(BUCKET_NAME)

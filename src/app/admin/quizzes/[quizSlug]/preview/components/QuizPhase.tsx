@@ -14,10 +14,8 @@ interface QuizPhaseProps {
     onNext: () => void
     onFinish: () => void
     onSelectOption: (id: string) => void
-    onTextAnswer: (text: string) => void
     isOptionDisabled: (id: string) => boolean
     selectedOptions: string[]
-    textAnswer: string
     submitting: boolean
     currentMediaUrl: string | null
     resolvingMedia: boolean
@@ -35,10 +33,8 @@ export default function QuizPhase({
     onNext,
     onFinish,
     onSelectOption,
-    onTextAnswer,
     isOptionDisabled,
     selectedOptions,
-    textAnswer,
     submitting,
     currentMediaUrl,
     resolvingMedia,
@@ -161,16 +157,6 @@ export default function QuizPhase({
                                     )
                                 })}
                             </div>
-                        )}
-
-                        {currentQuestion.type === "short_answer" && (
-                            <textarea
-                                value={textAnswer}
-                                onChange={(e) => onTextAnswer(e.target.value)}
-                                placeholder="Escribe tu respuesta aquí..."
-                                rows={4}
-                                className="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-medium text-slate-700 outline-none focus:border-blue-300 transition-all resize-none"
-                            />
                         )}
                     </motion.div>
                 </AnimatePresence>

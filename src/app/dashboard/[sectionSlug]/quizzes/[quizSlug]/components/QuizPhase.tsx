@@ -1,7 +1,7 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { Clock, CheckCircle2, ArrowLeft, ArrowRight, Send } from "lucide-react"
+import { Clock, CheckCircle2, ArrowLeft, ArrowRight, Send, X } from "lucide-react"
 
 interface QuizPhaseProps {
     currentIndex: number
@@ -13,12 +13,12 @@ interface QuizPhaseProps {
     onNext: () => void
     onFinish: () => void
     onSelectOption: (id: string) => void
-    onTextAnswer: (text: string) => void
     isOptionDisabled: (id: string) => boolean
     selectedOptions: string[]
-    textAnswer: string
     submitting: boolean
     isLastQuestion: boolean
+    onCancel: () => void
+    embedded?: boolean
 }
 
 export default function QuizPhase({
@@ -31,20 +31,27 @@ export default function QuizPhase({
     onNext,
     onFinish,
     onSelectOption,
-    onTextAnswer,
     isOptionDisabled,
     selectedOptions,
-    textAnswer,
     submitting,
-    isLastQuestion
+    isLastQuestion,
+    onCancel,
+    embedded = false
 }: QuizPhaseProps) {
     if (!currentQuestion) return null
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
+        <div className={`${embedded ? "h-full" : "min-h-screen"} bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col`}>
             {/* Top Bar */}
             <div className="bg-white border-b border-slate-100 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
                 <div className="flex items-center gap-4">
+                    <button
+                        onClick={onCancel}
+                        className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                        title="Cancelar Intento"
+                    >
+                        <X size={16} />
+                    </button>
                     <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
                         {currentIndex + 1} / {totalQuestions}
                     </span>
@@ -147,16 +154,6 @@ export default function QuizPhase({
                                     )
                                 })}
                             </div>
-                        )}
-
-                        {currentQuestion.type === "short_answer" && (
-                            <textarea
-                                value={textAnswer}
-                                onChange={(e) => onTextAnswer(e.target.value)}
-                                placeholder="Escribe tu respuesta aquí..."
-                                rows={4}
-                                className="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-medium text-slate-700 outline-none focus:border-blue-300 transition-all resize-none"
-                            />
                         )}
                     </motion.div>
                 </AnimatePresence>

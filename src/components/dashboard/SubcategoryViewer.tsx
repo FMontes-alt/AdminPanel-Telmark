@@ -21,6 +21,7 @@ export function SubcategoryViewer({ sub }: SubcategoryViewerProps) {
     const [selectedItem, setSelectedItem] = useState<any>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [loadingPreview, setLoadingPreview] = useState(false)
+    const [previewError, setPreviewError] = useState<string | null>(null)
 
     const getContentIcon = (contentType: string) => {
         switch (contentType) {
@@ -78,16 +79,21 @@ export function SubcategoryViewer({ sub }: SubcategoryViewerProps) {
 
         setSelectedItem(item)
         setPreviewUrl(null)
+        setPreviewError(null)
         setLoadingPreview(true)
 
         try {
+            let resolvedUrl: string | null = null
+
             if (item.filePath) {
                 const url = await getSignedUrlAction(item.filePath)
+                resolvedUrl = url
                 if (url && (item.filePath.toLowerCase().endsWith('.pdf') || item.contentType === 'document')) {
                     try {
                         const response = await fetch(url)
                         const blob = await response.blob()
                         const objectUrl = URL.createObjectURL(blob)
+                        resolvedUrl = objectUrl
                         setPreviewUrl(objectUrl)
                     } catch (e) {
                         setPreviewUrl(url)
@@ -101,10 +107,16 @@ export function SubcategoryViewer({ sub }: SubcategoryViewerProps) {
                     const match = url.match(/src=["']([^"']+)["']/)
                     if (match && match[1]) url = match[1]
                 }
-                setPreviewUrl(getEmbedUrl(url))
+                resolvedUrl = getEmbedUrl(url)
+                setPreviewUrl(resolvedUrl)
+            }
+
+            if ((item.filePath || item.externalLink) && !resolvedUrl) {
+                setPreviewError("No se pudo cargar este recurso. Revisa los permisos o el archivo asociado.")
             }
         } catch (error) {
             console.error("Error loading preview:", error)
+            setPreviewError("No se pudo cargar este recurso. Revisa los permisos o el archivo asociado.")
         } finally {
             setLoadingPreview(false)
         }
@@ -113,6 +125,7 @@ export function SubcategoryViewer({ sub }: SubcategoryViewerProps) {
     const handleClose = () => {
         setSelectedItem(null)
         setPreviewUrl(null)
+        setPreviewError(null)
     }
 
     const handleDownload = async () => {
@@ -158,6 +171,20 @@ export function SubcategoryViewer({ sub }: SubcategoryViewerProps) {
                     <div className="text-center space-y-4">
                         <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto shadow-sm" />
                         <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Sincronizando recurso...</p>
+                    </div>
+                </div>
+            )
+        }
+
+        if (previewError) {
+            return (
+                <div className="flex items-center justify-center h-full text-center p-12">
+                    <div className="space-y-4 max-w-sm">
+                        <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-[24px] flex items-center justify-center mx-auto">
+                            <FileText size={30} />
+                        </div>
+                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">Vista previa no disponible</h4>
+                        <p className="text-xs text-slate-500 font-medium leading-relaxed">{previewError}</p>
                     </div>
                 </div>
             )

@@ -109,6 +109,7 @@ export async function getQuizAnalytics(quizId: string) {
             .sort((a, b) => b.bestAttempt.score - a.bestAttempt.score)
             .map((u, index) => ({
                 id: u.bestAttempt.id, // ID del mejor intento para key de React
+                userId: u.userId,
                 rank: index + 1,
                 name: u.name,
                 email: u.email,
@@ -131,6 +132,85 @@ export async function getQuizAnalytics(quizId: string) {
         }
     } catch (error) {
         console.error("Error fetching quiz analytics:", error)
+        return null
+    }
+}
+
+export async function getUserQuizAnalytics(quizId: string, userId: string) {
+    try {
+        // 1. Obtener todas las preguntas del quiz
+        const questions = await db
+            .select()
+            .from(quizQuestions)
+            .where(eq(quizQuestions.quizId, quizId))
+            .orderBy(quizQuestions.sortOrder)
+
+        // 2. Obtener todos los intentos del usuario para este quiz
+        const attempts = await db
+            .select()
+            .from(quizAttempts)
+            .where(and(
+                eq(quizAttempts.quizId, quizId),
+                eq(quizAttempts.userId, userId),
+                sql`${quizAttempts.completedAt} IS NOT NULL`
+            ))
+            .orderBy(desc(quizAttempts.score)) // El mejor intento primero
+
+        if (attempts.length === 0) return null
+
+        const bestAttempt = attempts[0]
+
+        // 3. Obtener las respuestas del usuario para ese mejor intento
+        const answers = await db
+            .select()
+            .from(quizAnswers)
+            .where(eq(quizAnswers.attemptId, bestAttempt.id))
+
+        // 4. Mapear preguntas con las respuestas del usuario
+        const questionsWithAnswers = await Promise.all(
+            questions.map(async (q) => {
+                const options = await db
+                    .select()
+                    .from(quizOptions)
+                    .where(eq(quizOptions.questionId, q.id))
+                    .orderBy(quizOptions.sortOrder)
+                const answer = answers.find(a => a.questionId === q.id)
+                return {
+                    ...q,
+                    options,
+                    userAnswer: answer || null
+                }
+            })
+        )
+
+        // 5. Agrupar aciertos por tema
+        const topicAnalysisMap = new Map<string, { correct: number; total: number }>()
+        questionsWithAnswers.forEach(q => {
+            const topic = q.topic || "General"
+            const current = topicAnalysisMap.get(topic) || { correct: 0, total: 0 }
+            current.total += 1
+            if (q.userAnswer?.isCorrect) {
+                current.correct += 1
+            }
+            topicAnalysisMap.set(topic, current)
+        })
+
+        const topicAnalysis = Array.from(topicAnalysisMap.entries()).map(([topic, stats]) => ({
+            topic,
+            correct: stats.correct,
+            total: stats.total,
+            percentage: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
+        }))
+
+        return {
+            bestAttempt,
+            attemptsCount: attempts.length,
+            attempts,
+            questions: questionsWithAnswers,
+            topicAnalysis
+        }
+    } catch (error) {
+        console.error("Error fetching user quiz analytics:", error)
         return null
     }
 }
