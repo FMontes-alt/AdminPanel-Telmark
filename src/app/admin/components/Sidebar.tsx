@@ -119,9 +119,9 @@ export function Sidebar() {
         {
             group: "Operativa",
             items: [
-                { name: 'Cuestionarios', href: '/admin/quizzes', icon: ClipboardList },
                 { name: 'Usuarios', href: '/admin/usuarios', icon: Users },
                 { name: 'Grupos', href: '/admin/grupos', icon: FolderTree },
+                { name: 'Cuestionarios', href: '/admin/quizzes', icon: ClipboardList },
                 { name: 'Monitoreo', href: '/admin/monitoring', icon: Eye },
                 { name: 'Analíticas', href: '/admin/analytics', icon: BarChart3 },
             ]
