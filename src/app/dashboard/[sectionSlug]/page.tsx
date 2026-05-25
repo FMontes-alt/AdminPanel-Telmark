@@ -122,18 +122,37 @@ export default function DashboardSectionPage() {
 
     if (loading) {
         return (
-            <div className="h-screen bg-slate-50 flex items-center justify-center p-8">
-                <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex flex-col items-center gap-6"
-                >
-                    <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin shadow-lg" />
-                    <div className="text-center space-y-1">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Iniciando Protocolo</p>
-                        <p className="text-sm font-bold text-slate-900 tracking-tight">Cargando Unidad de Negocio...</p>
+            <div className="h-screen bg-[#fafafa] flex overflow-hidden font-sans selection:bg-blue-600/10 selection:text-blue-600">
+                <DashboardSidebar 
+                    section={section || { name: "Cargando..." }}
+                    categories={categories}
+                    selectedCategoryId={selectedCategoryId}
+                    onSelectCategory={setSelectedCategoryId}
+                    quizCount={quizCount || 1}
+                    sectionSlug={sectionSlug as string}
+                />
+
+                <main className="flex-1 flex flex-col h-full bg-white relative">
+                    <DashboardHeader 
+                        sectionName={section?.name || "Cargando..."}
+                        searchTerm={searchTerm}
+                        onSearchChange={setSearchTerm}
+                    />
+
+                    <div className="flex-1 flex items-center justify-center bg-[#fafafa]/50">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex flex-col items-center gap-6"
+                        >
+                            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin shadow-lg" />
+                            <div className="text-center space-y-1">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Iniciando Protocolo</p>
+                                <p className="text-sm font-bold text-slate-900 tracking-tight">Cargando Documentación...</p>
+                            </div>
+                        </motion.div>
                     </div>
-                </motion.div>
+                </main>
             </div>
         )
     }

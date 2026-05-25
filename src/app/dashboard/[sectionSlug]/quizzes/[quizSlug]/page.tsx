@@ -2,9 +2,14 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { getQuizWithDetailsBySlug } from "@/actions/quizzes"
+import { getPublishedQuizzes, getQuizWithDetailsBySlug } from "@/actions/quizzes"
 import { startAttempt, submitAnswer, completeAttempt, getAttemptResults } from "@/actions/quiz-attempts"
 import { createClient } from "@/lib/supabase/client"
+import { getSectionBySlug } from "@/actions/sections"
+import { getFilteredHierarchy } from "@/actions/hierarchy"
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
+import { AlertTriangle, X } from "lucide-react"
 
 // Modular Components
 import IntroPhase from "./components/IntroPhase"
@@ -27,6 +32,10 @@ export default function QuizTakePage() {
     const router = useRouter()
 
     const [phase, setPhase] = useState<Phase>("intro")
+    const [section, setSection] = useState<any>(null)
+    const [categories, setCategories] = useState<any[]>([])
+    const [quizCount, setQuizCount] = useState(0)
+    const [searchTerm, setSearchTerm] = useState("")
     const [quiz, setQuiz] = useState<any>(null)
     const [questions, setQuestions] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -41,12 +50,24 @@ export default function QuizTakePage() {
 
     const [results, setResults] = useState<any>(null)
     const [submitting, setSubmitting] = useState(false)
+    const [showCancelModal, setShowCancelModal] = useState(false)
 
     useEffect(() => {
         const init = async () => {
             const supabase = createClient()
             const { data: { user } } = await supabase.auth.getUser()
             if (user) setUserId(user.id)
+
+            const sec = await getSectionBySlug(sectionSlug as string)
+            if (sec) {
+                setSection(sec)
+                const [catsWithSubs, published] = await Promise.all([
+                    getFilteredHierarchy(sec.id),
+                    getPublishedQuizzes(sec.id),
+                ])
+                setCategories(catsWithSubs)
+                setQuizCount(published.length)
+            }
 
             const data = await getQuizWithDetailsBySlug(quizSlug as string)
             if (data) {
@@ -63,7 +84,7 @@ export default function QuizTakePage() {
             setLoading(false)
         }
         init()
-    }, [quizSlug])
+    }, [sectionSlug, quizSlug])
 
     useEffect(() => {
         if (phase !== "quiz" || timeLeft === null) return
@@ -148,38 +169,118 @@ export default function QuizTakePage() {
     }
 
     const handleCancel = () => {
-        if (window.confirm("¿Estás seguro de que deseas cancelar el intento? Tu progreso no se guardará.")) {
-            router.push(`/dashboard/${sectionSlug}/quizzes`)
-        }
+        setShowCancelModal(true)
     }
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
-    if (!quiz) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><p className="text-slate-400 font-bold">Cuestionario no encontrado</p></div>
+    const confirmCancel = () => {
+        setShowCancelModal(false)
+        router.push(`/dashboard/${sectionSlug}/quizzes`)
+    }
+
+    const renderShell = (content: any) => (
+        <div className="h-screen bg-[#fafafa] flex overflow-hidden font-sans selection:bg-blue-600/10 selection:text-blue-600">
+            <DashboardSidebar
+                section={section || { name: "Cargando..." }}
+                categories={categories}
+                selectedCategoryId={null}
+                onSelectCategory={() => router.push(`/dashboard/${sectionSlug}`)}
+                quizCount={quizCount || 1}
+                sectionSlug={sectionSlug as string}
+            />
+
+            <main className="flex-1 flex flex-col h-full bg-white relative">
+                <DashboardHeader
+                    sectionName={section?.name || "Cargando..."}
+                    searchTerm={searchTerm}
+                    onSearchChange={setSearchTerm}
+                />
+                <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#fafafa]/50">
+                    {content}
+                </div>
+            </main>
+
+            {showCancelModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                    <div className="w-full max-w-md bg-white rounded-[28px] shadow-2xl border border-slate-100 overflow-hidden">
+                        <div className="p-6 flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
+                                <AlertTriangle size={22} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Cancelar intento</h3>
+                                <p className="text-sm text-slate-500 font-medium leading-relaxed mt-1">
+                                    Si sales ahora, el progreso de este cuestionario no se guardará.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowCancelModal(false)}
+                                className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="px-6 py-4 bg-slate-50/70 border-t border-slate-100 flex items-center justify-end gap-3">
+                            <button
+                                onClick={() => setShowCancelModal(false)}
+                                className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-colors"
+                            >
+                                Continuar
+                            </button>
+                            <button
+                                onClick={confirmCancel}
+                                className="px-5 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-black uppercase tracking-widest hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20"
+                            >
+                                Cancelar intento
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+
+    if (loading) {
+        return renderShell(
+            <div className="h-full flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            </div>
+        )
+    }
+
+    if (!quiz) {
+        return renderShell(
+            <div className="h-full flex items-center justify-center">
+                <p className="text-slate-400 font-bold">Cuestionario no encontrado</p>
+            </div>
+        )
+    }
 
     if (phase === "intro") {
-        return (
+        return renderShell(
             <IntroPhase 
                 quiz={quiz} 
                 questionsCount={questions.length} 
                 onStart={handleStart} 
                 onBack={() => router.push(`/dashboard/${sectionSlug}/quizzes`)}
+                embedded
             />
         )
     }
 
     if (phase === "results" && results) {
-        return (
+        return renderShell(
             <PersonalResults 
                 results={results}
                 onRepeat={() => {
                     setPhase("intro"); setCurrentIndex(0); setAnswers({}); setResults(null); setAttemptId(null); setTimeLeft(null);
                 }}
                 onBackToQuizzes={() => router.push(`/dashboard/${sectionSlug}/quizzes`)}
+                embedded
             />
         )
     }
 
-    return (
+    return renderShell(
         <QuizPhase 
             currentIndex={currentIndex}
             totalQuestions={questions.length}
@@ -195,6 +296,7 @@ export default function QuizTakePage() {
             submitting={submitting}
             isLastQuestion={currentIndex === questions.length - 1}
             onCancel={handleCancel}
+            embedded
         />
     )
 }

@@ -7,15 +7,16 @@ interface PersonalResultsProps {
     results: any
     onRepeat: () => void
     onBackToQuizzes: () => void
+    embedded?: boolean
 }
 
-export default function PersonalResults({ results, onRepeat, onBackToQuizzes }: PersonalResultsProps) {
+export default function PersonalResults({ results, onRepeat, onBackToQuizzes, embedded = false }: PersonalResultsProps) {
     const attempt = results.attempt
     const percentage = attempt?.maxScore ? Math.round((attempt.score / attempt.maxScore) * 100) : 0
     const details = results.details?.questions || []
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 py-12">
+        <div className={`${embedded ? "min-h-full" : "min-h-screen"} bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 py-12`}>
             <div className="max-w-2xl mx-auto space-y-8">
                 <button
                     onClick={onBackToQuizzes}

@@ -18,6 +18,7 @@ interface QuizPhaseProps {
     submitting: boolean
     isLastQuestion: boolean
     onCancel: () => void
+    embedded?: boolean
 }
 
 export default function QuizPhase({
@@ -34,12 +35,13 @@ export default function QuizPhase({
     selectedOptions,
     submitting,
     isLastQuestion,
-    onCancel
+    onCancel,
+    embedded = false
 }: QuizPhaseProps) {
     if (!currentQuestion) return null
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
+        <div className={`${embedded ? "h-full" : "min-h-screen"} bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col`}>
             {/* Top Bar */}
             <div className="bg-white border-b border-slate-100 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
                 <div className="flex items-center gap-4">
