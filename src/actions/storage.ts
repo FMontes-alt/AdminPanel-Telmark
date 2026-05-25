@@ -87,6 +87,15 @@ async function canAccessStoragePath(path: string) {
         return true
     }
 
+    const [quizCover] = await db.select({ sectionId: quizzes.sectionId })
+        .from(quizzes)
+        .where(inArray(quizzes.imagePath, pathCandidates))
+        .limit(1)
+
+    if (quizCover && hasHierarchyPermission(perms, quizCover, assignedSectionIds)) {
+        return true
+    }
+
     const [quizMedia] = await db.select({ sectionId: quizzes.sectionId })
         .from(quizQuestions)
         .innerJoin(quizzes, eq(quizQuestions.quizId, quizzes.id))

@@ -26,6 +26,7 @@ export default function QuizEditorPage() {
     const [editTitle, setEditTitle] = useState("")
     const [editSectionId, setEditSectionId] = useState("")
     const [editDescription, setEditDescription] = useState("")
+    const [editImagePath, setEditImagePath] = useState("")
     const [editTimeLimit, setEditTimeLimit] = useState("")
     const [editRandomize, setEditRandomize] = useState(false)
     const [editPassingScore, setEditPassingScore] = useState(80)
@@ -51,6 +52,7 @@ export default function QuizEditorPage() {
             setEditTitle(quizData.title)
             setEditSectionId(quizData.sectionId)
             setEditDescription(quizData.description || "")
+            setEditImagePath(quizData.imagePath || "")
             setEditTimeLimit(quizData.timeLimitMinutes?.toString() || "")
             setEditRandomize(quizData.randomizeQuestions)
             setEditPassingScore(quizData.passingScore)
@@ -72,6 +74,7 @@ export default function QuizEditorPage() {
             title: editTitle,
             sectionId: editSectionId,
             description: editDescription || undefined,
+            imagePath: editImagePath || null,
             timeLimitMinutes: editTimeLimit ? parseInt(editTimeLimit) : null,
             randomizeQuestions: editRandomize,
             passingScore: editPassingScore,
@@ -134,6 +137,7 @@ export default function QuizEditorPage() {
                 editTitle={editTitle} setEditTitle={setEditTitle}
                 editSectionId={editSectionId} setEditSectionId={setEditSectionId}
                 editDescription={editDescription} setEditDescription={setEditDescription}
+                editImagePath={editImagePath} setEditImagePath={setEditImagePath}
                 editTimeLimit={editTimeLimit} setEditTimeLimit={setEditTimeLimit}
                 editRandomize={editRandomize} setEditRandomize={setEditRandomize}
                 editPassingScore={editPassingScore} setEditPassingScore={setEditPassingScore}

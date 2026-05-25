@@ -16,11 +16,13 @@ import {
     Shuffle,
     FileText,
     Play,
+    Image as ImageIcon,
 } from "lucide-react"
 import { getQuizzes, createQuiz, deleteQuiz, publishQuiz } from "@/actions/quizzes"
 import { getAllSectionsAction } from "@/actions/sections"
 import DeleteConfirmModal from "@/components/ui/DeleteConfirmModal"
 import { AdminPageHeader } from "@/components/ui/admin-page-header"
+import { ResolvedStorageImage } from "@/components/ui/resolved-storage-image"
 
 export default function AdminQuizzesPage() {
     const router = useRouter()
@@ -36,6 +38,7 @@ export default function AdminQuizzesPage() {
     // Form
     const [newTitle, setNewTitle] = useState("")
     const [newDescription, setNewDescription] = useState("")
+    const [newImagePath, setNewImagePath] = useState("")
     const [newSectionId, setNewSectionId] = useState("")
     const [newTimeLimit, setNewTimeLimit] = useState<string>("")
     const [newRandomize, setNewRandomize] = useState(false)
@@ -67,6 +70,7 @@ export default function AdminQuizzesPage() {
                 sectionId: newSectionId,
                 title: newTitle,
                 description: newDescription || undefined,
+                imagePath: newImagePath || null,
                 timeLimitMinutes: newTimeLimit ? parseInt(newTimeLimit) : null,
                 randomizeQuestions: newRandomize,
                 passingScore: newPassingScore,
@@ -189,6 +193,29 @@ export default function AdminQuizzesPage() {
                                 />
                             </div>
 
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">
+                                    Imagen (Storage Path o URL)
+                                </label>
+                                <div className="flex gap-3">
+                                    <input
+                                        value={newImagePath}
+                                        onChange={(e) => setNewImagePath(e.target.value)}
+                                        placeholder="ej: quizzes/portada.webp o https://..."
+                                        className="flex-1 bg-slate-100/50 border-transparent focus:bg-white focus:border-blue-100 rounded-2xl py-4 px-6 text-sm transition-all border outline-none font-bold text-slate-700 shadow-sm focus:ring-4 focus:ring-blue-500/5"
+                                    />
+                                    {newImagePath && (
+                                        <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-200 bg-white shrink-0 shadow-sm">
+                                            <ResolvedStorageImage
+                                                src={newImagePath}
+                                                alt="Preview"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">
@@ -308,6 +335,15 @@ export default function AdminQuizzesPage() {
                             whileHover={{ y: -4 }}
                             className="group bg-white border border-slate-100 rounded-[32px] shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all overflow-hidden"
                         >
+                            {quiz.imagePath && (
+                                <div className="h-36 bg-slate-100 overflow-hidden">
+                                    <ResolvedStorageImage
+                                        src={quiz.imagePath}
+                                        alt={quiz.title}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                </div>
+                            )}
                             {/* Card Header */}
                             <div className={`px-8 py-6 border-b border-slate-50 ${quiz.isPublished ? 'bg-emerald-50/50' : 'bg-amber-50/50'}`}>
                                 <div className="flex items-center justify-between mb-3">
@@ -340,7 +376,7 @@ export default function AdminQuizzesPage() {
                             {/* Card Body */}
                             <div className="px-8 py-5 space-y-4">
                                 <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
-                                    <FileText size={14} />
+                                    {quiz.imagePath ? <ImageIcon size={14} /> : <FileText size={14} />}
                                     <span>{quiz.sectionName || "Sin sección"}</span>
                                 </div>
 

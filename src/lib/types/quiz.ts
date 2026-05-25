@@ -9,6 +9,7 @@ export interface Quiz {
     title: string;
     slug: string;
     description: string | null;
+    imagePath: string | null;
     isPublished: boolean;
     timeLimitMinutes: number | null;
     randomizeQuestions: boolean;
@@ -76,6 +77,7 @@ export interface CreateQuizInput {
     sectionId: string;
     title: string;
     description?: string;
+    imagePath?: string | null;
     timeLimitMinutes?: number | null;
     randomizeQuestions?: boolean;
     passingScore?: number;

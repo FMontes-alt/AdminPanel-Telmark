@@ -1,6 +1,7 @@
 "use client"
 
 import { Play, Eye, EyeOff, Clock, Shuffle, Save } from "lucide-react"
+import { ResolvedStorageImage } from "@/components/ui/resolved-storage-image"
 
 interface QuizEditorHeaderProps {
     editTitle: string
@@ -9,6 +10,8 @@ interface QuizEditorHeaderProps {
     setEditSectionId: (v: string) => void
     editDescription: string
     setEditDescription: (v: string) => void
+    editImagePath: string
+    setEditImagePath: (v: string) => void
     editTimeLimit: string
     setEditTimeLimit: (v: string) => void
     editRandomize: boolean
@@ -30,6 +33,7 @@ export default function QuizEditorHeader({
     editTitle, setEditTitle,
     editSectionId, setEditSectionId,
     editDescription, setEditDescription,
+    editImagePath, setEditImagePath,
     editTimeLimit, setEditTimeLimit,
     editRandomize, setEditRandomize,
     editPassingScore, setEditPassingScore,
@@ -98,6 +102,27 @@ export default function QuizEditorHeader({
                         placeholder="Opcional..."
                         className="w-full bg-slate-50 rounded-2xl py-3 px-5 text-sm font-medium text-slate-700 outline-none border border-transparent focus:border-blue-200 focus:bg-white transition-all"
                     />
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Imagen (Storage Path o URL)</label>
+                    <div className="flex gap-4">
+                        <input
+                            value={editImagePath}
+                            onChange={(e) => setEditImagePath(e.target.value)}
+                            placeholder="ej: quizzes/portada.webp o https://..."
+                            className="flex-1 bg-slate-50 rounded-2xl py-3 px-5 text-sm font-medium text-slate-700 outline-none border border-transparent focus:border-blue-200 focus:bg-white transition-all"
+                        />
+                        {editImagePath && (
+                            <div className="w-20 h-20 rounded-2xl overflow-hidden border border-slate-200 bg-white shrink-0 shadow-sm">
+                                <ResolvedStorageImage
+                                    src={editImagePath}
+                                    alt="Preview"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -20,6 +20,7 @@ import { getUserAttempts } from "@/actions/quiz-attempts"
 import { checkUserSectionAccess, checkQuizUnlocked } from "@/actions/quiz-access"
 import { getFilteredHierarchy } from "@/actions/hierarchy"
 import { createClient } from "@/lib/supabase/client"
+import { ResolvedStorageImage } from "@/components/ui/resolved-storage-image"
 
 // Importar el nuevo Header
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
@@ -196,6 +197,15 @@ export default function UserQuizzesPage() {
                                                 }}
                                                 className={`group block bg-white border border-slate-100 rounded-[32px] shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all overflow-hidden ${!quiz.unlocked ? 'opacity-60 cursor-not-allowed shadow-none' : ''}`}
                                             >
+                                                {quiz.imagePath && (
+                                                    <div className="h-40 bg-slate-100 overflow-hidden">
+                                                        <ResolvedStorageImage
+                                                            src={quiz.imagePath}
+                                                            alt={quiz.title}
+                                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                        />
+                                                    </div>
+                                                )}
                                                 <div className="p-8 space-y-5">
                                                     <div className="flex items-start justify-between">
                                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm ${!quiz.unlocked ? 'bg-slate-100 text-slate-400' : 'bg-slate-50 text-slate-600 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-lg group-hover:shadow-blue-600/30'}`}>

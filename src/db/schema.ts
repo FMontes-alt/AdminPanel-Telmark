@@ -147,6 +147,7 @@ export const quizzes = pgTable("quizzes", {
     title: text("title").notNull(),
     slug: text("slug").notNull(),
     description: text("description"),
+    imagePath: text("image_path"),
     isPublished: boolean("is_published").default(false).notNull(),
     timeLimitMinutes: integer("time_limit_minutes"), // null = sin límite
     randomizeQuestions: boolean("randomize_questions").default(false).notNull(),

@@ -19,6 +19,7 @@ export async function getQuizzes(sectionId?: string) {
                 title: quizzes.title,
                 slug: quizzes.slug,
                 description: quizzes.description,
+                imagePath: quizzes.imagePath,
                 isPublished: quizzes.isPublished,
                 timeLimitMinutes: quizzes.timeLimitMinutes,
                 randomizeQuestions: quizzes.randomizeQuestions,
@@ -173,6 +174,7 @@ export async function createQuiz(data: CreateQuizInput) {
                 title: data.title,
                 slug,
                 description: data.description || null,
+                imagePath: data.imagePath || null,
                 timeLimitMinutes: data.timeLimitMinutes || null,
                 randomizeQuestions: data.randomizeQuestions || false,
                 sortOrder,
@@ -199,6 +201,7 @@ export async function updateQuiz(quizId: string, data: Partial<CreateQuizInput> 
             updateData.slug = data.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
         }
         if (data.description !== undefined) updateData.description = data.description
+        if (data.imagePath !== undefined) updateData.imagePath = data.imagePath
         if (data.sectionId !== undefined) updateData.sectionId = data.sectionId
         if (data.timeLimitMinutes !== undefined) updateData.timeLimitMinutes = data.timeLimitMinutes
         if (data.randomizeQuestions !== undefined) updateData.randomizeQuestions = data.randomizeQuestions
@@ -228,6 +231,12 @@ export async function publishQuiz(quizId: string, publish: boolean) {
 
 export async function deleteQuiz(quizId: string) {
     try {
+        const [quiz] = await db
+            .select({ imagePath: quizzes.imagePath })
+            .from(quizzes)
+            .where(eq(quizzes.id, quizId))
+            .limit(1)
+
         // 1. Limpiar storage de todas las preguntas del quiz
         const questions = await db
             .select({ mediaUrl: quizQuestions.mediaUrl })
@@ -237,6 +246,10 @@ export async function deleteQuiz(quizId: string) {
         const filePaths = questions
             .map(q => q.mediaUrl)
             .filter((url): url is string => !!url && !url.startsWith('http'))
+
+        if (quiz?.imagePath && !quiz.imagePath.startsWith('http')) {
+            filePaths.push(quiz.imagePath)
+        }
 
         if (filePaths.length > 0) {
             try {

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { ArrowRight, ChevronLeft } from "lucide-react"
+import { ResolvedStorageImage } from "@/components/ui/resolved-storage-image"
 
 interface IntroPhaseProps {
     quiz: any
@@ -27,6 +28,15 @@ export default function IntroPhase({
                 animate={{ opacity: 1, scale: 1 }}
                 className="max-w-lg w-full bg-white rounded-[36px] shadow-xl border border-slate-100 overflow-hidden"
             >
+                {quiz.imagePath && (
+                    <div className="h-48 bg-slate-100 overflow-hidden">
+                        <ResolvedStorageImage
+                            src={quiz.imagePath}
+                            alt={quiz.title}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                )}
                 <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-8 text-white text-center flex gap-2 flex-col items-center">
                     {isAdmin && (
                         <span className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-black tracking-widest uppercase mb-2">
