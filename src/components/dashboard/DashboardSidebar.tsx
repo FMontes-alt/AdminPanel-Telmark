@@ -25,6 +25,11 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
     const pathname = usePathname()
     const isQuizzesActive = pathname.includes("/quizzes")
+    const isDocumentationActive = !isQuizzesActive
+    const documentationHref = sectionSlug ? `/dashboard/${sectionSlug}` : "#"
+    const shouldShowDocumentationFallback = categories.length === 0 && !!sectionSlug
+    const shouldShowQuizzes = quizCount > 0 || isQuizzesActive
+
     return (
         <aside className="w-64 bg-white border-r border-slate-100 flex flex-col h-full shadow-[10px_0_30px_rgba(0,0,0,0.01)] z-30 flex-shrink-0">
             {/* Compact Header */}
@@ -70,6 +75,24 @@ export function DashboardSidebar({
                 <div className="px-3 mb-4">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Categorías</p>
                 </div>
+                {shouldShowDocumentationFallback && (
+                    <Link href={documentationHref} className="block">
+                        <button
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative ${isDocumentationActive
+                                    ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-500/10'
+                                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                }`}
+                        >
+                            {isDocumentationActive && (
+                                <div className="absolute left-0 w-1 h-5 bg-blue-600 rounded-full" />
+                            )}
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${isDocumentationActive ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-white border border-slate-100 text-slate-300 group-hover:bg-blue-50 group-hover:text-blue-600'}`}>
+                                <LayoutGrid size={14} />
+                            </div>
+                            <span className="text-[12px] font-bold tracking-tight truncate">Documentación</span>
+                        </button>
+                    </Link>
+                )}
                 {categories.map((cat, index) => (
                     <motion.button
                         key={cat.id}
@@ -95,7 +118,7 @@ export function DashboardSidebar({
                     </motion.button>
                 ))}
 
-                {categories.length === 0 && (
+                {categories.length === 0 && !shouldShowDocumentationFallback && (
                     <div className="p-6 text-center space-y-2">
                         <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center mx-auto text-slate-200">
                             <Info size={16} />
@@ -104,7 +127,7 @@ export function DashboardSidebar({
                     </div>
                 )}
 
-                {quizCount > 0 && (
+                {shouldShowQuizzes && (
                     <>
                         <div className="h-px bg-slate-100 my-4" />
                         <div className="px-3 mb-2">
