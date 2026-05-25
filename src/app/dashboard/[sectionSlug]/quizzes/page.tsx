@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -27,6 +27,7 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
 
 export default function UserQuizzesPage() {
     const { sectionSlug } = useParams()
+    const router = useRouter()
     const [section, setSection] = useState<any>(null)
     const [categories, setCategories] = useState<any[]>([])
     const [quizzes, setQuizzes] = useState<any[]>([])
@@ -101,7 +102,7 @@ export default function UserQuizzesPage() {
                     section={section || { name: "Cargando..." }}
                     categories={categories} 
                     selectedCategoryId={null}
-                    onSelectCategory={() => {}}
+                    onSelectCategory={() => router.push(`/dashboard/${sectionSlug}`)}
                     quizCount={0}
                     sectionSlug={sectionSlug as string}
                 />
@@ -136,7 +137,7 @@ export default function UserQuizzesPage() {
                 section={section || {}}
                 categories={categories} 
                 selectedCategoryId={null}
-                onSelectCategory={() => {}}
+                onSelectCategory={() => router.push(`/dashboard/${sectionSlug}`)}
                 quizCount={quizzes.length}
                 sectionSlug={sectionSlug as string}
             />
