@@ -122,64 +122,65 @@ export function PermissionSelector({ hierarchy, selectedItems, inheritedPermissi
         if (search && !matchesSearch && !hasMatchingChild) return null
 
         return (
-            <div key={item.id} className="select-none">
+            <div key={item.id} className="select-none flex flex-col">
                 <div 
-                    className={`flex items-center gap-2 py-2 px-3 rounded-xl transition-all ${
+                    className={`flex items-center gap-3 py-2 pr-4 transition-all border-b border-slate-50 last:border-0 ${
                         isInherited 
-                            ? 'bg-blue-50/20 grayscale-[0.2] cursor-default opacity-80' 
+                            ? 'bg-blue-50/10 cursor-default' 
                             : 'hover:bg-slate-50 cursor-pointer'
-                    } ${selectedManually ? 'bg-blue-50/40' : ''}`}
-                    style={{ marginLeft: `${depth * 20}px` }}
+                    } ${selectedManually ? 'bg-blue-50/30' : ''}`}
+                    style={{ paddingLeft: `${depth * 24 + 16}px` }}
+                    onClick={() => !isInherited && handleToggle(item)}
                 >
                     <button 
                         type="button"
                         onClick={(e) => { e.stopPropagation(); if (hasChildren) toggleExpand(item.id) }}
-                        className={`p-1 hover:bg-slate-200 rounded-md transition-all ${!hasChildren ? 'invisible' : ''}`}
+                        className={`p-1 hover:bg-slate-200 rounded-md transition-all text-slate-400 shrink-0 ${!hasChildren ? 'opacity-0 cursor-default' : ''}`}
                     >
                         {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </button>
 
-                    <div 
-                        onClick={() => !isInherited && handleToggle(item)} 
-                        className={`flex items-center gap-2 flex-1 min-w-0 ${isInherited ? 'pointer-events-none' : ''}`}
-                    >
-                        <div className="relative flex items-center justify-center w-5 h-5">
-                            {selectedManually ? (
-                                <CheckSquare size={16} className="text-blue-600" />
-                            ) : isInherited ? (
-                                <div className="bg-blue-600/10 p-1 rounded-md">
-                                    <ShieldCheck size={12} className="text-blue-600" />
-                                </div>
-                            ) : (
-                                <Square size={16} className="text-slate-300" />
-                            )}
-                        </div>
-
-                        {renderIcon(item.type)}
-                        
-                        <div className="flex flex-col min-w-0">
-                            <div className="flex items-center gap-2">
-                                <span className={`text-[11px] truncate ${isActive ? 'font-black text-blue-900 uppercase tracking-tight' : 'text-slate-500 font-bold'}`}>
-                                    {item.name}
-                                </span>
-                                {groupSource && (
-                                    <div className="flex items-center gap-1 bg-blue-600 text-white px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-widest shadow-sm shadow-blue-500/10">
-                                        <Users size={8} />
-                                        Equipo
-                                    </div>
-                                )}
+                    <div className="relative flex items-center justify-center w-4 h-4 shrink-0">
+                        {selectedManually ? (
+                            <CheckSquare size={16} className="text-blue-600" />
+                        ) : isInherited ? (
+                            <div className="bg-blue-100 p-0.5 rounded-[4px]">
+                                <ShieldCheck size={12} className="text-blue-600" />
                             </div>
-                            {statusLabel && (
-                                <span className="text-[7px] text-blue-400 font-black uppercase tracking-[0.1em] leading-none mt-0.5 opacity-70">
-                                    {statusLabel}
-                                </span>
+                        ) : (
+                            <Square size={16} className="text-slate-300" />
+                        )}
+                    </div>
+
+                    <div className="shrink-0 flex items-center justify-center w-5">
+                        {renderIcon(item.type)}
+                    </div>
+                    
+                    <div className="flex flex-col min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xs truncate ${isActive ? 'font-black text-slate-900 tracking-tight' : 'text-slate-600 font-semibold'}`}>
+                                {item.name}
+                            </span>
+                            {groupSource && (
+                                <div className="flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-[4px] text-[9px] font-black uppercase tracking-widest">
+                                    <Users size={10} />
+                                    Grupo
+                                </div>
                             )}
                         </div>
                     </div>
+
+                    {statusLabel && (
+                        <div className="shrink-0">
+                            <span className="text-[9px] text-blue-500 font-bold uppercase tracking-widest bg-blue-50 px-2 py-1 rounded-md">
+                                {statusLabel}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {(isExpanded || (search && hasMatchingChild)) && item.children && (
-                    <div className="mt-1">
+                    <div className="flex flex-col">
                         {item.children.map(child => renderItem(child, depth + 1, [...path, item]))}
                     </div>
                 )}
@@ -188,58 +189,62 @@ export function PermissionSelector({ hierarchy, selectedItems, inheritedPermissi
     }
 
     return (
-        <div className="space-y-4 border border-slate-100 rounded-3xl p-6 bg-slate-50/30">
-            <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input 
-                    type="text"
-                    placeholder="Buscar sección, categoría o elemento..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-11 pr-4 text-xs font-bold text-slate-700 outline-none focus:border-blue-300 transition-all shadow-sm"
-                />
+        <div className="space-y-4">
+            <div className="flex items-center gap-4">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <input 
+                        type="text"
+                        placeholder="Buscar sección, categoría o elemento..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-10 pr-4 text-xs font-bold text-slate-700 outline-none focus:border-blue-300 focus:bg-white transition-all"
+                    />
+                </div>
+                
+                <div className="flex items-center gap-4 shrink-0 text-right pr-2">
+                    <div className="flex flex-col">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            {selectedItems.length} Individuales
+                        </p>
+                        {inheritedPermissions.length > 0 && (
+                            <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">
+                                + {inheritedPermissions.length} Por Grupos
+                            </p>
+                        )}
+                    </div>
+                    <button 
+                        type="button" 
+                        onClick={() => onChange([])}
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+                    >
+                        Limpiar
+                    </button>
+                </div>
             </div>
 
             {alert && (
-                <div className="bg-amber-50 border border-amber-100 p-3 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-1 duration-300">
                     <ShieldCheck className="text-amber-500" size={16} />
-                    <p className="text-[10px] text-amber-800 font-bold uppercase leading-tight selection:bg-amber-200">
+                    <p className="text-[10px] text-amber-800 font-bold uppercase leading-tight">
                         {alert.message}
                     </p>
                 </div>
             )}
 
-            <div className="max-h-[400px] overflow-y-auto custom-scrollbar pr-2 space-y-1">
-                {hierarchy.length > 0 ? (
-                    hierarchy.map(section => renderItem(section))
-                ) : (
-                    <div className="py-10 text-center space-y-2">
-                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto text-slate-300">
-                            <Layers size={24} />
+            <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
+                <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                    {hierarchy.length > 0 ? (
+                        hierarchy.map(section => renderItem(section))
+                    ) : (
+                        <div className="py-12 text-center space-y-3">
+                            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto text-slate-300 border border-slate-100">
+                                <Layers size={24} />
+                            </div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cargando Estructura...</p>
                         </div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cargando Estructura...</p>
-                    </div>
-                )}
-            </div>
-
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                <div className="flex flex-col">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        {selectedItems.length} Permisos Individuales
-                    </p>
-                    {inheritedPermissions.length > 0 && (
-                        <p className="text-[8px] font-bold text-blue-500 uppercase tracking-widest">
-                            + {inheritedPermissions.length} Permisos por Grupos
-                        </p>
                     )}
                 </div>
-                <button 
-                    type="button" 
-                    onClick={() => onChange([])}
-                    className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:text-blue-700"
-                >
-                    Limpiar Individuales
-                </button>
             </div>
         </div>
     )

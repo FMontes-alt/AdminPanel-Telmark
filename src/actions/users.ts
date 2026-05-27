@@ -86,8 +86,8 @@ export async function getDashboardData() {
     if (!auth) return { profile: null, sections: [] }
     const { user, profile } = auth
 
-    // Si es superadmin, ve todo
-    if (profile.role === 'superadmin') {
+    // Si es superadmin o admin, ve todo
+    if (profile.role === 'superadmin' || profile.role === 'admin') {
         const allSections = await db.select().from(sections).orderBy(sections.name)
         const { getSignedUrlAction } = await import("@/actions/storage")
         for (const s of allSections) {

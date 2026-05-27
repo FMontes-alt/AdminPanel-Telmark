@@ -2,28 +2,22 @@
 
 import {
     Bell,
-    AlertCircle,
-    Trash2,
-    Lock,
-    Unlock,
-    Plus,
-    Edit3,
-    Zap,
+    AlertTriangle,
+    Trash,
+    Shield,
+    ShieldCheck,
+    PlusCircle,
+    FileEdit,
+    Settings,
     Clock,
     ChevronRight,
     ExternalLink,
+    Hash
 } from "lucide-react"
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { motion } from "framer-motion"
-/*
-### Session & Security Fix
-Resolved the "infinite loop" and access issues in the admin panel.
-- **Loop Prevention**: Fixed a bug where non-admin users were redirected to `/admin` repeatedly. Now they are sent back to the home page (`/`) safely.
-- **Middleware Cleanup**: Streamlined the session refresh process to prevent redundant calls and ensure cookies are correctly synchronized.
-- **Improved Logging**: Added a unique `x-trace-id` to every request for easier debugging of future access issues.
-*/
 
 interface AlertItemProps {
     alert: any
@@ -34,12 +28,13 @@ interface AlertItemProps {
 export function AlertItem({ alert, onMarkAsRead, index }: AlertItemProps) {
     const getIcon = (type: string) => {
         switch (type) {
-            case "delete": return <Trash2 size={16} />
-            case "lock": return <Lock size={16} />
-            case "unlock": return <Unlock size={16} />
-            case "error": return <AlertCircle size={16} />
-            case "create": return <Plus size={16} />
-            case "edit": return <Edit3 size={16} />
+            case "delete": return <Trash size={16} />
+            case "lock": return <Shield size={16} />
+            case "unlock": return <ShieldCheck size={16} />
+            case "error": return <AlertTriangle size={16} />
+            case "create": return <PlusCircle size={16} />
+            case "edit": return <FileEdit size={16} />
+            case "system": return <Settings size={16} />
             default: return <Bell size={16} />
         }
     }
@@ -51,6 +46,8 @@ export function AlertItem({ alert, onMarkAsRead, index }: AlertItemProps) {
             default: return "bg-blue-50 text-blue-600 border-blue-100 shadow-blue-500/10"
         }
     }
+
+    const isLinkDisabled = !alert.targetUrl || alert.type === "delete"
 
     return (
         <motion.div
@@ -88,7 +85,7 @@ export function AlertItem({ alert, onMarkAsRead, index }: AlertItemProps) {
             <div className="flex items-center">
                 {alert.targetName ? (
                     <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-50 rounded-md border border-slate-100">
-                        <Zap size={10} className="text-slate-400" />
+                        <Hash size={10} className="text-slate-400" />
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest truncate max-w-[120px]">{alert.targetName}</span>
                     </div>
                 ) : (
@@ -107,8 +104,16 @@ export function AlertItem({ alert, onMarkAsRead, index }: AlertItemProps) {
             </div>
 
             {/* 6. Actions (Column: Acciones) */}
-            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                {alert.targetUrl && (
+            <div className="flex items-center justify-end gap-2 transition-all pr-4">
+                {isLinkDisabled ? (
+                    <button
+                        disabled
+                        className="p-2.5 rounded-xl bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed flex items-center justify-center transition-all"
+                        title="Enlace no disponible (Eliminado o sin ruta)"
+                    >
+                        <ExternalLink size={14} />
+                    </button>
+                ) : (
                     <Link
                         href={alert.targetUrl}
                         className="p-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md shadow-blue-500/10 flex items-center justify-center"
@@ -117,17 +122,15 @@ export function AlertItem({ alert, onMarkAsRead, index }: AlertItemProps) {
                         <ExternalLink size={14} />
                     </Link>
                 )}
+                
                 {!alert.isRead && (
                     <button
                         onClick={() => onMarkAsRead(alert.id)}
-                        className="px-4 py-2 rounded-xl bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-md shadow-slate-900/5 text-center flex-1"
+                        className="px-4 py-2 rounded-xl bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-md shadow-slate-900/5 text-center"
                     >
                         Listo
                     </button>
                 )}
-                <div className="hidden lg:flex w-8 h-8 rounded-full items-center justify-center text-slate-200">
-                    <ChevronRight size={18} />
-                </div>
             </div>
 
             {/* Unread indicator dot (only for mobile list look) */}

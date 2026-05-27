@@ -88,8 +88,8 @@ async function fetchHierarchy(userId: string, sectionId: string) {
         )
     )
 
-    // Revertimos admin bypass para que puedan probar los permisos reales como pidieron
-    const isSuperAdmin = profile.role === 'superadmin'
+    // Damos acceso total a superadmin y admin
+    const isSuperAdmin = profile.role === 'superadmin' || profile.role === 'admin'
 
     // 2. Obtener categorías
     const allCategories = await db.select().from(categories)
