@@ -3,13 +3,17 @@ import {
     FileEdit, 
     PlusCircle, 
     Trash2, 
-    MessageCircle 
+    MessageCircle,
+    AlertTriangle,
+    Lock,
+    Unlock,
+    Settings
 } from "lucide-react"
 import { AdminPageHeader } from "@/components/ui/admin-page-header"
 
-type ActivityType = 'create' | 'edit' | 'delete' | 'comment' | 'user'
+export type ActivityType = 'create' | 'edit' | 'delete' | 'error' | 'lock' | 'unlock' | 'system'
 
-interface ActivityItem {
+export interface ActivityItem {
     id: string
     type: ActivityType
     user: string
@@ -21,9 +25,11 @@ interface ActivityItem {
 const activityIcons: Record<ActivityType, any> = {
     create: { icon: PlusCircle, color: 'text-green-600 bg-green-50' },
     edit: { icon: FileEdit, color: 'text-blue-600 bg-blue-50' },
-    comment: { icon: MessageCircle, color: 'text-purple-600 bg-purple-50' },
     delete: { icon: Trash2, color: 'text-red-600 bg-red-50' },
-    user: { icon: User, color: 'text-slate-600 bg-slate-50' },
+    error: { icon: AlertTriangle, color: 'text-red-600 bg-red-100' },
+    lock: { icon: Lock, color: 'text-orange-600 bg-orange-50' },
+    unlock: { icon: Unlock, color: 'text-green-600 bg-green-50' },
+    system: { icon: Settings, color: 'text-slate-600 bg-slate-50' },
 }
 
 interface ActivityFeedProps {
