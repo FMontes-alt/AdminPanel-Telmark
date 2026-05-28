@@ -27,6 +27,11 @@ export function SectionsClient({ initialSections }: { initialSections: any[] }) 
     const router = useRouter()
     const externalPreviewUrl = getExternalUrl(newCoverUrl);
 
+    // Sync sections when Server Component re-renders after router.refresh()
+    useEffect(() => {
+        setSections(initialSections)
+    }, [initialSections])
+
     useEffect(() => {
         let isMounted = true;
         
@@ -53,7 +58,7 @@ export function SectionsClient({ initialSections }: { initialSections: any[] }) 
     const handleAddSection = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
-            await createSection({ 
+            const res = await createSection({ 
                 name: newName, 
                 slug: newSlug,
                 imagePath: newCoverUrl,
@@ -61,6 +66,9 @@ export function SectionsClient({ initialSections }: { initialSections: any[] }) 
                     template: selectedTemplate
                 }
             })
+            if (res.success && res.data) {
+                setSections(prev => [...prev, res.data])
+            }
             setNewName("")
             setNewSlug("")
             setNewCoverUrl("")
@@ -86,7 +94,10 @@ export function SectionsClient({ initialSections }: { initialSections: any[] }) 
         if (!deletingSection) return
         setIsDeleting(true)
         try {
-            await deleteSection(deletingSection.id)
+            const res = await deleteSection(deletingSection.id)
+            if (res.success) {
+                setSections(prev => prev.filter(s => s.id !== deletingSection.id))
+            }
             setDeletingSection(null)
             router.refresh()
         } catch (error) {
