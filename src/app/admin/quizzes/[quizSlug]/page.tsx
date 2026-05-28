@@ -42,7 +42,7 @@ export default function QuizEditorPage() {
     const fetchQuiz = useCallback(async () => {
         setLoading(true)
         const [quizData, sectionsList, quizzesList] = await Promise.all([
-            getQuizWithDetailsBySlug(quizSlug as string),
+            getQuizWithDetailsBySlug(decodeURIComponent(quizSlug as string)),
             getAllSectionsAction(),
             getQuizzes()
         ])

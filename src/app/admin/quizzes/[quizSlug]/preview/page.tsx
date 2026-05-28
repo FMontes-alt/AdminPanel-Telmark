@@ -1,5 +1,6 @@
 "use client"
 
+
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getQuizWithDetailsBySlug } from "@/actions/quizzes"
@@ -52,7 +53,7 @@ export default function AdminQuizPreviewPage() {
             const { data: { user } } = await supabase.auth.getUser()
             if (user) setUserId(user.id)
 
-            const data = await getQuizWithDetailsBySlug(quizSlug as string)
+            const data = await getQuizWithDetailsBySlug(decodeURIComponent(quizSlug as string))
             if (data) {
                 setQuiz(data)
                 let qs = data.questions || []
@@ -86,6 +87,8 @@ export default function AdminQuizPreviewPage() {
             setAttemptId(result.data.id)
             setPhase("quiz")
             if (quiz.timeLimitMinutes) setTimeLeft(quiz.timeLimitMinutes * 60)
+        } else if (result?.error) {
+            alert(result.error)
         }
     }
 

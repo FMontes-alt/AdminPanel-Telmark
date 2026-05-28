@@ -1,5 +1,6 @@
 "use client"
 
+
 import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getPublishedQuizzes, getQuizWithDetailsBySlug } from "@/actions/quizzes"
@@ -69,7 +70,7 @@ export default function QuizTakePage() {
                 setQuizCount(published.length)
             }
 
-            const data = await getQuizWithDetailsBySlug(quizSlug as string)
+            const data = await getQuizWithDetailsBySlug(decodeURIComponent(quizSlug as string))
             if (data) {
                 setQuiz(data)
                 let qs = data.questions || []
@@ -103,6 +104,8 @@ export default function QuizTakePage() {
             setAttemptId(result.data.id)
             setPhase("quiz")
             if (quiz.timeLimitMinutes) setTimeLeft(quiz.timeLimitMinutes * 60)
+        } else if (result?.error) {
+            alert(result.error)
         }
     }
 

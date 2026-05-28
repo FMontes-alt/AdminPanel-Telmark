@@ -199,7 +199,7 @@ export const quizAttempts = pgTable("quiz_attempts", {
         .notNull(),
     score: integer("score"),
     maxScore: integer("max_score"),
-    status: attemptStatusEnum("status").default("completed").notNull(),
+    status: attemptStatusEnum("status").default("in_progress").notNull(),
     startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
 });
