@@ -9,7 +9,7 @@ Este módulo permite la administración centralizada de los accesos de los emple
 El sistema ha evolucionado de un modelo de asignación directa de secciones a un sistema jerárquico y granular basado en **Equipos** y **Permisos Especiales**.
 
 - **Entidades Clave**: `groups`, `user_groups` y `permissions`.
-- **Drizzle Schema**: Para más detalles técnicos, ver [Arquitectura de Permisos](file:///c:/Users/Fran/Desktop/AdminPanel-Telmark/docs/architecture/sistema-permisos-grupos.md).
+- **Drizzle Schema**: Para más detalles técnicos, ver [Arquitectura de Permisos](file:///c:/Users/Fran/Desktop/AdminPanel-Telmark/docs/architecture/permissions-groups-system.md).
 
 ---
 

@@ -10,10 +10,10 @@ Conceptos base y estructura del sistema.
 
 - 🗄️ **[Base de Datos](architecture/database.md)**: Esquema relacional, filosofía UUID y tablas core.
 - 🔐 **[Seguridad y RLS](architecture/security-rls.md)**: Políticas de Row Level Security y gestión de sesiones.
-- 🛡️ **[Sistema de Permisos](architecture/sistema-permisos-grupos.md)**: Herencia por Equipos, granularidad y lógica de Dashboard.
+- 🛡️ **[Sistema de Permisos](architecture/permissions-groups-system.md)**: Herencia por Equipos, granularidad y lógica de Dashboard.
 - ⚙️ **[Middleware](architecture/middleware.md)**: Roadmap y lógica de las capas de control (Auth, Security, Maintenance).
-- 🏗️ **[Arquitectura Modular Quizzes](architecture/ARQUITECTURA_MODULAR_QUIZZES.md)**: Diseño y propuesta técnica.
-- 📑 **[Informe de Arquitectura](architecture/INFORME_ARQUITECTURA.md)**: Informe general del estado del sistema.
+- 🏗️ **[Arquitectura Modular Quizzes](architecture/quizzes-architecture.md)**: Diseño y propuesta técnica.
+- 📑 **[Informe de Arquitectura](architecture/architecture-report.md)**: Informe general del estado del sistema.
 
 ## 📘 [Guías de Desarrollo](guides/setup.md)
 
@@ -24,9 +24,9 @@ Instrucciones paso a paso para desarrolladores.
 - ⚡ **[API & Server Actions](guides/api-actions.md)**: Cómo usar y crear acciones de servidor.
 - 🧬 **[Seeders & Data](guides/seeding.md)**: Poblado de datos de prueba y fábricas.
 - 🔑 **[Flujo de Autenticación](guides/auth-flow.md)**: Detalles sobre el login y logout.
-- 🔒 **[Guía de Seguridad](guides/GUIA_SEGURIDAD.md)**: Prácticas y manejo de RLS.
-- 🔧 **[Fix Auth & RLS](guides/FIX_AUTH_RLS.md)**: Guía y soluciones para problemas comunes.
-- 📁 **[Guía de Storage](guides/SUPABASE_STORAGE_GUIDE.md)**: Manejo de archivos en Supabase.
+- 🔒 **[Guía de Seguridad](guides/security-guide.md)**: Prácticas y manejo de RLS.
+- 🔧 **[Fix Auth & RLS](guides/fix-auth-rls.md)**: Guía y soluciones para problemas comunes.
+- 📁 **[Guía de Storage](guides/supabase-storage-guide.md)**: Manejo de archivos en Supabase.
 
 ## 🚀 [Módulos y Funcionalidades](features/campaign-builder.md)
 
@@ -34,11 +34,11 @@ Documentación técnica de los módulos principales.
 
 - 🎨 **[Campaign Builder](features/campaign-builder.md)**: Motor de diseño de campañas premium.
 - 🔔 **[Sistema de Alertas](features/alerts-system.md)**: Trazabilidad total de eventos del sistema.
-- 👥 **[Gestión de Empleados](features/gestion-empleados.md)**: Administración de accesos y redirección por sección.
-- 📝 **[Sistema de Cuestionarios](features/SISTEMA_CUESTIONARIOS.md)**: Evaluaciones, formación y gestión de multimedia segura.
-- 📥 **[Descargas y Enlaces](features/MEJORA_DESCARGAS_ENLACES.md)**: Optimización del sistema de distribución.
-- 📺 **[Recursos Multimedia](features/MULTIMEDIA_RESOURCES.md)**: Gestión de vídeos, audios y documentos.
-- 🔎 **[Visor Inline](features/VISOR_INLINE_ACTUALIZACION.md)**: Previsualización de documentos.
+- 👥 **[Gestión de Empleados](features/employee-management.md)**: Administración de accesos y redirección por sección.
+- 📝 **[Sistema de Cuestionarios](features/quizzes-system.md)**: Evaluaciones, formación y gestión de multimedia segura.
+- 📥 **[Descargas y Enlaces](features/downloads-links-improvement.md)**: Optimización del sistema de distribución.
+- 📺 **[Recursos Multimedia](features/multimedia-resources.md)**: Gestión de vídeos, audios y documentos.
+- 🔎 **[Visor Inline](features/inline-viewer-update.md)**: Previsualización de documentos.
 
 ## 📋 [Gestión del Proyecto](project/epics.md)
 

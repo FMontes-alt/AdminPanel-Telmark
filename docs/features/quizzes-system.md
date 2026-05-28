@@ -54,5 +54,5 @@ Al finalizar un cuestionario en modo prueba, se genera un resumen de resultados 
   - `src/actions/quiz-questions.ts`: CRUD profundo de preguntas y sus opciones.
   - `src/actions/quiz-attempts.ts`: Lógica de negocio para iniciar, guardar respuestas parciales y calcular resultados finales.
 - **Seguridad Multimedia**: Uso de `getSignedUrlAction` de Supabase para servir archivos privados.
-- **Modularización**: Para mantener la escalabilidad, las páginas complejas se han dividido en sub-componentes especializados (ver `docs/ARQUITECTURA_MODULAR_QUIZZES.md`).
+- **Modularización**: Para mantener la escalabilidad, las páginas complejas se han dividido en sub-componentes especializados (ver `docs/architecture/quizzes-architecture.md`).
 - **Lógica de Servidor**: Server Actions dedicados para CRUD, estadísticas y gestión de intentos.
