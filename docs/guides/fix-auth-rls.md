@@ -41,7 +41,7 @@ Se modificó estrictamente el *namespace* para indicar a PostgreSQL qué dato qu
 ```sql
 ... AND (s.slug = split_part(storage.objects.name, '/'::text, 1))
 ```
-Con este cambio, solo los usuarios **asignados explícitamente a una sección** en la tabla `profile_sections` en base de datos tienen el poder de desencriptar y cargar archivos privados de dicha sección.
+Con este cambio, solo los usuarios **asignados explícitamente** mediante el sistema de permisos (`permissions`) en base de datos tienen el poder de desencriptar y cargar archivos privados de dicha sección.
 
 ---
 
@@ -57,4 +57,4 @@ Si en un futuro la directiva prefiere una plataforma donde cualquier comercial o
    ```sql
    true
    ```
-Al poner `true`, le estás diciendo a Supabase que cualquier usuario autenticado (`Target Roles: authenticated`) tiene vía libre instantánea y global para descargar y previsualizar contenido en el dashboard, anulando cualquier requerimiento de vinculación con la tabla `profile_sections`.
+Al poner `true`, le estás diciendo a Supabase que cualquier usuario autenticado (`Target Roles: authenticated`) tiene vía libre instantánea y global para descargar y previsualizar contenido en el dashboard, anulando cualquier requerimiento de vinculación con la tabla `permissions`.

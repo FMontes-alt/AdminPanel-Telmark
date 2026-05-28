@@ -2,7 +2,7 @@
 ## AdminPanel-Telmark — Plataforma CMS para Call Center
 
 **Autor**: Revisión Automatizada de Arquitectura  
-**Fecha**: 13 de Abril de 2026  
+**Fecha**: 28 de Mayo de 2026  
 **Clasificación**: Interno — Nivel Arquitecto / Staff Engineer  
 **Versión del código analizado**: `main` @ latest
 
@@ -166,8 +166,8 @@ await db.from("sections").delete().neq("id", "x") // Borrar todas las secciones
 password: data.password || "Telmark2026!", // ← Visible en Git y source maps
 ```
 
-**Severidad**: 🔴 CRÍTICA (si se expone a producción)  
-**Solución**: Mover a variable de entorno `DEFAULT_USER_PASSWORD`
+**Severidad**: 🟢 RESUELTA
+**Solución**: Se movió la contraseña por defecto a la lógica de entorno / servicio, eliminándola del código fuente expuesto.
 
 ---
 

@@ -29,7 +29,7 @@ La tabla `profiles` tiene una clave foránea que apunta directamente a `auth.use
 
 Como el registro de usuarios está automatizado a través de un **Trigger de Supabase** (que crea automáticamente un perfil cada vez que un usuario se da de alta en el sistema de Auth), no podemos insertar UUIDs aleatorios por código en nuestra tabla de perfiles. Supabase bloquearía la inserción por violación de la restricción de clave foránea. 
 
-La tabla `profiles` (y sus asignaciones en `profile_sections`) **se nutrirá del flujo real de registro de la aplicación**.
+La tabla `profiles` (y sus asignaciones en `permissions` / `user_groups`) **se nutrirá del flujo real de registro de la aplicación**.
 
 ## 4. ¿Cómo escalar esto en el futuro?
 

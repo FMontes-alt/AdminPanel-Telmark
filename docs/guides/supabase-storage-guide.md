@@ -31,7 +31,7 @@ USING (
     public.is_admin_or_superadmin()
     OR
     EXISTS (
-        SELECT 1 FROM public.profile_sections ps
+        SELECT 1 FROM public.permissions p
         JOIN public.sections s ON s.id = ps.section_id
         WHERE ps.profile_id = auth.uid()
         AND s.slug = (split_part(name, '/', 1)) -- Comprobamos el primer segmento de la ruta

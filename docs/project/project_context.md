@@ -15,7 +15,7 @@
 ## Arquitectura de Datos (Confirmada)
 La base de datos es **relacional pura** estructurada en hierarchy + usuarios:
 0.  **PROFILES**: Usuarios con roles (`superadmin`, `admin`, `usuario`). Vinculados a Supabase Auth.
-0.5 **PROFILE_SECTIONS**: Tabla intermedia para asignar secciones específicas a usuarios.
+0.5 **PERMISSIONS / GROUPS**: Sistema granular para asignar acceso a secciones, categorías, subcategorías o items mediante pertenencia a grupos o permisos directos.
 1. **SECTIONS**: (Ej: ADESLAS, ENERGÍA, ALARMA).
 2. **CATEGORIES**: Agrupadores de primer nivel.
 3. **SUBCATEGORIES**: Agrupadores de segundo nivel.
@@ -28,7 +28,7 @@ La base de datos es **relacional pura** estructurada en hierarchy + usuarios:
 - **Seguridad**: RLS estricto por ROLES. 
   - `superadmin`: Acceso total.
   - `admin`: Gestión de contenido global.
-  - `usuario`: Solo ve las secciones asignadas en `profile_sections`.
+  - `usuario`: Solo ve los contenidos asignados mediante el sistema de **Permisos y Grupos**.
 - **Automatización**: Trigger en Supabase para crear `profile` automáticamente al registrarse en Auth.
 - **Identidad**: Uso estricto de **UUID**.
 - **Orden**: Directorio raíz limpio. Lógica en `src/`, docs en `docs/`.
@@ -37,6 +37,6 @@ La base de datos es **relacional pura** estructurada en hierarchy + usuarios:
 Toda la documentación está centralizada en el **[Hub de Documentación](docs/INDEX.md)**.
 
 ## Próximos Pasos (Pendientes)
-1.  Implementar el Trigger de autocreación de perfiles en Supabase.
-2.  Configurar el Middleware de Next.js para proteger rutas según el rol.
-3.  Implementar Server Actions para la gestión de usuarios y asignación de secciones.
+1.  Implementar políticas RLS (Row Level Security) directamente en Supabase para robustecer la seguridad (actualmente mitigado vía Middleware y Server Actions).
+2.  Implementar suite de testing unitario y E2E.
+3.  Optimización de queries (N+1) en la resolución de jerarquías.
