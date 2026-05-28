@@ -22,6 +22,8 @@ describe('Sections Actions', () => {
 
     describe('createSection', () => {
         it('debe requerir permisos de admin', async () => {
+            // @ts-ignore
+            db.returning.mockResolvedValueOnce([{ id: 'sec-1', name: 'Test', slug: 'test' }])
             await createSection({ name: 'Test', slug: 'test' })
             expect(requireAdmin).toHaveBeenCalled()
         })

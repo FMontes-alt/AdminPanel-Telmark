@@ -52,7 +52,9 @@ export async function bulkCreateHierarchy(data: BulkHierarchyInput): Promise<Act
 
             const createdStructure = {
                 category: newCategory,
-                subcategories: [] as any[]
+                subcategories: [] as (typeof subcategories.$inferSelect & {
+                    items: typeof items.$inferSelect[];
+                })[]
             }
 
             // 2. Create Subcategories and Items
@@ -69,7 +71,7 @@ export async function bulkCreateHierarchy(data: BulkHierarchyInput): Promise<Act
 
                 const subEntry = {
                     ...newSub,
-                    items: [] as any[]
+                    items: [] as typeof items.$inferSelect[]
                 }
 
                 for (const itemInput of subInput.items) {

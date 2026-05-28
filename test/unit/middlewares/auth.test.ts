@@ -38,6 +38,13 @@ describe('Auth Middleware', () => {
             expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/login', 'http://localhost/admin'))
         })
 
+        it('debe redirigir al login si accede a /dashboard sin usuario', async () => {
+            mockRequest = { nextUrl: { pathname: '/dashboard', clone: vi.fn() }, url: 'http://localhost/dashboard' }
+            const result = await withAuth(mockRequest as any, mockResponse, mockSupabase, null)
+            
+            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/login', 'http://localhost/dashboard'))
+        })
+
         it('debe redirigir a / si el usuario no es admin', async () => {
             mockRequest = { nextUrl: { pathname: '/admin', clone: vi.fn() }, url: 'http://localhost/admin' }
             mockSupabase.single.mockResolvedValueOnce({ data: { role: 'user' } })
