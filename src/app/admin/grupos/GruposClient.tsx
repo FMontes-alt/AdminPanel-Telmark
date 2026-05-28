@@ -7,6 +7,7 @@ import { GroupForm } from "./GroupForm"
 import { AdminPageHeader } from "@/components/ui/admin-page-header"
 import { Plus, FolderTree, Loader2, Search } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { DeleteGroupModal } from "./DeleteGroupModal"
 
 export function GruposClient({
     initialGroups,
@@ -22,17 +23,28 @@ export function GruposClient({
     const [editingGroup, setEditingGroup] = useState<any>(null)
     const [loadingGroup, setLoadingGroup] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
+    const [groupToDelete, setGroupToDelete] = useState<any>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
     const router = useRouter()
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("¿Estás seguro de que deseas eliminar este grupo? Los usuarios no serán eliminados.")) return
+    const handleDeleteClick = (id: string) => {
+        const group = groups.find(g => g.id === id)
+        if (group) setGroupToDelete(group)
+    }
+
+    const confirmDelete = async () => {
+        if (!groupToDelete) return
+        setIsDeleting(true)
         try {
-            const result = await deleteGroup(id)
+            const result = await deleteGroup(groupToDelete.id)
             if (result.success) {
                 router.refresh()
+                setGroupToDelete(null)
             }
         } catch (error) {
             console.error("Error deleting group:", error)
+        } finally {
+            setIsDeleting(false)
         }
     }
 
@@ -110,7 +122,7 @@ export function GruposClient({
                 <GroupsList
                     groups={filteredGroups}
                     onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onDelete={handleDeleteClick}
                 />
             ) : (
                 <div className="py-20 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm border-dashed">
@@ -134,6 +146,15 @@ export function GruposClient({
                         )}
                     </div>
                 </div>
+            )}
+
+            {groupToDelete && (
+                <DeleteGroupModal
+                    group={groupToDelete}
+                    isDeleting={isDeleting}
+                    onClose={() => setGroupToDelete(null)}
+                    onConfirm={confirmDelete}
+                />
             )}
         </div>
     )
