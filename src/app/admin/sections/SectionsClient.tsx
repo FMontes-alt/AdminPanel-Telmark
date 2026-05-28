@@ -11,9 +11,9 @@ import { getSignedUrlAction } from "@/actions/storage"
 import { getExternalUrl, toSlug } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 
-export function SectionsClient({ initialSections }: { initialSections: any[] }) {
+export function SectionsClient({ initialSections, initialIsAdding = false }: { initialSections: any[], initialIsAdding?: boolean }) {
     const [sections, setSections] = useState<any[]>(initialSections)
-    const [isAdding, setIsAdding] = useState(false)
+    const [isAdding, setIsAdding] = useState(initialIsAdding)
     const [deletingSection, setDeletingSection] = useState<{ id: string, name: string } | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
     

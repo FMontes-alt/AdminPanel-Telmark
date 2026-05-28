@@ -2,22 +2,25 @@ import type { Metadata } from "next";
 import { Sidebar } from "./components/Sidebar";
 import { AdminHeader } from "./components/AdminHeader";
 import { SidebarProvider } from "./components/SidebarProvider";
+import { getAllSectionsAction } from "@/actions/sections";
 
 export const metadata: Metadata = {
   title: "Admin Panel | Telmark CMS",
   description: "Gestión de campañas y contenidos",
 };
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const sections = await getAllSectionsAction();
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-slate-50">
         {/* Navegación Lateral */}
-        <Sidebar />
+        <Sidebar initialSections={sections} />
 
         {/* Contenido Principal */}
         <div className="flex-1 flex flex-col min-w-0">

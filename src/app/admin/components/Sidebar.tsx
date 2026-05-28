@@ -29,11 +29,11 @@ const getColorForSection = (name: string) => {
     return 'text-slate-400';
 }
 
-export function Sidebar() {
+export function Sidebar({ initialSections = [] }: { initialSections?: any[] }) {
     const pathname = usePathname()
     const { isCollapsed, toggleSidebar } = useSidebar()
     const [collapsedSections, setCollapsedSections] = useState<string[]>([])
-    const [dbSections, setDbSections] = useState<{name: string, slug: string}[]>([])
+    const [dbSections, setDbSections] = useState<{name: string, slug: string}[]>(initialSections)
     const [profile, setProfile] = useState<{ firstName?: string; lastName?: string; avatarUrl?: string; email?: string } | null>(null)
     const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false)
 
@@ -56,16 +56,8 @@ export function Sidebar() {
     }, [])
 
     useEffect(() => {
-        const fetchSections = async () => {
-            try {
-                const data = await getAllSectionsAction()
-                setDbSections(data || [])
-            } catch (error) {
-                console.error("Error fetching sections for sidebar:", error)
-            }
-        }
-        fetchSections()
-    }, [])
+        setDbSections(initialSections)
+    }, [initialSections])
 
     useEffect(() => {
         const fetchUnread = async () => {
@@ -123,7 +115,6 @@ export function Sidebar() {
                 { name: 'Grupos', href: '/admin/grupos', icon: FolderTree },
                 { name: 'Cuestionarios', href: '/admin/quizzes', icon: ClipboardList },
                 { name: 'Monitoreo', href: '/admin/monitoring', icon: Eye },
-                { name: 'Analíticas', href: '/admin/analytics', icon: BarChart3 },
             ]
         }
     ]

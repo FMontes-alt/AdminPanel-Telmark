@@ -14,7 +14,7 @@ const actions: ActionItem[] = [
     {
         label: "Nueva Campaña",
         description: "Crear sección",
-        href: "/admin/sections/new",
+        href: "/admin/sections?action=new",
         icon: Megaphone,
         colorClass: "group-hover:text-blue-600 hover:border-blue-100",
         iconBgClass: "bg-blue-50 text-blue-600 group-hover:bg-blue-100"
@@ -22,7 +22,7 @@ const actions: ActionItem[] = [
     {
         label: "Crear Quiz",
         description: "Añadir cuestionario",
-        href: "/admin/quizzes/new",
+        href: "/admin/quizzes?action=new",
         icon: GraduationCap,
         colorClass: "group-hover:text-indigo-600 hover:border-indigo-100",
         iconBgClass: "bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100"
@@ -30,7 +30,7 @@ const actions: ActionItem[] = [
     {
         label: "Nuevo Agente",
         description: "Dar de alta usuario",
-        href: "/admin/usuarios/new",
+        href: "/admin/usuarios?action=new",
         icon: UserPlus,
         colorClass: "group-hover:text-emerald-600 hover:border-emerald-100",
         iconBgClass: "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100"

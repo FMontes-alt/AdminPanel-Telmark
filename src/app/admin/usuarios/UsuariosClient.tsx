@@ -12,15 +12,17 @@ export function UsuariosClient({
     initialAgents,
     initialSections,
     initialGroups,
-    initialHierarchy
+    initialHierarchy,
+    initialIsFormOpen = false
 }: {
     initialAgents: any[]
     initialSections: any[]
     initialGroups: any[]
     initialHierarchy: any[]
+    initialIsFormOpen?: boolean
 }) {
     const [agents, setAgents] = useState<any[]>(initialAgents)
-    const [isFormOpen, setIsFormOpen] = useState(false)
+    const [isFormOpen, setIsFormOpen] = useState(initialIsFormOpen)
     const [editingAgent, setEditingAgent] = useState<any>(null)
     const [loadingAgent, setLoadingAgent] = useState(false)
 

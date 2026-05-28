@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     ClipboardList,
@@ -29,7 +29,8 @@ export default function AdminQuizzesPage() {
     const [quizzes, setQuizzes] = useState<any[]>([])
     const [sections, setSections] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [isCreating, setIsCreating] = useState(false)
+    const searchParams = useSearchParams()
+    const [isCreating, setIsCreating] = useState(searchParams.get("action") === "new")
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
     const [itemToDeleteId, setItemToDeleteId] = useState<string | null>(null)
